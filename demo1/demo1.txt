@@ -1,0 +1,10 @@
+Suoritetut tehtävät:
+    1.1: Git-repo on perustettu ja opettajat pääsevät siihen käsiksi: 3 p
+    1.2: Rasbpian on asennettu ja asetukset on asetettu: 4 p
+    1.3: Etäyhteys toimii: 3 p
+    1.4: BONUS: Raspbian kirjoitettu kortille itse 2 p
+
+Raspin IP: asennuksen aikana: 192.168.0.5 & 192.168.0.6
+Etäkäyttö SSH:lla:
+pi@hyivattu:~ $ sudo systemctl start ssh
+teemu@linux:~> ssh 192.168.0.6 -lpi
