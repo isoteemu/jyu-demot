@@ -609,6 +609,11 @@ function joukkuJasenSyöttö(el=undefined, min=2) {
         );
     }
 
+    let jasennr = 1;
+    for(let e of kaava.elements.jasen) {
+        e.parentNode.childNodes[0].replaceWith(document.createTextNode("Jäsen "+jasennr++));
+    }
+
 }
 
 
@@ -681,7 +686,6 @@ function tallennaKaava(kaava) {
 }
 
 function lisaaJoukkue(kaava) {
-    console.log("Lisää joukkue");
     kaava = ("form" in kaava) ? kaava.form : kaava;
     if(! joukkueKaavanTarkistus(kaava)) return false;
 
@@ -763,7 +767,7 @@ function resetoiKaava(kaava) {
         for(let f of kaava.elements.jasen) {
             f.value = "";
         }
-    } catch(error) {};
+    } catch(error) {}
 
     joukkuJasenSyöttö(undefined, 2);
 
@@ -840,7 +844,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
     let joukkuekaava = H(document.forms[1]);
     joukkuekaava.append(joukkueKaava());
-    joukkuekaava.node.addEventListener("submit", (e) => { tallennaKaava(joukkuekaava.node); tulostaulu.reflowTaulu(data); e.preventDefault();});
+    joukkuekaava.node.addEventListener("submit", (e) => {
+        tallennaKaava(joukkuekaava.node);
+        tulostaulu.reflowTaulu(data);
+        e.preventDefault();
+    });
 
     resetoiKaava(joukkuekaava.node);
 });
