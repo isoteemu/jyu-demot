@@ -1,0 +1,13 @@
+Suoritetut tehtävät:
+    * Tehtävä 2.1 - Vilkuta lediä: 1p
+    * Tehtävä 2.2 - Lue painiketta ja PIR- sensoria: 2p
+    * Tehtävä 2.3 - Liikennevalot: 4p
+    * Tehtävä 2.4 - Signaalivalo jalankulkijoille: 2p
+    * Tehtävä 2.5 - Liiketunnistin mukaan liikennevaloihin: 1p
+    ====
+    10p
+
+Video: http://users.jyu.fi/~tearautt/tiea345/liikennevalo.mp4
+Kaavion kuva: http://users.jyu.fi/~tearautt/tiea345/liikennevalo.png - sama kuin repossa.
+
+Erona videoon vihreä ja punainen valo toimii yleisesti oikeaksi mielletyllä tavalla repossa olevalla koodilla.
