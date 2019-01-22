@@ -360,7 +360,7 @@ HQ.prototype = {
         if(typeof(key) == "string") {
             if(val == undefined) return this.node.getAttribute(key);
             else this.node.setAttribute(key,val);
-        } else if(typeof(key) == Array) {
+        } else if(key instanceof Array) {
             for(let e of key) {
                 this.attr(e);
             }
@@ -373,8 +373,19 @@ HQ.prototype = {
         return this;
     },
 
+    on: function(event, callback) {
+        if(event instanceof Array) {
+           for(let e in event) {
+               this.on("event", callback);
+           }
+        } else {
+            this.node.addEventListener(event, callback);
+        }
+        return this;
+    },
+
     click: function(callback) {
-        this.node.addEventListener("click", callback);
+        this.on("click", callback);
         return this;
     },
 
@@ -567,8 +578,8 @@ function joukkueKaava() {
         ),
     ]);
 
-    kaava.node.addEventListener("change", () => joukkueKaavanTarkistus(kaava.node));
-    kaava.node.addEventListener("keypress", () => joukkueKaavanTarkistus(kaava.node));
+    kaava.on("change", () => joukkueKaavanTarkistus(kaava.node));
+    kaava.on("keypress", () => joukkueKaavanTarkistus(kaava.node));
     return kaava;
 }
 
@@ -602,8 +613,7 @@ function joukkuJasenSyöttö(el=undefined, min=2) {
                     H("input").attr({
                         type:"text",
                         name:"jasen",
-                        oninput:"joukkuJasenSyöttö(this)"
-                    })
+                    }).on("input", (e) => joukkuJasenSyöttö(e.target))
                 )
             )
         );
@@ -840,17 +850,18 @@ document.addEventListener("DOMContentLoaded", function(event) {
     let rastikaava = H(document.forms[0]);
     rastikaava.append(RastiKaava());
     // Kaavan lähetys
-    rastikaava.attr("onsubmit", "return rastiKaavaSubmit(this);");
+    rastikaava.on("submit", (e) => {
+        e.preventDefault();
+        return rastiKaavaSubmit(e.target);
+    });
 
     let joukkuekaava = H(document.forms[1]);
     joukkuekaava.append(joukkueKaava());
     joukkuekaava.node.addEventListener("submit", (e) => {
-        tallennaKaava(joukkuekaava.node);
+        tallennaKaava(e.target);
         tulostaulu.reflowTaulu(data);
         e.preventDefault();
     });
 
     resetoiKaava(joukkuekaava.node);
 });
-
-/// TODO: Joukkueen lisäys, näkymän päivitys
