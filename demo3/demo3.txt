@@ -4,3 +4,27 @@ Tehtävä 3.1, sensorin peruskäyttö 2p:
   (^ Sensori käden vieressä)
 
 Tehtävä 3.2, Google Sheets 2p:
+ - Loin appenginen konsolissa uuden projektin:
+   - Otin käyttöön Drive-, ja Spreadsheet  -apin
+   - Loin service key credentiaalit owner -roolilla.
+   - Latasin jsonin demo3 kansioon, ja laiton se gittiin ignorettavaksi
+   - client_id: tiea345-demo3@tiea345-demo3-229423.iam.gserviceaccount.com
+   - Päivitin kasan python kirjastoja
+   - ``Demo2.excel()``
+
+Tehtävä 3.3, Raspin kameralla kuva ja videota 1p:
+ - Video: http://users.jyu.fi/~tearautt/tiea345/vid.mp4 (Pahoittelen ääniraidan uupumista)
+ - Kuva: http://users.jyu.fi/~tearautt/tiea345/kuva.jpg
+ - Koko pienennetty parametreissä:
+   # raspivid --width 640 --height 360 -fps 24 -t 0 -n -o vid.h264
+
+Tehtävä 3.4, liiketunnistin ja kamera 2p
+ - ``Demo3.cctv()``
+
+Tehtävä 3.5 2p:
+ - Lisätty tunnittain crontabiin:
+   # crontab -e
+0 * * * * raspistill -n -o "$HOME/Pictures/`date --iso-8601=minutes`.jpg" > /dev/null
+
+Tehtävä 3.6 1p:
+ - ``Demo3.http()`` luo SimpleHTTPServerin ``Demo2.CCTV_DIR`` (~/Pictures) kansiolle.
