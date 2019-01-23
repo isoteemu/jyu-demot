@@ -1,0 +1,6 @@
+Tehtävä 3.1, sensorin peruskäyttö 2p:
+> pi@hyivattu:~/projects/tiea345/demo3 $ python3 demo3.py lampotila
+> Lämpötila: 30 Kosteus: 24
+  (^ Sensori käden vieressä)
+
+Tehtävä 3.2, Google Sheets 2p:
