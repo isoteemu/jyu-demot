@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fi">
+    <head><!-- head-osan sisältöä ei saa muuttaa -->
+        <script src="http://appro.mit.jyu.fi/tiea2120/vt/vt1/2019/data.js"></script>
+        <script src="vt3.js"></script>
+        <link rel="StyleSheet" href="tyylit.css" type="text/css" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta charset="utf-8"/>
+        <title>Tulospalvelu</title>
+    </head>
+    <body><!-- Tämän tiedoston sisältöä saa muuttaa vapaasti tästä kommentista eteenpäin ! -->
+        <h1>Tulospalvelu</h1>
+        <div class="sivu">
+
+            <div id="joukkueet">
+                <!-- Tähän tulee joukkueet -->
+            </div>
+            <div class="kaavat">
+                <form id="joukkue-tiedot" name="joukkue">
+                    <h3>Lisää Joukkue</h3>
+                    <p id="viesti-joukkue">&nbsp;</p>
+                    <fieldset name="tiedot">
+                        <legend>Joukkuueen tiedot</legend>
+                        <dl>
+                            <dt><label for="tiedot-nimi">Nimi</label></dt>
+                            <dd><input type="text" name="nimi" required minlength="2" id="tiedot-nimi" /></dd>
+
+                            <dt><label>Leimaustapa</label></dt>
+                            <dd id="tiedot-leimaustapa"></dd>
+
+                            <dt><label>Sarja</label></dt>
+                            <dd id="tiedot-sarja"></dd>
+                        </dl>
+                    </fieldset>
+
+                    <fieldset name="jasenet">
+                        <legend>Jäsenet</legend>
+                        <!-- Magic -->
+                    </fieldset>
+
+                    <input type="hidden" name="id" value="" />
+                    <button>Tallenna</button>
+
+
+                </form>
+
+                <form id="lisää-sarja" name="sarja">
+                    <h3>Lisää Sarja</h3>
+                    <p id="viesti-sarja">&nbsp;</p>
+                    <fieldset>
+                        <legend>Sarjan tiedot</legend>
+                        <dl>
+                            <dt><label for="sarja-nimi">Nimi</label></dt>
+                            <dd><input type="text" name="nimi" required id="sarja-nimi" /></dd>
+
+                            <dt><label for="sarja-kesto">Kesto</label></dt>
+                            <dd><input type="number" min="1" value="1" name="kesto" required id="sarja-kesto" /></dd>
+
+                            <dt><label for="sarja-alkuaika">Alkuaika</label></dt>
+                            <dd><input type="datetime-local" name="alkuaika" id="sarja-alkuaika" /></dd>
+
+                            <dt><label for="sarja-loppuaika">Loppuaika</label></dt>
+                            <dd><input type="datetime-local" name="loppuaika" id="sarja-loppuaika" /></dd>
+
+                        </dl>
+                    </fieldset>
+                    <button>Tallenna</button>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>
