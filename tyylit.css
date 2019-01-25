@@ -1,0 +1,72 @@
+dt  {
+    float: left;
+    clear: left;
+}
+ 
+dd {
+    margin-left: auto;
+    clear: right;
+    white-space: nowrap;
+}
+
+dd input[type="text"] {
+    border: 1px solid #a9a9a9;
+}
+
+dd:after {
+    content: "";
+    display: block;
+    clear: both;
+    width: 100%;
+}
+
+/*
+form dl {
+    margin: 0px;
+    padding: 0px;
+    overflow: auto;
+}
+
+form dd {
+   width: 60%;
+   display: inline-block;
+   text-align: right;
+}
+
+form dd > * {
+    text-align: left;
+}
+*/
+
+@media (min-width: 599px) {
+    dd:first-of-type {
+        margin-bottom: 2em;
+    }
+
+    dt + dd {
+        margin-bottom: 1em;
+    }
+
+    dt {
+        width: 33%;
+    }
+    
+    dd {
+        margin-left: auto;
+        width: 66%;
+    }
+    dd > * {
+        display: block;
+        width: 240px;
+    }
+
+    dd > * {
+        display: block;
+        width: 240px;
+    }
+    dd > label {
+        text-align: right;
+        display: block;
+    }
+
+}
