@@ -1,3 +1,14 @@
+Suoritetut tehtävät:
+    * Tehtävä 4.1 Motionin asennus 1p
+    * Tehtävä 4.2 kuvia ennen liikettä 1p
+    * Tehtävä 4.3 10 sekunnin video 1p
+    * Tehtävä 4.4 Keskusta 2p
+    * Tehtävä 4.5 Asennus 1p
+    * Tehtävä 4.6 Vertailu 1p
+    * Tehtävä 4.8 Picameralla kasvot 1p
+    ====
+    8p
+
 Tehtävä 4.1 Motionin asennus 1p:
  - Asennettu motion, kopioitu motion.conf, ja vaihdettu:
     ``
@@ -7,15 +18,30 @@ Tehtävä 4.1 Motionin asennus 1p:
     ``
 
 Tehtävä 4.2 kuvia ennen liikettä 1p:
- - Näitä EI ole testattu
+ - Config -tiedoston muutokset
     ``
     # framerate 2
     pre_capture 4
     post_capture 10
     ``
 
+Tehtävä 4.3 10 sekunnin video 1p:
+ - Config -tiedoston muutokset
+    ``
+    ffmpeg_output_movies = on
+    framerate = 15
+    max_movie_time 10
+    post_capture = 150
+    ``
+
+Tehtävä 4.4 Keskusta 2p: 
+ - Tein täysin mustan kuvan vastaamaan motionin kameran resoluutiota, ja piirsin keskelle valkoisen ympyrän.
+   ``
+   mask_file /home/pi/projects/tiea345/demo4/motion/maski.pgm
+   ``
+
 Tehtävä 4.5 Asennus 1p:
- - [OK], mutta käytin valmiita paketteja YKSI PISTE.
+ - [OK], kerneleitä käännelty riittävästi niin käytin valmiita paketteja - YKSI PISTE.
 
 Tehtävä 4.6 Vertailu 1p: 
  - ``t6.py`` vertailee kahta Hoganin kuvaa - huonosti.
@@ -25,3 +51,4 @@ Tehtävä 4.7 Tunnista kasvot 1p:
 
 Tehtävä 4.8 Picameralla kasvot 1p: 
  - ``t8.py`` kopioi picameran kuvan, ja merkkaa siihen kasvot. Ei ole testattu, mutta pitäisi toimia, käyttää edellisen tehtävän koodia.
+ 
