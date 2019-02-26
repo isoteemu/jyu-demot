@@ -1,0 +1,27 @@
+Tehtävä 4.1 Motionin asennus 1p:
+ - Asennettu motion, kopioitu motion.conf, ja vaihdettu:
+    ``
+    process_id_file /home/pi/projects/tiea345/demo4/motion/motion.pid
+    logfile /home/pi/projects/tiea345/demo4/motion/motion.log
+    target_dir  /home/pi/projects/tiea345/demo4/motion/
+    ``
+
+Tehtävä 4.2 kuvia ennen liikettä 1p:
+ - Näitä EI ole testattu
+    ``
+    # framerate 2
+    pre_capture 4
+    post_capture 10
+    ``
+
+Tehtävä 4.5 Asennus 1p:
+ - [OK], mutta käytin valmiita paketteja YKSI PISTE.
+
+Tehtävä 4.6 Vertailu 1p: 
+ - ``t6.py`` vertailee kahta Hoganin kuvaa - huonosti.
+
+Tehtävä 4.7 Tunnista kasvot 1p: 
+ - ``t7.py`` Tunnistaa Hoganin kasvot ``4-6_wwf.jpg`` kuvasta ja merkkaa ne ``4_7_kasvot.jpg``
+
+Tehtävä 4.8 Picameralla kasvot 1p: 
+ - ``t8.py`` kopioi picameran kuvan, ja merkkaa siihen kasvot. Ei ole testattu, mutta pitäisi toimia, käyttää edellisen tehtävän koodia.
