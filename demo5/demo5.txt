@@ -1,3 +1,21 @@
 Suoritetut tehtävät:
-    Tehtävä 5.1: signaalien luku ja kirjoitus 2p
-    
+    * Tehtävä 5.1: signaalien luku ja kirjoitus 2p
+    * Tehtävä 5.2: liikennevalot 4p
+    * Tehtävä 5.3: Viestinvälitys Redisin kautta 2p
+    * Tehtävä 5.4: MQTT asiakas 0p
+    ====
+    8p
+
+
+Tehtävä 5.1: signaalien luku ja kirjoitus 2p:
+ - ``$ gcc t1.c -lwiringPi -ot1 && ./t1``
+
+
+Tehtävä 5.2: Toimivat liikennevalot C:llä, 4 p:
+ - Lähes identtinen toteutus Demo 2:sen suhteen. Erona lisätty signaalivalo, jonka uupumisesta Demo2:sessa tuli satikutia. Nappula, sekä liikkeentunnistin on.
+ - ``$ gcc t2.c -lwiringPi -ot2 && ./t2``
+
+
+Tehtävä 5.3: Viestinvälitys Redisin kautta 2p
+ - Asennettu redis ja tarpeellinen python kirjasto.
+ - ``$ python t3.py pub`` lähettää satunnaisia sanoja sanakirjast, ja ``$ python t3.py sub`` vastaannottaa niitä.
