@@ -1,0 +1,3 @@
+Suoritetut tehtävät:
+    Tehtävä 5.1: signaalien luku ja kirjoitus 2p
+    
