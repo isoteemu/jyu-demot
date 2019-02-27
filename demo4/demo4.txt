@@ -5,9 +5,10 @@ Suoritetut tehtävät:
     * Tehtävä 4.4 Keskusta 2p
     * Tehtävä 4.5 Asennus 1p
     * Tehtävä 4.6 Vertailu 1p
+    * Tehtävä 4.7 Tunnista kasvot 1p
     * Tehtävä 4.8 Picameralla kasvot 1p
     ====
-    8p
+    9p
 
 Tehtävä 4.1 Motionin asennus 1p:
  - Asennettu motion, kopioitu motion.conf, ja vaihdettu:
@@ -51,4 +52,3 @@ Tehtävä 4.7 Tunnista kasvot 1p:
 
 Tehtävä 4.8 Picameralla kasvot 1p: 
  - ``t8.py`` kopioi picameran kuvan, ja merkkaa siihen kasvot. Ei ole testattu, mutta pitäisi toimia, käyttää edellisen tehtävän koodia.
- 
