@@ -45,7 +45,7 @@ Tehtävä 4.5 Asennus 1p:
  - [OK], kerneleitä käännelty riittävästi niin käytin valmiita paketteja - YKSI PISTE.
 
 Tehtävä 4.6 Vertailu 1p: 
- - ``t6.py`` vertailee kahta Hoganin kuvaa - huonosti.
+ - ``t6.py`` vertailee kahta Hoganin kuvaa - huonosti -> ``4-6_orb.jpg``
 
 Tehtävä 4.7 Tunnista kasvot 1p: 
  - ``t7.py`` Tunnistaa Hoganin kasvot ``4-6_wwf.jpg`` kuvasta ja merkkaa ne ``4_7_kasvot.jpg``

@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-""" Demo 4 Tehtävä 8 
+""" Demo 4 Tehtävä 8 """
 
-OBS: Tätä ei ole testattu. Mutta pylint ei anna virheitä, ja on
-kopioita aika suoraan ohjeista.
-
-"""
-
-#from picamera.array import PiRGBArray
-#from picamera import PiCamera
+from picamera.array import PiRGBArray
+from picamera import PiCamera
+import cv2
 import time
 
 from t7 import etsi_ja_piirra
