@@ -1,0 +1,101 @@
+.sivu {
+    display: flex;
+    flex-flow: row wrap;
+}
+
+.sivu > * {
+    flex: 1 100%;
+}
+
+#joukkueet {
+    order: 1;
+    width: 100%;
+}
+
+dl * {
+    vertical-align: middle;
+}
+dt  {
+    float: left;
+    clear: left;
+    margin-right: 0.5em;
+}
+ 
+dd {
+    margin-left: auto;
+    clear: right;
+}
+
+dd input[type="text"] {
+    border: 1px solid #a9a9a9;
+}
+dd label {
+    white-space: nowrap;
+}
+
+fieldset[name="tiedot"] dd:first-of-type {
+    margin-bottom: 2em;
+}
+
+dt + dd {
+    margin-bottom: 1em;
+}
+
+fieldset[name="jasenet"] {
+    counter-reset: jäsenet;  
+}
+
+fieldset[name="jasenet"] label:after {
+    margin-left: 0.3em;
+    counter-increment: jäsenet;
+    content: counter(jäsenet);
+}
+
+/*
+form dl {
+    margin: 0px;
+    padding: 0px;
+    overflow: auto;
+}
+
+form dd {
+   width: 60%;
+   display: inline-block;
+   text-align: right;
+}
+
+form dd > * {
+    text-align: left;
+}
+*/
+
+@media (min-width: 599px) {
+
+    #joukkueet {
+        order: 2;
+        flex: 1 50%;
+    }
+    .sivu .kaavat {
+        order: 1;
+        flex: 1 50%;
+    }
+
+    dt {
+        width: 29%;
+    }
+    dd {
+        margin-left: auto;
+        width: 70%;
+    }
+    dd > * {
+        display: block;
+        width: 240px;
+        max-width: 100%;
+    }
+
+    dd > label {
+        text-align: right;
+        display: block;
+    }
+
+}
