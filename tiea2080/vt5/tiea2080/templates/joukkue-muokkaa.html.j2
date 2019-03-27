@@ -1,0 +1,12 @@
+{% extends 'wtforms.html.j2' %}
+
+{% block title %} {{ gettext("Joukkueen muokkaus") }} {% endblock %}
+
+{% block content %}
+<fieldset>
+    <h3>{{ self.title() }}</h3>
+    <form method="post" action="{{ request.base_url }}/joukkue" class="wtform">
+    {{ super() }}
+    </form>
+</fieldset>
+{% endblock %}

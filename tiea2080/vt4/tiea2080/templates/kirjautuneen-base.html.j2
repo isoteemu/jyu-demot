@@ -1,0 +1,12 @@
+{% extends 'base.html.j2' %}
+
+{% block nav %}
+<nav>
+    <ul>
+        <li>{{current_user.kilpailun_nimi|e}}</li>
+        <li><a href="{{ url_for('joukkueet.muokkaa', joukkue_id=current_user.id) }}">{{current_user.nimi|e}}</a></li>
+        <li><a href="{{ url_for('joukkueet.index') }}">Joukkueet</a></li>
+        <li><a href="{{ url_for('kirjautuminen.uloskirjautumissivu') }}">Kirjaudu ulos</a></li>
+    </ul>
+</nav>
+{% endblock %}

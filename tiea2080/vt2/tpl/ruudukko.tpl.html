@@ -1,0 +1,13 @@
+{% macro linkki(rivi="", sarake="", nappula="", text="") -%}
+<a href="?rivi={{rivi|e}}&sarake={{sarake|e}}&toiminto={{toimintotila|e}}&x={{koko}}&teksti={{teksti|urlencode}}&ruudukko={{ruudukko|tojson|urlencode}}" class="nappula-{{nappula}}">{{text}}</a>
+{%- endmacro %}
+<table id="ruudukko">
+    {% for rivi in ruudukko %}
+        {% set r = loop.index0 %}
+        <tr>
+            {% for ruutu in rivi %}
+            <td>{{ linkki(r, loop.index0, nappula=ruutu) }}</td>    
+            {% endfor %}
+        </tr>
+    {% endfor %}
+</table>

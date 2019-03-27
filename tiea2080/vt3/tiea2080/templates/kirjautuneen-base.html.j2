@@ -1,0 +1,11 @@
+{% extends 'base.html.j2' %}
+
+{% block nav %}
+<nav>
+    <ul>
+        <li>{{g.laji|e}}</li>
+        <li><a href="{{ url_for('joukkueet.muokkaa', joukkue=g['joukkue']) }}">{{g.joukkue|e}}</a></li>
+        <li><a href="{{ url_for('joukkueet.index') }}">Joukkueet</a></li>
+    </ul>
+</nav>
+{% endblock %}

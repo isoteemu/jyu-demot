@@ -1,0 +1,12 @@
+{% extends 'wtforms.html.j2' %}
+
+{% block title %} {{ gettext("Kirjaudu sisään") }} {% endblock %}
+
+{% block content %}
+<h3>{{ self.title() }}</h3>
+<fieldset>
+    <form method="post" action="{{ url_for('kirjautuminen.kirjautumissivu') }}" class="wtform">
+    {{ super() }}
+    </form>
+</fieldset>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends 'kirjautuneen-base.html.j2' %}
+
+{% block content %}
+<ul class="kisat">
+{% for sarja, joukkueet in joukkueet|sort(attribute='sarjan_nimi')|groupby("sarjan_nimi") %}
+    <li>{{sarja|e}}
+    <ul class="sarjat">
+        {% for joukkue in joukkueet|sort(attribute='nimi') %}
+            <li>{{joukkue['nimi']|e}}
+                <ul class="jasenet">
+                {% for jasen in joukkue['jasenet_lista']|sort() %}
+                    <li>{{jasen|e}}</li>
+                {% endfor %}
+                </ul>
+            </li>
+        {% endfor %}
+    </ul>
+
+    </li>
+{% endfor %}
+</ul>
+{% endblock %}

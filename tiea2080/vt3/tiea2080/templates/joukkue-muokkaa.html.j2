@@ -1,0 +1,17 @@
+{% extends 'kirjautuneen-base.html.j2' %}
+
+{% block content %}
+<form method="post" action="{{request.base_url}}">
+    {% for field in form %}
+        {% if field.type in ["HiddenField", "CSRFTokenField", "SubmitField"] %}
+            {{field}}
+        {% else %}
+            <label for="{{field.id}}">{{field.label}}</label>
+            <div>{{field}} {% for error in field.errors %} <span class="error">{{ error|e }}</span> {% endfor %}</div>
+        {% endif %}
+    {% endfor %}
+    <div>
+        <input type="submit" name="tallenna" value="Tallenna" />
+    </div>
+</form>
+{% endblock %}

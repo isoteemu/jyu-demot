@@ -1,0 +1,21 @@
+<div class="koko">
+<p>Kerro luotavan pelialueen koko. Ruudukko on yhtä monta ruutua
+leveä kuin korkea. </p>
+
+<form action="index.cgi" method="get">
+<fieldset>
+    <p>
+        <label for="x">Koko</label>
+        <input type="number" id="x" name="x" min="{{ koko_min }}" max="{{ koko_max }}" value="{{ koko|e }}" />
+        {% if koko_virhe %}
+            <span class="virhe-viesti" title="{{ koko_virhe|e }}">Syöttämäsi arvo ei kelpaa</span>
+        {% endif %}
+    </p><p>
+        <label for="teksti">Teksti</label>
+        <input type="text" id="teksti" name="teksti" value="{{ teksti|e }}" />
+    </p><p>
+        <input type="submit" value="Luo" />
+    </p>
+</fieldset>
+</form>
+</div>

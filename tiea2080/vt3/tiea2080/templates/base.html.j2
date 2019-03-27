@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <link rel="stylesheet" href="tyyli.css" />
+    <title>TIEA2080 - {% block title %}{% endblock title %}</title>
+</head>
+<body>
+    <header>
+        {% block nav %}{% endblock nav%}
+    </header>
+    <section class="content">
+    {% for message in get_flashed_messages() %}
+        <div class="flash">{{ message|e }}</div>
+    {% endfor %}
+
+    {% block content %}
+    {% endblock content%}
+    </section>
+
+    <footer>
+    </footer>
+</body>
+</html>

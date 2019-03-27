@@ -1,0 +1,23 @@
+{% if not standalone %}{% extends 'kirjautuneen-base.html.j2' %}{% endif %}
+
+{% block content %}
+{% for field in form %}
+    {% if field.type == "CSRFTokenField" %}
+        {# Vältetään kaksois id:t #}
+        <input type="hidden" name="{{field.name}}" value="{{ csrf_token() }}"/>
+    {% elif field.type in ["HiddenField", "SubmitField"] %}
+        <div>{{field}}</div>
+    {% elif field.type in ["RadioField"] %}
+        {# Radiofieldin <label> on väärin. jätetään poikkeen. #}
+        <div>
+        {{field.label.text|e}}
+        {{field}} {% for error in field.errors %} <span class="error">{{ error|e }}</span> {% endfor %}
+        </div>
+    {% else %}
+        <div>
+        {{field.label}}
+        {{field}} {% for error in field.errors %} <span class="error">{{ error|e }}</span> {% endfor %}
+        </div>
+    {% endif %}
+{% endfor %}
+{% endblock %}

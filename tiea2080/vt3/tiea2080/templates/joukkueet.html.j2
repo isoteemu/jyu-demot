@@ -1,0 +1,18 @@
+{% extends 'kirjautuneen-base.html.j2' %}
+
+{% block content %}
+<ul>
+{% for e in joukkueet %}
+    {% if loop.changed(e[1].nimi) %}{% if not loop.first %}</ul></li>{%endif%}<li>{{ e[1].nimi|e }}<ul>{% endif %}
+    <li>{{e[0].nimi|e}}
+    <ul>
+        {% for j in e[0].jasenet|sort %}
+            <li>{{j|e}}</li>
+        {% endfor %}
+    </ul>
+
+    </li>
+    {% if loop.last %}</ul></li>{% endif %}
+{% endfor %}
+</ul>
+{% endblock %}

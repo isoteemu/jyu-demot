@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <title>TIEA2080 - {% block title %} VT 5 {% endblock title %}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='tyyli.css') }}" />
+    <script type="text/javascript">
+        $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+    </script>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="{{ url_for('static', filename='jquery-3.3.1.js') }}">\x3C/script>')</script>
+
+    {# Oma javascript on sivun lopussa. Sivu halutaan ulos mahdollisimman nopeasti,
+    ja headissa olevien lataus blokkaa sivun latauksen. #}
+</head>
+<body>
+    <header>
+        {% block nav %}
+        <nav><ul>
+            <li><a id="navi-kilpailu" href="{{ url_for('joukkueet.index') }}"><!-- Kilpailun nimi tulee tähän --></a></li>
+            <li id="navi-joukkue"><!-- Joukkueen nimi tulee tähän --></li>
+            <li id="navi-spacer">&nbsp;</li>
+            <li id="navi-logout">
+                <form action="{{ url_for('kirjautuminen.uloskirjautumissivu') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="submit" value="{{ _("Kirjaudu ulos")|e }}" />
+                </form>
+            </li>
+            {#
+            <li id="navi-kilpailu">{% if current_user is defined %}{{current_user.kilpailun_nimi|e}}{% endif %}</li>
+            <li id="navi-joukkue">{% if current_user is defined %}<a href="{{ url_for('joukkueet.muokkaa', joukkue_id=current_user.id) }}">
+                {{current_user.nimi|e}}</a>{% endif %}
+            </li>
+            <li><a href="{{ url_for('joukkueet.muokkaa', joukkue_id=current_user.id) }}">{{current_user.nimi|e}}</a></li>
+            <li><a href="{{ url_for('joukkueet.index') }}">Joukkueet</a></li>
+            
+            #}
+        </ul></nav>
+        {% endblock nav%}
+    </header>
+    <div id="osiot">
+    {% for osio in osiot %}
+        <section class="content" id="{{ "osio-" ~ osio|safe }}">
+            {{osiot[osio]}}
+        </section>
+    {% endfor %}
+    </div>
+
+    <div id="overlay">
+        <!-- Latausindikaattori. Alustetaan tässä, jotta saadaan sivu nopeasti liikkeelle. -->
+        <div id="throbberi">
+            🕐
+        </div>
+        <script type="text/javascript">
+        var kyselyitä_odottamassa = 1;
+        function odota_kyselyä() {
+            var f = ['🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚','🕛'];
+
+            function loop() {
+                if(kyselyitä_odottamassa > 0) {
+                    $("#overlay").show();
+                    $("#throbberi").text(f[Math.floor((Date.now()/100)%f.length)]);
+                    setTimeout(loop, 100);
+                } else {
+                    $("#overlay").hide();
+                }
+            }
+
+            loop();
+        }
+        $(document).ready(function() {kyselyitä_odottamassa -= 1;});
+        odota_kyselyä();
+        </script>
+    </div>
+
+    {# Sammy on jqueryn plugin, joka hoitaa javascriptinssä urlien routtauksen. #}
+    <script src="{{ url_for('static', filename='sammy.js') }}"></script>
+    {# Noudetaan viimeisenä oma tunkki, että käyttäjälle on nopeasti saatu vastattua #}
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

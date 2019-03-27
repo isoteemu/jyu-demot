@@ -1,0 +1,18 @@
+{% extends 'base.html.j2' %}
+
+{% block title %} Kirjaudu {% endblock %}
+
+{% block content %}
+<form method="post" action="{{request.base_url}}">
+    {{ form.csrf_token }}
+
+    {% for field in form %}
+        {% if field.type in ["HiddenField", "CSRFTokenField", "SubmitField"] %}
+            {{field}}
+        {% else %}
+            {{field.label}}
+            <div>{{field}} {% for error in field.errors %} <span class="error">{{ error|e }}</span> {% endfor %}</div>
+        {% endif %}
+    {% endfor %}
+</form>
+{% endblock %}

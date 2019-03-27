@@ -1,0 +1,10 @@
+{% extends 'base.html.j2' %}
+
+{% block content %}
+
+<form method="post" action="{{request.base_url}}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h4>Haluatko varmasti kirjautua ulos?</h4>
+    <input type="submit" name="logout" value="Kirjaudu ulos">
+</form>
+{% endblock %}

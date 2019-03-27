@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <title>Peli</title>
+    <link rel="stylesheet" href="tyyli.css" />
+</head>
+<body class="toimintotila-{{toimintotila}}">
+
+<h1>Peli</h1>
+{% block koko %}{% include 'koko.tpl.html' %}{% endblock %}
+
+{% block ruudukko %}
+
+    {% if ruudukko %}{% include 'ruudukko.tpl.html' %}{% endif %}
+{% endblock %}
+
+<div>
+    {{ teksti|e }}
+</div>
+
+</body>
+</html>
