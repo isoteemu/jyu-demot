@@ -1,0 +1,14 @@
+ - Käynnistetty rasperry näytöllä ja monitorilla
+ - Vaihdettu salasana ja locale
+ - Käynnistetty SSH palvelin
+ - Irroitettu turhat oheislaitteet
+ - Laite käynnistetty uudelleen
+ - Työpöytäkoneesta otettu SSH yhteys. Käytetty verkkokaapelia.
+ - Päivitetty:
+ # sudo apt-get update && sudo apt-get upgrade
+ - Vaihdettu asetuksia raspi-configin kautta:
+   - hostname: hyivattu
+   - Ajettu expand storage
+
+ - Kopioitu ssh avain:
+# ssh-copy-id pi@192.168.0.5

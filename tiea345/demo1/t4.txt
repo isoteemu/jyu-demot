@@ -1,0 +1,3 @@
+  - Ladattu Rasperryn viimeisin: https://downloads.raspberrypi.org/raspbian_latest
+  - Kirjoitettu Etcherillä levykuva /dev/mmcblk0
+  - Testattu toimivaksi.

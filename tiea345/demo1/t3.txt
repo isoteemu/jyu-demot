@@ -1,0 +1,21 @@
+ - Asettettu SSH käynnistymään käynnistyksessä
+ - Käynnistetty laite uudelleen
+ - Routerista tarkistettu asetettu IP: 192.168.0.5
+ - Otettu ssh yhteys:
+ # ssh 192.168.0.5 -lpi
+
+ - Skannattu verkko wlan tukiasemista:
+ # sudo iwlist scan
+
+ Asetettu network /etc/wpa_supplicant/wpa_supplicant.conf -tiedostoon:
+ network={
+    ssid="🌈🦄"
+    psk=[--]
+    id_str="koti"
+}
+
+# sudo wpa_cli -i wlan0 reconfigure
+
+ - Testattu wlan ja ssh toimivaksi.
+ 
+ # ssh 192.168.0.6 -lpi
