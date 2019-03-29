@@ -1,0 +1,4 @@
+Toimii vain posix ympäristöissä - katso vastaukset.txt.
+
+Käyttö:
+$ python3 t5.py <polku>

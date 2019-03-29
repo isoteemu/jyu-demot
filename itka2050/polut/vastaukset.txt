@@ -1,0 +1,33 @@
+
+ITKA2050 Tehtävä: Polkujen käsittely
+
+1: > Voiko merkkijonon operaatioita soveltaa tiedostopolkuihin?
+   > Luodaanko polut yleensä yhdistelemällä merkkijonoja vai suositellaanko jotain toista tapaa?
+
+Pythonissa polut luodaan merkkijono-operaatioilla, ja kieli itsessään muttaa :module:`os.path` moduulissa polut
+alustaan sopivaksi.
+
+
+2: > Miten polku normalisoidaan (esim. foo/bar/../baz → foo/baz)? 
+
+Käyttämällä :func:`os.path.normpath()` -functiota:
+    import normpath from os.path
+    polku = normpath("spam/ham/../baz")
+
+
+3: > Miten selvitetään onko tiedostopolku suhteellinen vai absoluuttinen?
+
+:func:`os.path.isabs()` -functiolla.
+
+
+4: > Miten selvitetään mihin tiedostoon polku johtaa? (Muista symboliset linkit!)
+
+:func:`os.path.realpath()`, joka normalisoi polun ja palauttaa kanoonisen polun.
+
+
+5: > Millä keinoin voisit tehdä aliohjelman, jota voi kutsua vain absoluuttisilla poluilla eikä suhteellisilla ollenkaan? Pystytkö tekemään käännösaikaisen eston? 
+
+Unixilla vertailisin ensimmäistä kirjainta: :file:`t5.py`
+
+...Tai käyttämällä :func:`os.path.isabs()` jos haluaa tukea muitakin alustoja.
+
