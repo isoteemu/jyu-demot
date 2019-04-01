@@ -1,0 +1,28 @@
+{% extends 'base.html.j2' %}
+
+{% block title %}{{ _("Kilpailut") }}{% endblock %}
+
+{% block content %}
+<div>
+<h3>{{ self.title() }}</h3>
+<ul class="kilpailut">
+{% for kilpailu in kilpailut|sort(attribute='nimi') %}
+    <li><a class="Kilpailu" href="{{ url_for('sivu_muokkaa', avain=kilpailu.key.urlsafe()|e) }}">{{kilpailu['nimi']|e}}</a><br /> {{_("Sarjat:")|e }}
+        <ul>
+        {% for sarja in kilpailu.sarjat|sort(attribute='nimi') %}
+            <li><a href="{{ url_for('sivu_muokkaa', avain=sarja.key.urlsafe()|e) }}">{{ sarja['nimi']|e }}</a>
+            (<time datetime="{{'PT' ~ sarja['kesto']~'H'|e}}"">{{ _("Kesto: %(kesto)sh", kesto=sarja['kesto'])|e }}</time>)</li>
+        {% endfor %}
+        <li><form action="{{ url_for('sivu_luo', tyyppi='Sarja') }}" method="get">
+            <input type="submit" value="{{ '🏋️‍ ' ~ _('Uusi sarja') }}" />
+            <input type="hidden" name="kilpailu" value="{{ kilpailu.key.urlsafe() }}" />
+        </form></li>
+    </ul></li>
+{% endfor %}
+    <li><form action="{{ url_for('sivu_luo', tyyppi='Kilpailu') }}" method="get">
+        <input type="submit" value="{{ '⚽️ ' ~ _('Uusi kilpailu') }}" />
+        </form></li>
+</ul>
+
+</div>
+{% endblock %}

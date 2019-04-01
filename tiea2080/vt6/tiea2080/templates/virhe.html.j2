@@ -1,0 +1,105 @@
+{% extends 'base.html.j2' %}
+
+{% block title %}SECRET LEVEL SELECT{% endblock %}
+
+{% block content %}
+<div class="error">
+    <h3 id="level-select">{{ self.title() }}</h3>
+    <!-- Jos mietit mitä tämä tekee, RTFS -->
+    {#     Joudut lukemaan __init__.py     #}
+    <p>{{ _("You have found the secret level select screen") }}</p>
+    {% if config['DEBUG'] %}
+    <p>{{ virhe|e }}</p>
+    <p>
+        <a href="{{ request.base_url }}">Lataa kenttä uudelleen</a>
+        {% for polku in routet %}
+            <a href="{{ polku }}">{{polku|e}}</a>
+        {% endfor %}
+        </p>
+    {% endif %}
+</div>
+
+<!-- pomppuefecti on sovellettu https://codepen.io/SteveJRobertson/pen/xwxeGO -->
+<style>
+body {
+    background: #1b1475 !important;
+    color: #a8bdff;
+    text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.3);
+}
+a {
+    color:  #a8bdff;
+    text-decoration:none;
+}
+
+a:hover,
+a:focus {
+    animation: vilku 0.8s infinite;  
+    color: #c7d7a8;
+}
+
+.error p a {
+    display: block;
+}
+
+{% set korkeus = "2.0em" %}
+#level-select {
+    margin-top: {{korkeus}};
+    color: #fff;
+    font-size: {{korkeus}};
+    font-weight: 400;
+    text-align: center;
+    text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.3);
+}
+#level-select span {
+    font-style: normal;
+    display: inline-block;
+    white-space:pre;
+}
+
+#level-select span.bounce-me {
+    animation: bounce 2.4s infinite ease-in-out;  
+}
+
+@keyframes vilku {
+    50% {
+        color: inherit;
+    }
+
+}
+
+@keyframes bounce {
+  60% {
+    -webkit-transform: translate(0px, -{{korkeus}}) scale(1.1);
+    opacity: 0.8;
+    text-shadow: 0px {{korkeus}} 15px rgba(0, 0, 0, 0.4);
+  }
+}
+
+
+</style>
+<script type="text/javascript">
+(function() {
+    $p = $("#level-select");
+    // Kääritään kaikki merkit tagin ympärille.
+    $p.html($p.text().split("").map(x => "<span>"+x+"</span>").join(""));
+
+    i = 0;
+    $p.children().each(function(e) {
+        var kirjain = this;
+        // Laitetaan luokka jokaiselle hieman myöhemmin.
+        setTimeout(function() {
+            $(kirjain).addClass("bounce-me");
+        }, 150*i++);
+    });
+})();
+
+{% if not config['DEBUG'] %}
+    {# Ohjataan takaisin #}
+    window.history.back();
+{% endif %}
+</script>
+
+{% endblock content %}
+
+{% block viesti %}
+{% endblock viesti %}

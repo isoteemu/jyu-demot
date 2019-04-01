@@ -1,0 +1,235 @@
+*, *:before, *:after {
+    box-sizing: inherit;
+}
+html {
+    box-sizing: border-box;
+    font-family: "Roboto Slab";
+}
+
+body {
+    margin: 0; padding:0;
+    background: #bddeff;
+}
+
+div.flash {
+    text-align: center;
+    clear: both;
+    margin: 0.8em;
+}
+
+div.flash .glyph {
+    font-size: 150%;
+}
+
+a.Kilpailu {
+    font-weight: bold;
+}
+
+ul.kilpailut > li {
+    margin-top:0.3em;
+    margin-bottom:0.3em;
+}
+
+li form[action="/luo/Kilpailu"] {
+    margin-top:1em;
+}
+
+input[type=submit] {
+    cursor: pointer;
+}
+
+form.wtform {
+    position: relative;
+}
+
+.wtform div {
+    margin-top:0.2em;
+    line-height: 2em;
+}
+.wtform div > label {
+    display:block;
+}
+
+.wtform ul {
+    list-style: none;
+}
+
+.wtform input[type="submit"] {
+    margin: 1em;
+}
+
+#osio-kirjautumiskaava_nakyma fieldset {
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.3);
+}
+#osio-kirjautumiskaava_nakyma label {
+    font-weight: bold;
+}
+
+#osio-kirjautumiskaava_nakyma .wtform div ~ div {
+    margin-top: 1em;
+}
+
+.wtform > div {
+    display: flex;
+    justify-content: space-between;
+    
+}
+
+#osio-muokkaa_joukkuetta .wtform > div:nth-child(3):before{
+    display: inline-block;
+    content: "Jäsenet";
+    clear:both;
+    left:0;
+    position: absolute;
+
+}
+#osio-muokkaa_joukkuetta .wtform > div:nth-child(3), 
+#osio-muokkaa_joukkuetta .wtform > div:nth-child(4), 
+#osio-muokkaa_joukkuetta .wtform > div:nth-child(5), 
+#osio-muokkaa_joukkuetta .wtform > div:nth-child(6), 
+#osio-muokkaa_joukkuetta .wtform > div:nth-child(7) {
+    justify-content: flex-end;
+}
+.wtform input[type=submit] {
+    border: 1px solid #207bbd;
+    color: #207bbd;
+    background: #fff;
+    padding-left: 1em;
+    padding-right: 1em;
+    padding-top: 0.4em;
+    padding-bottom: 0.4em;
+    font-weight: bold;
+    border-radius: 4px;
+}
+
+.wtform .toiminnot {
+    background: #efefef;
+    justify-content: flex-end;
+    border-top: 1px solid #cecece;
+}
+
+input ~ .error,
+select ~ .error {
+    position: absolute;
+    background: #fff;
+    border: 2px solid red;
+    padding:0.2em;
+    left: 100%;
+}
+
+#overlay {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top:0;
+    bottom:0;
+    left: 0;
+    right: 0;
+    background: rgba(223, 223, 223, 0.45);
+    align-items: center;
+    align-content: center;
+    display: flex;
+    z-index: 1000;
+}
+
+#overlay #throbberi {
+    font-size:250%;
+}
+
+#overlay > * {
+    margin: auto;
+}
+
+.content {
+    display: flex;
+}
+
+#osio-kirjautumiskaava_nakyma {
+    align-content: center;
+    align-items: center;
+}
+
+#osio-kirjautumiskaava_nakyma input[type="submit"] {
+    color: #fff;
+    background: #3194de;
+    font-size: 100%;
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+section fieldset {
+    min-width: 680px;
+}
+
+.content > * {
+    margin: auto;
+}
+
+#osiot .section {
+    display:none;
+}
+
+.content fieldset {
+    background: #fff;
+    border:0 none;
+}
+
+#navi-kilpailu {
+    font-weight: bold;
+}
+#navi-kilpailu:hover {
+    text-shadow: #333 0px 0px 1px;
+}
+
+#navi-kilpailu:before {
+    content:"<";
+    margin-right: 0.3em;
+}
+
+#navi-logout input {
+    background: transparent;
+    border: 0 none;
+    color: inherit;
+}
+
+nav {
+    background: #2076b5;
+    color: #dee6e6;
+    visibility: hidden;
+}
+
+.kirjautunut nav {
+    visibility: visible;
+}
+
+nav a {
+    color: inherit;
+    text-decoration: none;
+}
+
+nav a:hover,
+nav input:hover {
+    color:#fff;
+}
+
+nav ul {
+    margin: 0;
+    padding: 0.2em;
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+}
+
+nav li {
+    padding-left: 1em;
+
+    display:inline-block;
+    margin: auto;
+}
+
+#navi-spacer {
+    /* take up the rest of the remaining space */
+    flex: 1;
+}

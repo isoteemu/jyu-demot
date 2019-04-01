@@ -1,0 +1,42 @@
+{% if not standalone %}{% extends 'base.html.j2' %}{% endif %}
+
+{% block title %}{{ _("Muokkaa > %(tyyppi)s", tyyppi=tyyppi)|e }}{% endblock %}
+
+{% block content %}
+<fieldset>
+    <h3>{{ self.title() }}</h3>
+    <form method="post" action="{{ request.base_url }}" class="wtform">
+
+<!-- {{form}} -->
+{% for field in form %}
+    {% if field.type in ["KeyPropertyField"] %}
+        <!-- Skip: {{field.type}} -->
+        {{field}}
+    {% elif field.type == "CSRFTokenField" %}
+        {# Vältetään kaksois id:t #}
+        <input type="hidden" name="{{field.name}}" value="{{ csrf_token() }}"/>
+    {% elif field.type in ["HiddenField", "SubmitField"] %}
+        <div>{{field}}</div>
+    {% elif field.type in ["RadioField"] %}
+        {# Radiofieldin <label> on väärin. jätetään poikkeen. #}
+        <div>
+        {{field.label.text|e}}
+        {{field}} {% for error in field.errors %} <span class="error">{{ error|e }}</span> {% endfor %}
+        </div>
+    {% else %}
+        <div>
+        {{field.label}}
+        {{field}} {% for error in field.errors %} <span class="error">{{ error|e }}</span> {% endfor %}
+        </div>
+    {% endif %}
+{% endfor %}
+    <div class="toiminnot">
+        <input type="submit" name="tallenna" value="{{'💾 ' ~ _('Tallenna')}}">
+        {% if objekti.key %}
+        <input type="submit" name="poista" value="{{'❌ ' ~ _('Poista')}}">
+        {% endif %}
+    </div>
+
+    </form>
+</fieldset>
+{% endblock %}

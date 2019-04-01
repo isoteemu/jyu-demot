@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <title>TIEA2080 - VT6 - {% block title %}Google App Engine ja Datastore{% endblock title %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='tyyli.css') }}" />
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="{{ url_for('static', filename='jquery-3.3.1.js') }}">\x3C/script>')</script>
+</head>
+<body class="kirjautunut">
+    <header>
+        {% block nav %}
+        <nav><ul>
+            <li><a id="navi-kilpailu" href="{{ url_for('sivu_kilpailut') }}">{{ _("Kilpailut") }}</a></li>
+            <li id="navi-joukkue"><!-- Joukkueen nimi tulee tähän --></li>
+            <li id="navi-spacer">&nbsp;</li>
+            <li id="navi-logout">
+                <form action="{# url_for('kirjautuminen.uloskirjautumissivu') #}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="submit" value="{{ _("Kirjaudu ulos")|e }}" />
+                </form>
+            </li>
+            {#
+            <li id="navi-kilpailu">{% if current_user is defined %}{{current_user.kilpailun_nimi|e}}{% endif %}</li>
+            <li id="navi-joukkue">{% if current_user is defined %}<a href="{{ url_for('joukkueet.muokkaa', joukkue_id=current_user.id) }}">
+                {{current_user.nimi|e}}</a>{% endif %}
+            </li>
+            <li><a href="{{ url_for('joukkueet.muokkaa', joukkue_id=current_user.id) }}">{{current_user.nimi|e}}</a></li>
+            <li><a href="{{ url_for('joukkueet.index') }}">Joukkueet</a></li>
+            
+            #}
+        </ul></nav>
+        {% endblock nav%}
+    </header>
+    
+    {% block viesti %}
+    {% for message in get_flashed_messages() %}
+        <div class="flash">
+            <span class="glyph">❗️</span> {{ message|e }}
+        </div>
+    {% endfor %}
+    {% endblock viesti %}
+    <section class="content">
+
+    {% block content %}
+        pu-pu-puppidu.
+    {% endblock content%}
+    </section>
+
+    <footer>
+    </footer>
+    <script src="{{ url_for('static', filename='tiea2080-vt6.js') }}"></script>
+</body>
+</html>
