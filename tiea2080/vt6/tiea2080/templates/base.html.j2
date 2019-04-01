@@ -15,7 +15,7 @@
             <li id="navi-joukkue"><!-- Joukkueen nimi tulee tähän --></li>
             <li id="navi-spacer">&nbsp;</li>
             <li id="navi-logout">
-                <form action="{# url_for('kirjautuminen.uloskirjautumissivu') #}" method="POST">
+                <form action="{{ url_for('sivu_uloskirjaudu') }}" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="submit" value="{{ _("Kirjaudu ulos")|e }}" />
                 </form>

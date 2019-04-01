@@ -2,15 +2,17 @@
 # -*- coding: utf-8 -*-
 
 import os
-import natsort
-from flask import render_template, abort, flash, request, redirect, url_for
+
+from flask import render_template, flash, request, redirect, url_for
 from flask_wtf import CSRFProtect, FlaskForm
 from werkzeug.exceptions import InternalServerError
 from flask_babel import _
 
 from google.appengine.ext import ndb
+from google.appengine.api import users
+
 from tiea2080 import alusta, app_init_virhe as level_select, Virhe
-from tiea2080.models import Kilpailu, Sarja, Joukkue
+from tiea2080.models import Kilpailu, Sarja
 from tiea2080.kaava import KilpailuKaava, SarjaKaava
 
 app = alusta()
@@ -18,7 +20,7 @@ app = alusta()
 app.config['DEBUG'] = app.debug = not os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/')
 
 # Sanakirja joka määrittelee miten eri mallit linkittyvät eri ``WTForms`` luokkiin.
-# En käytä ``wtforms-appengine:ä``, se vaikutti liian hälläväliä toteutukselta.
+# En käytä ``wtforms-appengine:ä``.
 kaava_map = {
     "Kilpailu": KilpailuKaava,
     "Sarja": SarjaKaava,
@@ -29,7 +31,23 @@ with app.app_context():
     # Suojausta. Tehtävä ei vaadi, mutta eh.
     csrf = CSRFProtect(app)
 
-    app.jinja_env.filters['natsort'] = natsort
+
+def apu_setattr(objekti, nimi, data):
+    r"""
+    Aseta mallin arvot vastaamaan kaavan arvoja.
+    """
+
+    if not hasattr(objekti, nimi) or nimi[0] == "_":
+        return objekti
+    if issubclass(type(getattr(type(objekti), nimi)), ndb.KeyProperty):
+        # ^^ Vertaillaan onko mallin arvo avainarvo[n perillinen]
+        # Haetaan objektin luokka, ja luokasta property, ja propertyn edustama luokka.
+        setattr(objekti, nimi, ndb.Key(urlsafe=data))
+    else:
+        setattr(objekti, nimi, data)
+
+    return objekti
+
 
 ##
 ## ROUTET
@@ -37,18 +55,25 @@ with app.app_context():
 
 @app.route("/")
 def root():
-    return render_template("base.html.j2")
+    return redirect(url_for("sivu_kilpailut"))
 
 
 @app.route("/kilpailut")
 def sivu_kilpailut():
-    return render_template("kilpailut.html.j2", kilpailut=Kilpailu.query())
+    kilpailut = Kilpailu.query()
+    return render_template("kilpailut.html.j2", kilpailut=kilpailut)
 
 @app.route("/test/<test>")
 def sivu_testi(test, foo=None):
 
     flash(u"Tämä oli virhe", "error")
     raise Virhe("Testivirhe")
+
+
+@app.route("/lopeta", methods=['POST'])
+def sivu_uloskirjaudu():
+    r""" Ohjaa googlen uloskirjautumissivulle. """
+    return redirect(users.create_logout_url('/'))
 
 
 @app.route("/luo/<tyyppi>", methods=('GET', 'POST'))
@@ -137,6 +162,11 @@ def crud_magic_happens_here(objekti):
                 apu_setattr(objekti, f.name, f.data)
 
             objekti.put()
+
+            # Vesan ohjeiden mukaan pitäisi toimia, mutta ei toimi. Tosin se
+            # taitaa olla BASEn kanssa eläessä siedettävä.
+            objekti.key.get()
+
             flash(_(u"Muutokset tallennettu"))
             return redirect(url_for("sivu_kilpailut"))
         except Exception as e:
@@ -146,23 +176,6 @@ def crud_magic_happens_here(objekti):
     templatet = [u"wtforms-%s.html.j2" % objekti._get_kind(), "wtforms.html.j2"]
 
     return render_template(templatet, form=crud, tyyppi=tyyppi, objekti=objekti)
-
-
-def apu_setattr(objekti, nimi, data):
-    r"""
-    Aseta mallin arvot vastaamaan kaavan arvoja.
-    """
-
-    if not hasattr(objekti, nimi) or nimi[0] == "_":
-        return objekti
-    if issubclass(type(getattr(type(objekti), nimi)), ndb.KeyProperty):
-        # ^^ Vertaillaan onko mallin arvo avainarvo[n perillinen]
-        # Haetaan objektin luokka, ja luokasta property, ja propertyn edustama luokka.
-        setattr(objekti, nimi, ndb.Key(urlsafe=data))
-    else:
-        setattr(objekti, nimi, data)
-
-    return objekti
 
 
 @app.route('/populate')
