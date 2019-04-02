@@ -3,16 +3,33 @@
 from google.appengine.ext import ndb
 from datetime import datetime
 
+import string
+from transliterate import translit
+
 
 def nimistin(nimi):
-    r""" Muuttaa nimen yksinkertaiseen muotoon, jota vastaan
-    voidaan tehdä kyselyitä """
-    return u"%s" % nimi.strip().lower()
+    r"""
+    Muuttaa nimen yksinkertaiseen muotoon, jota vastaan voidaan tehdä kyselyitä.
+
+    Canonisoi nimen transliteroimalla ():class:`transliterate`), poistamalla
+    erikoismerkit (control-characters yms.) sekä tietysti pienentämällä merkistön.
+    """
+    if not isinstance(nimi, unicode):
+        nimi = nimi.decode("utf-8")
+
+    # Käyttää translittiä canonisoimiseen, ei olisi oikeasti hyvä.
+    nimi = translit(nimi, reversed=True)
+    nimi = u"".join([x for x in nimi if x in string.printable])
+    nimi = nimi.strip().lower()
+
+    return u"%s" % nimi
 
 
 class AikaProperty(ndb.DateTimeProperty):
     def _to_base_type(self, value):
-        """ Muunna merkkijono :class:`datetime` olioksi. """
+        """
+        Muunna merkkijono :class:`datetime` olioksi.
+        """
         if isinstance(value, (str, unicode)):
             r = None
             for f in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"]:
@@ -20,7 +37,9 @@ class AikaProperty(ndb.DateTimeProperty):
                     r = datetime.strptime(value, f)
                     break
                 except ValueError:
+                    # Jos ei pystytä muuttamaan, seuraava taso heittää sitten virheen.
                     pass
+
             return r
 
 
@@ -71,12 +90,17 @@ class Sarja(ndb.Model):
 class Joukkue(ndb.Model):
     def validate_jasenet(prop, value):
         jasenet = value
-        if not len(jasenet) > 1:
+        if not len(jasenet) >= 2:
             raise ValueError(u"Jäseniä on oltava vähintään kaksi : %s" % jasenet)
 
     nimi = ndb.StringProperty(required=True)
 
     # json-muotoon ja siitä purkaminen hoituu automaattisesti eli tähän kenttään voi suoraan tallentaa
     # melkein minkä tahansa pythonin listan, joka sisältää perustietotyyppejä
+    #
+    # HUOM: Tämä olisi parempi olla ``ndb.StringProperty(repeated=True)``, mutta
+    # tehtävä vaatii pitämään sen tällaisena.
     jasenet = ndb.JsonProperty(required=True, validator=validate_jasenet)
-    sarja = ndb.KeyProperty(required=True, kind=Sarja) #viittaus sarjaan
+    jasenet_lower = ndb.ComputedProperty(lambda self: map(nimistin, self.jasenet))
+
+    sarja = ndb.KeyProperty(required=True, kind=Sarja)
