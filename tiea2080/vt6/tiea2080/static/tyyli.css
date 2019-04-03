@@ -134,21 +134,6 @@ select ~ .error {
     display: flex;
 }
 
-#osio-kirjautumiskaava_nakyma {
-    align-content: center;
-    align-items: center;
-}
-
-#osio-kirjautumiskaava_nakyma input[type="submit"] {
-    color: #fff;
-    background: #3194de;
-    font-size: 100%;
-    padding-top: 0.2em;
-    padding-bottom: 0.2em;
-    padding-left: 1em;
-    padding-right: 1em;
-}
-
 section fieldset {
     min-width: 680px;
 }
@@ -224,9 +209,14 @@ nav li {
     flex: 1;
 }
 
+.ops {
+    float:right;
+    font-size: small;
+}
+
 /* Tyyli elementeille jotka ovat juuri muokattuja. */
 a[href].aktiivinen {
-    animation: välähdä 1.2s ease-out 1;
+    animation: välähdä 0.8s ease-out 1;
 }
 
 @keyframes välähdä {
@@ -242,8 +232,33 @@ a[href].aktiivinen {
 
 /* Joukkueen jäsenten "kuvat" */
 span.osallistuja {
-    margin-left: 1em;
+    padding-left: 1em;
 }
-span.osallistuja.naamake {
-    margin-left: 0em;
+span.osallistuja .naamake {
+    margin-left: -1em;
+    font-family: "Twemoji Mozilla", "Apple Color Emoji", "Noto Color Emoji";
+}
+
+.content fieldset h3 {
+    border-bottom: 1px solid #bddeff;
+    display: inline-block;
+    clear: both;
+    background: #f9fcff;
+    /* Jep, sen ylivuoto on haluttu */
+    margin-left: -1em;
+    padding-left: 1em;
+    margin-right: -1em;
+    padding-right: 1em;
+
+}
+.kilpailut h4, 
+.kilpailut h5 {
+    margin: 0;
+}
+
+.leimatut .removed {
+    color: red;
+}
+.leimatut .removed::before{
+    content:"❌ ";
 }

@@ -11,8 +11,14 @@
     <header>
         {% block nav %}
         <nav><ul>
-            <li><a id="navi-kilpailu" href="{{ url_for('sivu_kilpailut') }}">{{ _("Kilpailut") }}</a></li>
-            <li id="navi-joukkue"><!-- Joukkueen nimi tulee tähän --></li>
+            {% if kilpailu %}
+                <li><a id="navi-kilpailu" href="{{ url_for('sivu_kilpailut', avain=kilpailu.key.urlsafe()) }}">{{ kilpailu.nimi|e }}</a></li>
+            {% else %}
+                <li><a id="navi-kilpailu" href="{{ url_for('sivu_kilpailut') }}" data-puuttuu="true">{{ _("Kilpailut") }}</a></li>
+            {% endif %}
+            {% if joukkue %}
+                <li id="navi-joukkue"><a href="{{ url_for('sivu_muokkaa', avain=joukkue.key.urlsafe()) }}">{{ joukkue.nimi|e }}</a></li>
+            {% endif %}
             <li id="navi-spacer">&nbsp;</li>
             <li id="navi-logout">
                 <form action="{{ url_for('sivu_uloskirjaudu') }}" method="POST">
@@ -41,10 +47,9 @@
     {% endfor %}
     {% endblock viesti %}
     <section class="content">
-
-    {% block content %}
-        pu-pu-puppidu.
-    {% endblock content%}
+        {% block content %}
+            pu-pu-puppidu.
+        {% endblock content%}
     </section>
 
     <footer>

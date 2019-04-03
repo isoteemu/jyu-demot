@@ -12,11 +12,11 @@ def nimistin(nimi):
     r"""
     Muuttaa nimen yksinkertaiseen muotoon, jota vastaan voidaan tehdä kyselyitä.
 
-    Canonisoi nimen transliteroimalla ():class:`transliterate`), poistamalla
-    erikoismerkit (control-characters yms.) sekä tietysti pienentämällä merkistön.
+    Normalisoi nimen transliteroimalla (:class:`transliterate`), poistamalla
+    erikoismerkit (control-characters yms.) sekä tietysti pienentämällä koon.
     """
     if not isinstance(nimi, unicode):
-        nimi = nimi.decode("utf-8")
+        nimi = u"%s" % nimi.decode("utf-8")
 
     try:
         nimi = translit(nimi, reversed=True)
@@ -30,22 +30,26 @@ def nimistin(nimi):
     return u"%s" % nimi
 
 
+def pura_aika(value):
+    """
+    Muunna merkkijono :class:`datetime` olioksi.
+    """
+    if isinstance(value, (str, unicode)):
+        r = None
+        for f in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"]:
+            try:
+                r = datetime.strptime(value, f)
+                break
+            except ValueError:
+                # Jos ei pystytä muuttamaan, seuraava taso heittää sitten virheen.
+                pass
+
+        return r
+
+
 class AikaProperty(ndb.DateTimeProperty):
     def _to_base_type(self, value):
-        """
-        Muunna merkkijono :class:`datetime` olioksi.
-        """
-        if isinstance(value, (str, unicode)):
-            r = None
-            for f in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"]:
-                try:
-                    r = datetime.strptime(value, f)
-                    break
-                except ValueError:
-                    # Jos ei pystytä muuttamaan, seuraava taso heittää sitten virheen.
-                    pass
-
-            return r
+        return pura_aika(value)
 
 
 class Kilpailu(ndb.Model):
@@ -69,7 +73,11 @@ class Kilpailu(ndb.Model):
 
     @property
     def sarjat(self):
-        return Sarja.query(Sarja.kilpailu == self.key)
+        return list(Sarja.query(Sarja.kilpailu == self.key))
+
+    @property
+    def rastit(self):
+        return list(Rasti.query(Rasti.kilpailu == self.key))
 
 
 class Sarja(ndb.Model):
@@ -115,9 +123,9 @@ class Joukkue(ndb.Model):
     jasenet = ndb.JsonProperty(required=True, validator=validate_jasenet)
     jasenet_lower = ndb.ComputedProperty(lambda self: map(nimistin, self.jasenet), repeated=True)
 
-    rastit = ndb.JsonProperty(required=False)
-
     sarja = ndb.KeyProperty(required=True, kind=Sarja)
+
+    rastit = ndb.JsonProperty(required=False, default=[])
 
 
 class Rasti(ndb.Model):
@@ -140,3 +148,6 @@ class Rasti(ndb.Model):
 
     lat = ndb.FloatProperty(required=True, validator=validate_lat)
     lon = ndb.FloatProperty(required=True, validator=validate_lon)
+
+    nimi = ndb.ComputedProperty(lambda self: self.koodi)
+

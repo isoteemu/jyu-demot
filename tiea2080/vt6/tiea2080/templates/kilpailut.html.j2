@@ -6,20 +6,39 @@
 {# Varoitus: Tämä on aika hirmuinen baabelin torni. #}
 <div>
 <h3>{{ self.title() }}</h3>
+
+    <div>
+        {{_("Näytä kilpailu:")}}
+        <!-- Tämä valinta on vain sen mukaan, että toteutus täyttää tehtävänannon vaatimukset
+        kijaimelliseti: "Sovelluksessa voidaan valita jokin olemassaolevista kilpailuista ja
+                         sovellus listaa tähän kilpailuun liittyvät sarjat sarjan nimen mukaan
+                         aakkosjärjestyksessä." -->
+        <select id="kilpailu-filtteri" name="kilpailu">
+            <option value="">{{_("Kaikki") }}</option>
+            {% for k in kilpailut|sort(attribute='nimi') %}
+            <option value="{{k.key.urlsafe()|e}}">{{k.nimi|e}}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+
 <ul class="kilpailut">
 {% for kilpailu in kilpailut|sort(attribute='nimi') %}
-    <li><a class="Kilpailu" href="{{ url_for('sivu_muokkaa', avain=kilpailu.key.urlsafe()|e) }}">{{kilpailu['nimi']|e}}</a>
-    (<a class="rastit" href="{{ url_for('sivu_rastit', kilpailu=kilpailu.key.urlsafe()) }}">{{_("Rastit")}}</a>)
-    <br /> {{_("Sarjat:") }}
+    <li class="kilpailu" id="{{'kilpailu-' ~ kilpailu.key.urlsafe()|safe}}"><a class="Kilpailu" href="{{ url_for('sivu_muokkaa', avain=kilpailu.key.urlsafe(), return=request.base_url) }}">{{kilpailu['nimi']|e}}</a>
+    <div class="ops"><a class="rastit" href="{{ url_for('sivu_rastit', kilpailu=kilpailu.key.urlsafe()) }}#">{{_("Rasteja: %(nr)d", nr=kilpailu.rastit|length or 0 ) }}</a></div>
+    <h4>{{_("Sarjat:") }}</h4>
         <ul>
         {% for sarja in kilpailu.sarjat|sort(attribute='nimi') %}
-            <li><a class="Sarja" href="{{ url_for('sivu_muokkaa', avain=sarja.key.urlsafe()|e) }}">{{ sarja['nimi']|e }}</a>
-            (<time datetime="{{'PT' ~ sarja['kesto']~'H'|e}}"">{{ _("Kesto: %(kesto)sh", kesto=sarja['kesto'])|e }}</time>)<br />
-             {{_("Joukkueet:") }}
+            <li><a class="Sarja" href="{{ url_for('sivu_muokkaa', avain=sarja.key.urlsafe(), return=request.base_url) }}">{{ sarja['nimi']|e }}</a>
+            <div class="ops"><time datetime="{{'PT' ~ sarja['kesto']~'H'|e}}"">{{ _("Kesto: %(kesto)sh", kesto=sarja['kesto'])|e }}</time></div>
+            <h5>{{_("Joukkueet:") }}</h5>
             <ul>
             {% for joukkue in sarja.joukkueet|sort(attribute='nimi') %}
                 <li>
-                    <a class="Joukkue" href="{{ url_for('sivu_muokkaa', avain=joukkue.key.urlsafe()|e) }}">{{ joukkue['nimi']|e }}</a>
+                    <a class="Joukkue" href="{{ url_for('sivu_muokkaa', avain=joukkue.key.urlsafe(), return=request.base_url) }}">{{ joukkue['nimi']|e }}</a>
+                    <div class="ops"><a class="rasteja" href="{{ url_for('sivu_leimaa', joukkue=joukkue.key.urlsafe()) }}#">
+                        {{_("Leimattu: %(nr)d", nr=joukkue.rastit|length)}}
+                    </a></div>
                     <ul>
                     {% for jasen in joukkue.jasenet|sort() %}
                         <li><span class="osallistuja">{{ jasen|e }}</span></li>
@@ -36,6 +55,10 @@
         {% endfor %}
         <li><form action="{{ url_for('sivu_luo', tyyppi='Sarja') }}" method="get">
             <input type="submit" value="{{ '🏵 ' ~ _('Lisää uusi sarja kisaan %(kilpailu)s', kilpailu=kilpailu.nimi) }}" />
+            <input type="hidden" name="kilpailu" value="{{ kilpailu.key.urlsafe() }}" />
+        </form></li>
+        <li><form action="{{ url_for('sivu_luo', tyyppi='Rasti', return=request.base_url) }}" method="get">
+            <input type="submit" value="{{ '☑️' ~ _('Lisää uusi rasti kilpailuun %(kilpailu)s', kilpailu=kilpailu.nimi) }}" />
             <input type="hidden" name="kilpailu" value="{{ kilpailu.key.urlsafe() }}" />
         </form></li>
     </ul></li>

@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-from time import sleep
 
 from flask import render_template, abort, flash, request, redirect, url_for
 from flask_wtf import CSRFProtect, FlaskForm
@@ -12,8 +11,15 @@ from google.appengine.ext import ndb
 from google.appengine.api import users
 
 from tiea2080 import alusta, app_init_virhe as level_select_screen, Virhe
-from tiea2080.models import Kilpailu, Sarja, Joukkue, Rasti
-from tiea2080.kaava import KilpailuKaava, SarjaKaava, JoukkueKaava, RastiKaava
+from tiea2080.models import Kilpailu, Sarja, Joukkue, Rasti, pura_aika
+from tiea2080.kaava import KilpailuKaava, SarjaKaava, JoukkueKaava, RastiKaava, RastiLeimaus
+
+try:
+    from urllib import urlencode
+    from urlparse import urlparse, urlunparse, urljoin, parse_qsl
+except:
+    # Python 3
+    from urllib.parse import urlencode, urlparse, urlunparse, urljoin, parse_qsl
 
 app = alusta()
 
@@ -44,7 +50,6 @@ def apu_setattr(objekti, nimi, data):
     """
 
     prop = getattr(type(objekti), nimi)
-    print(prop)
 
     if not hasattr(objekti, nimi) or nimi[0] == "_":
         return objekti
@@ -73,6 +78,40 @@ def crud_kaava_render(kaava, objekti, **kwargs):
 
     templatet = [u"wtforms-%s.html.j2" % kwargs['tyyppi'], "wtforms.html.j2"]
     return render_template(templatet, objekti=objekti, form=kaava, **kwargs)
+
+
+def is_safe_url(target):
+    r"""
+    Tarkistaa että paluu url on oma url
+
+    Kopioitu suoraan http://flask.pocoo.org/snippets/62/
+    """
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and \
+        ref_url.netloc == test_url.netloc
+
+
+def paluu_url(fallback="sivu_kilpailut", **kwargs):
+    """
+    Jos on ``return=`` arvo urlissa, palauta siihen, muutoin :param:`fallback`
+    """
+
+    r = request.args.get('return')
+    if r:
+        if not is_safe_url(r):
+            return abort(400)
+        # Puretaan url, päivitetään query string, ja koostetaan uudestaan.
+        parser = urlparse(r)
+        parts = list(parser)
+        qs = dict(parse_qsl(parts[4]))
+        qs.update(kwargs)
+        parts[4] = urlencode(qs)
+        return urlunparse(parts)
+
+    else:
+        # Ei return osoitetta, palataan fallbackiin.
+        return url_for(fallback, **kwargs)
 
 
 # ROUTET
@@ -106,7 +145,86 @@ def sivu_kilpailut():
 
 @app.route("/rastit/<kilpailu>")
 def sivu_rastit(kilpailu):
-    pass
+    try:
+        kisa = ndb.Key(urlsafe=kilpailu).get()
+        if not isinstance(kisa, Kilpailu):
+            raise ValueError(u"Pyydetty objekti ei ole Kilpailu.")
+    except Exception as e:
+        app.logger.info(e)
+        raise Virhe(u"Kilpailua ei löydetty.")
+
+    if not kisa:
+        abort(404)
+
+    uusin = None
+    if "uusi" in request.args:
+        # Varmistaa että juuri lisätty on sivulla ja uusin
+        try:
+            uusin = ndb.key.Key(urlsafe=request.args['uusi']).get()
+        except TypeError as e:
+            app.logger.info(u"Rastin avain virheellinen: %s" % e)
+
+    rastit = list(Rasti.query(Rasti.kilpailu == kisa.key))
+
+    if uusin:
+        if uusin._get_kind() == "Rasti":
+            if uusin not in rastit and uusin.kilpailu == kisa.key:
+                rastit.append(uusin)
+
+    return render_template("rastit.html.j2", rastit=rastit, kilpailu=kisa)
+
+
+@app.route("/leimaa/<joukkue>", methods=('GET', 'POST'))
+def sivu_leimaa(joukkue): 
+    """
+    Joukkueen rastien leimauksen sivu
+    """
+    try:
+        joukkue_obj = ndb.Key(urlsafe=joukkue).get()
+        if not isinstance(joukkue_obj, Joukkue):
+            raise ValueError(u"Pyydetty objekti ei ole Rasti.")
+    except Exception as e:
+        app.logger.info(e)
+        raise Virhe(u"Kilpailua ei löydetty.")
+
+    kaava = RastiLeimaus()
+    _rastit = list(joukkue_obj.rastit)
+
+    if kaava.validate_on_submit():
+
+        # Poistetaan vanha leima
+        _rastit = filter(lambda x: x['rasti'] != kaava.rasti.data, _rastit)
+
+        joukkue_obj.rastit = _rastit
+
+        if "poista" in request.form:
+            flash(_(u"Rasti %(rasti)s poistettu leimatuista", rasti=dict(kaava.rasti.choices)[kaava.rasti.data]))
+        else:
+            joukkue_obj.rastit = [{
+                u"aika": u"%s" % kaava.aika.data,
+                u"rasti": kaava.rasti.data
+            }] + _rastit
+
+            flash(_(u"Rasti %(rasti)s leimattu", rasti=dict(kaava.rasti.choices)[kaava.rasti.data]))
+
+        joukkue_obj.put()
+
+    rastit = []
+    for rasti in joukkue_obj.rastit:
+        # Kerää kaikki pätevät rastit
+        try:
+            # Huom kaksoissulut, on :type:`Tuple`.
+            rastit.append((
+                ndb.Key(urlsafe=rasti['rasti']).get(),
+                pura_aika(rasti['aika'])
+            ))
+        except Exception as e:
+            app.logger.debug(u"Joukkueelle ei löytynyt rastia: %s" % e)
+            # Elementti poistettu.
+            pass
+
+    return render_template("leimaa.html.j2", form=kaava, joukkue=joukkue_obj, rastit=rastit)
+
 
 @app.route("/test/<test>")
 def sivu_testi(test, foo=None):
@@ -171,12 +289,14 @@ def populate():
     return u"<br />".join(virheet), 201
 
 
-@app.route("/lopeta", methods=['POST'])
+@app.route("/lopeta", methods=('POST',))
 def sivu_uloskirjaudu():
     r"""
     Ohjaa googlen uloskirjautumissivulle.
     """
-    return redirect(users.create_logout_url('/'))
+    url = paluu_url("sivu_root")
+
+    return redirect(users.create_logout_url(url))
 
 
 # CRUD
@@ -194,7 +314,8 @@ def sivu_luo(tyyppi):
     if tyyppi not in kaava_map.keys():
         flash(_(u"Tuntematon malli."), "warning")
         app.logger.warning(u"Tuntematon malli pyydetty luotavaksi: %s" % tyyppi)
-        return redirect(url_for("sivu_kilpailut"))
+
+        return redirect(paluu_url("sivu_kilpailut"))
 
     # Ouh nouh, globals! Mutta ihan OK tässä tapauksessa.
     objekti = globals()[tyyppi]()
@@ -202,15 +323,15 @@ def sivu_luo(tyyppi):
     if request.method == "GET":
         # Täytä mahdollisilla esi-tiedoilla.
         for arg in request.args:
-            apu_setattr(objekti, arg, request.args.get(arg))
+            if hasattr(objekti, arg):
+                apu_setattr(objekti, arg, request.args.get(arg))
 
     kaava = crud_magic_happens_here(objekti)
 
     if kaava.Meta.tila is True:
-        return redirect(url_for("sivu_kilpailut", uusi=objekti.key.urlsafe()))
+        return redirect(paluu_url("sivu_kilpailut", uusi=objekti.key.urlsafe()))
 
     return crud_kaava_render(kaava, objekti, tyyppi=tyyppi)
-
 
 
 @app.route("/muokkaa/<avain>", methods=('GET', 'POST'))
@@ -234,10 +355,9 @@ def sivu_muokkaa(avain):
     kaava = crud_magic_happens_here(objekti)
 
     if kaava.Meta.tila is True:
-        return redirect(url_for("sivu_kilpailut", uusi=objekti.key.urlsafe()))
+        return redirect(paluu_url("sivu_kilpailut", uusi=objekti.key.urlsafe()))
 
     return crud_kaava_render(kaava, objekti, tyyppi=tyyppi)
-
 
 def crud_magic_happens_here(objekti):
     """
@@ -273,7 +393,7 @@ def crud_magic_happens_here(objekti):
         # validoinnit.
         try:
             objekti.key.delete()
-            flash(_(u"%(tyyppi)s %(nimi)s poistettiin.", tyyppi=tyyppi, nimi=crud.data.get('nimi')))
+            flash(_(u"%(tyyppi)s %(nimi)s poistettiin.", tyyppi=tyyppi, nimi=objekti.nimi))
             crud.Meta.tila = True
         except Exception as e:
             flash(_(u"Poisto epäonnistui. Tarkemmat tiedot lokissa."), "warning")

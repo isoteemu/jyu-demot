@@ -4,11 +4,14 @@
 from flask_babel import _
 from flask_wtf import FlaskForm
 from wtforms import validators as v, widgets as w
-from wtforms.fields import StringField, SelectField, FormField, FieldList
+from wtforms.fields import StringField, SelectField, FormField, FieldList, FloatField
 from wtforms.fields.html5 import DateTimeLocalField, IntegerField
-from .models import Kilpailu, Sarja, Joukkue, nimistin
 
+from .models import Kilpailu, Sarja, Joukkue, Rasti, nimistin
 from google.appengine.ext import ndb
+
+from datetime import datetime
+
 
 r"""
     Nimivalidaattorit
@@ -56,6 +59,18 @@ def validate_joukkueen_nimi(form, field):
     for s in q:
         if form.Meta.avain is not s.key:
             raise v.ValidationError(_(u"Valitussa sarjassa on jo joukkue \"%(joukkue)s\"", joukkue=field.data))
+
+
+def validate_rastin_koodi(form, field):
+    koodi = field.data.strip()
+    kilpailu = ndb.Key(urlsafe=form.kilpailu.data)
+
+    q = Rasti.query(Rasti.koodi == koodi,
+                    Rasti.kilpailu == kilpailu)
+
+    for s in q:
+        if form.Meta.avain is not s.key:
+            raise v.ValidationError(_(u"Valitussa kilpailussa on jo rasti \"%(rasti)s\"", rasti=field.data))
 
 
 r"""
@@ -117,21 +132,41 @@ class JoukkueKaava(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super(JoukkueKaava, self).__init__(*args, **kwargs)
-        self.sarja.choices = [(e.key.urlsafe(), e.nimi) for e in Sarja.query()]
+        self.sarja.choices = [(e.key.urlsafe(), u"%s: %s" % (e.kilpailu.get().nimi, e.nimi)) for e in Sarja.query()]
 
     def validate_jasenet(form, field):
         uniq_jasenet = list(set([j.strip() for j in field.data if j != ""]))
         _jasenet = list(set([nimistin(j) for j in uniq_jasenet]))
-        print(_jasenet)
+
         if not len(_jasenet) >= 2:
             raise v.ValidationError(_(u"Yksilöllisiä nimiä vaaditaan vähintään %(nr)d", nr=2))
 
         return uniq_jasenet
 
-    def validate_nimi(form, field):
-        pass
-
 
 class RastiKaava(FlaskForm):
-    koodi = StringField(_("Koodi"), validators=[v.InputRequired()])
+    koodi = StringField(_("Koodi"), validators=[v.InputRequired(), v.Length(1, 12), validate_rastin_koodi])
+    lat = FloatField(_("Lat"), validators=[v.InputRequired(), v.NumberRange(-90, 90)])
+    lon = FloatField(_("Lon"), validators=[v.InputRequired(), v.NumberRange(-90, 90)])
     kilpailu = Ristiviittaus(_("Kilpailu"), validators=[v.InputRequired()])
+
+    def __init__(self, *args, **kwargs):
+        super(RastiKaava, self).__init__(*args, **kwargs)
+        self.kilpailu.choices = [(e.key.urlsafe(), e.nimi) for e in Kilpailu.query()]
+
+
+class RastiLeimaus(FlaskForm):
+    """
+    Taso 5 Kaava rastileimauksille.
+
+    "Rastileimauksesta täytyy lomakkeella kysyä leimauksen kellonaika ja
+    mikä rasti on leimattu.Käytettävissä olevat rastit on tarjottava
+    alasvetovalikossa."
+    """
+
+    aika = DateTimeLocalField(_(u"Kellonaika"), format="%Y-%m-%dT%H:%M:%S", default=datetime.now())
+    rasti = SelectField(_(u"Rasti"), validators=[v.InputRequired()])
+
+    def __init__(self, *args, **kwargs):
+        super(RastiLeimaus, self).__init__(*args, **kwargs)
+        self.rasti.choices = [(e.key.urlsafe(), e.nimi) for e in Rasti.query()]

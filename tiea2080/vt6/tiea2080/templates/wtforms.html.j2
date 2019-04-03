@@ -1,17 +1,15 @@
 {% if not standalone %}{% extends 'base.html.j2' %}{% endif %}
 
-{% block title %}{{ _("Muokkaa > %(tyyppi)s", tyyppi=tyyppi)|e }}{% endblock %}
+{% block title %}{{ _("Muokkaa > %(tyyppi)s: %(nimi)s", tyyppi=tyyppi, nimi=objekti.nimi or _("Uusi"))|e }}{% endblock %}
 
 {% block content %}
 <fieldset>
     <h3>{{ self.title() }}</h3>
-    <form method="post" action="{{ request.base_url }}" class="wtform">
+    <form method="post" action="" class="wtform">
 
 <!-- {{form}} -->
 {% for field in form %}
-    {% if field.type in ["KeyPropertyField"] %}
-        <!-- Skip: {{field.type}} -->
-    {% elif field.type == "CSRFTokenField" %}
+    {% if field.type == "CSRFTokenField" %}
         {# Vältetään kaksois id:t #}
         <input type="hidden" name="{{field.name}}" value="{{ csrf_token() }}"/>
     {% elif field.type in ["HiddenField", "SubmitField"] %}

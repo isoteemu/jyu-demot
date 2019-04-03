@@ -12,6 +12,7 @@ __version__ = 'VT6'
 
 from flask import Flask, Response, render_template, flash
 from flask_babel import Babel
+from babel.dates import get_timezone
 from flask.logging import default_handler
 import werkzeug.exceptions
 
@@ -41,7 +42,7 @@ def alusta(**kwargs):
     kwargs.setdefault("DEBUG", True)
 
     kwargs.setdefault("BABEL_DEFAULT_LOCALE", "fi")
-    kwargs.setdefault("BABEL_DEFAULT_TIMEZONE", "EEST")
+    #kwargs.setdefault("BABEL_DEFAULT_TIMEZONE", u"Europe/Helsinki")
 
     app.config.update(kwargs)
 
