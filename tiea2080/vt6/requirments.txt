@@ -2,4 +2,4 @@ Flask==1.0
 Werkzeug==0.15
 flask-wtf==0.14
 Flask-Babel==0.12
-natsort==6.0
+transliterate==1.10

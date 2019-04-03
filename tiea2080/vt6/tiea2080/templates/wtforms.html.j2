@@ -11,7 +11,6 @@
 {% for field in form %}
     {% if field.type in ["KeyPropertyField"] %}
         <!-- Skip: {{field.type}} -->
-        {{field}}
     {% elif field.type == "CSRFTokenField" %}
         {# Vältetään kaksois id:t #}
         <input type="hidden" name="{{field.name}}" value="{{ csrf_token() }}"/>
@@ -32,8 +31,9 @@
 {% endfor %}
     <div class="toiminnot">
         <input type="submit" name="tallenna" value="{{'💾 ' ~ _('Tallenna')}}">
+        <input type="reset" name="reset" value="{{'⎌ ' ~ _('Palaa')}}">
         {% if objekti.key %}
-        <input type="submit" name="poista" value="{{'❌ ' ~ _('Poista')}}">
+            <input type="submit" name="poista" value="{{'❌ ' ~ _('Poista')}}">
         {% endif %}
     </div>
 

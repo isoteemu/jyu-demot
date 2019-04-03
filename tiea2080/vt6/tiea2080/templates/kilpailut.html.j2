@@ -3,24 +3,45 @@
 {% block title %}{{ _("Kilpailut") }}{% endblock %}
 
 {% block content %}
+{# Varoitus: Tämä on aika hirmuinen baabelin torni. #}
 <div>
 <h3>{{ self.title() }}</h3>
 <ul class="kilpailut">
 {% for kilpailu in kilpailut|sort(attribute='nimi') %}
-    <li><a class="Kilpailu" href="{{ url_for('sivu_muokkaa', avain=kilpailu.key.urlsafe()|e) }}">{{kilpailu['nimi']|e}}</a><br /> {{_("Sarjat:")|e }}
+    <li><a class="Kilpailu" href="{{ url_for('sivu_muokkaa', avain=kilpailu.key.urlsafe()|e) }}">{{kilpailu['nimi']|e}}</a>
+    (<a class="rastit" href="{{ url_for('sivu_rastit', kilpailu=kilpailu.key.urlsafe()) }}">{{_("Rastit")}}</a>)
+    <br /> {{_("Sarjat:") }}
         <ul>
         {% for sarja in kilpailu.sarjat|sort(attribute='nimi') %}
-            <li><a href="{{ url_for('sivu_muokkaa', avain=sarja.key.urlsafe()|e) }}">{{ sarja['nimi']|e }}</a>
-            (<time datetime="{{'PT' ~ sarja['kesto']~'H'|e}}"">{{ _("Kesto: %(kesto)sh", kesto=sarja['kesto'])|e }}</time>)</li>
+            <li><a class="Sarja" href="{{ url_for('sivu_muokkaa', avain=sarja.key.urlsafe()|e) }}">{{ sarja['nimi']|e }}</a>
+            (<time datetime="{{'PT' ~ sarja['kesto']~'H'|e}}"">{{ _("Kesto: %(kesto)sh", kesto=sarja['kesto'])|e }}</time>)<br />
+             {{_("Joukkueet:") }}
+            <ul>
+            {% for joukkue in sarja.joukkueet|sort(attribute='nimi') %}
+                <li>
+                    <a class="Joukkue" href="{{ url_for('sivu_muokkaa', avain=joukkue.key.urlsafe()|e) }}">{{ joukkue['nimi']|e }}</a>
+                    <ul>
+                    {% for jasen in joukkue.jasenet|sort() %}
+                        <li><span class="osallistuja">{{ jasen|e }}</span></li>
+                    {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+                <li><form action="{{ url_for('sivu_luo', tyyppi='Joukkue') }}" method="get">
+                <input type="submit" value="{{ '👭 ' ~ _('Lisää uusi joukkue sarjaan %(sarja)s', sarja=sarja.nimi) }}" />
+                <input type="hidden" name="sarja" value="{{ sarja.key.urlsafe() }}" />
+                </form></li>
+            </ul>
+            </li>
         {% endfor %}
         <li><form action="{{ url_for('sivu_luo', tyyppi='Sarja') }}" method="get">
-            <input type="submit" value="{{ '🏋️‍ ' ~ _('Uusi sarja') }}" />
+            <input type="submit" value="{{ '🏵 ' ~ _('Lisää uusi sarja kisaan %(kilpailu)s', kilpailu=kilpailu.nimi) }}" />
             <input type="hidden" name="kilpailu" value="{{ kilpailu.key.urlsafe() }}" />
         </form></li>
     </ul></li>
 {% endfor %}
     <li><form action="{{ url_for('sivu_luo', tyyppi='Kilpailu') }}" method="get">
-        <input type="submit" value="{{ '⚽️ ' ~ _('Uusi kilpailu') }}" />
+        <input type="submit" value="{{ '🏆 ' ~ _('Lisää uusi kilpailu') }}" />
         </form></li>
 </ul>
 

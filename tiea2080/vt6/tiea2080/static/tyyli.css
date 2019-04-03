@@ -60,37 +60,10 @@ form.wtform {
     margin: 1em;
 }
 
-#osio-kirjautumiskaava_nakyma fieldset {
-    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.3);
-}
-#osio-kirjautumiskaava_nakyma label {
-    font-weight: bold;
-}
-
-#osio-kirjautumiskaava_nakyma .wtform div ~ div {
-    margin-top: 1em;
-}
-
 .wtform > div {
     display: flex;
     justify-content: space-between;
     
-}
-
-#osio-muokkaa_joukkuetta .wtform > div:nth-child(3):before{
-    display: inline-block;
-    content: "Jäsenet";
-    clear:both;
-    left:0;
-    position: absolute;
-
-}
-#osio-muokkaa_joukkuetta .wtform > div:nth-child(3), 
-#osio-muokkaa_joukkuetta .wtform > div:nth-child(4), 
-#osio-muokkaa_joukkuetta .wtform > div:nth-child(5), 
-#osio-muokkaa_joukkuetta .wtform > div:nth-child(6), 
-#osio-muokkaa_joukkuetta .wtform > div:nth-child(7) {
-    justify-content: flex-end;
 }
 .wtform input[type=submit],
 .wtform input[type=reset] {
@@ -124,6 +97,7 @@ form.wtform {
     border-color:#f00;
 }
 
+ul ~ .error,
 input ~ .error,
 select ~ .error {
     position: absolute;

@@ -5,6 +5,7 @@ from datetime import datetime
 
 import string
 from transliterate import translit
+from transliterate.exceptions import LanguageDetectionError
 
 
 def nimistin(nimi):
@@ -17,8 +18,12 @@ def nimistin(nimi):
     if not isinstance(nimi, unicode):
         nimi = nimi.decode("utf-8")
 
-    # Käyttää translittiä canonisoimiseen, ei olisi oikeasti hyvä.
-    nimi = translit(nimi, reversed=True)
+    try:
+        nimi = translit(nimi, reversed=True)
+    except LanguageDetectionError:
+        # jos erikoismerkkejä ei havaittu, translit valittaa siitä.
+        pass
+
     nimi = u"".join([x for x in nimi if x in string.printable])
     nimi = nimi.strip().lower()
 
@@ -80,20 +85,27 @@ class Sarja(ndb.Model):
     nimi_lower = ndb.ComputedProperty(lambda self: nimistin(self.nimi))
 
     def __init__(self, *args, **kwargs):
-        if "kilpailu" in kwargs and isinstance(kwargs['kilpailu'], (str, unicode)):
+        if "kilpailu" in kwargs and isinstance(kwargs['kilpailu'], basestring):
             # jos kilpailu on merkkijono, muuta se relaatioavaimeksi.
             kwargs['kilpailu'] = Kilpailu.query(Kilpailu.nimi == kwargs['kilpailu']).get().key
 
         return super(Sarja, self).__init__(*args, **kwargs)
 
+    @property
+    def joukkueet(self):
+        return Joukkue.query(Joukkue.sarja == self.key)
+
 
 class Joukkue(ndb.Model):
     def validate_jasenet(prop, value):
-        jasenet = value
+        jasenet = list(set(map(lambda x: x.strip(), value)))
         if not len(jasenet) >= 2:
             raise ValueError(u"Jäseniä on oltava vähintään kaksi : %s" % jasenet)
 
+        return jasenet
+
     nimi = ndb.StringProperty(required=True)
+    nimi_lower = ndb.ComputedProperty(lambda self: nimistin(self.nimi))
 
     # json-muotoon ja siitä purkaminen hoituu automaattisesti eli tähän kenttään voi suoraan tallentaa
     # melkein minkä tahansa pythonin listan, joka sisältää perustietotyyppejä
@@ -101,6 +113,30 @@ class Joukkue(ndb.Model):
     # HUOM: Tämä olisi parempi olla ``ndb.StringProperty(repeated=True)``, mutta
     # tehtävä vaatii pitämään sen tällaisena.
     jasenet = ndb.JsonProperty(required=True, validator=validate_jasenet)
-    jasenet_lower = ndb.ComputedProperty(lambda self: map(nimistin, self.jasenet))
+    jasenet_lower = ndb.ComputedProperty(lambda self: map(nimistin, self.jasenet), repeated=True)
+
+    rastit = ndb.JsonProperty(required=False)
 
     sarja = ndb.KeyProperty(required=True, kind=Sarja)
+
+
+class Rasti(ndb.Model):
+    def validate_lat(prop, value):
+        r"""
+        Latituden on oltava liukuluku väliltä -90 - 90
+        """
+
+        return max(-90, min(90, value))
+
+    def validate_lon(prop, value):
+        r"""
+        Longituden on oltava liukuluku väliltä -180 - 180
+        """
+
+        return max(-180, min(180, value))
+
+    koodi = ndb.StringProperty(required=True)
+    kilpailu = ndb.KeyProperty(kind=Kilpailu, required=True)
+
+    lat = ndb.FloatProperty(required=True, validator=validate_lat)
+    lon = ndb.FloatProperty(required=True, validator=validate_lon)

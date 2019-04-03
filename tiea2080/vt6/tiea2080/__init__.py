@@ -67,18 +67,19 @@ def app_init_virhe(app):
     r"""
     Määrittelee oman virhekäsittelijän.
 
-    Hassu fakta, MegaDriven peleissä on monesti exception handler joka väittää
-    sen olevan "salainen kenttä", jotta Segan QA ei hylkäisi peliä sen
-    bugisuuden vuoksi. https://www.youtube.com/watch?v=i9bkKw32dGw
+    Hassu fakta, MegaDriven peleissä oli monesti exception handler joka väittää
+    sen olevan "salainen kenttä". Näin Segan QA ei toivottavasti hylkäisi peliä
+    sen bugisuuden vuoksi. https://www.youtube.com/watch?v=i9bkKw32dGw
     """
 
-    #@app.errorhandler(werkzeug.exceptions.InternalServerError)
+    # @app.errorhandler(werkzeug.exceptions.InternalServerError)
     @app.errorhandler(Exception)
     def handle_internal_server_error(e):
         virhe_sivu = u"Palvelimen virhe:\n %s" % e
         try:
             app.logger.error(u"Kohdattiin virhe ladattaessa sivua: %s " % e)
-            flash(u"%s" % e, "error")
+            if issubclass(type(e), Virhe):
+                flash(u"%s" % e, "error")
 
             virhe_sivu = render_template("virhe.html.j2", virhe=unicode(e), routet=app.url_map.iter_rules())
         except Exception as e:

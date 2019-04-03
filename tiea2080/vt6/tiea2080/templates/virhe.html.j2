@@ -13,7 +13,7 @@
     <p>
         <a href="{{ request.base_url }}">Lataa kenttä uudelleen</a>
         {% for polku in routet %}
-            <a href="{{ polku }}">{{polku|e}}</a>
+            <a href="{{ polku }}" rel="nofollow">{{polku|e}}</a>
         {% endfor %}
         </p>
     {% endif %}
@@ -33,8 +33,7 @@ a {
 
 a:hover,
 a:focus {
-    animation: vilku 1.2s infinite;  
-    color: #c7d7a8;
+    animation: vilku 1.2s infinite;
 }
 
 .error p a {
@@ -62,15 +61,13 @@ a:focus {
 
 @keyframes vilku {
     50% {
-        color: inherit;
+        color: #c7d7a8;;
     }
-
 }
 
 @keyframes bounce {
-  60% {
-    -webkit-transform: translate(0px, -{{korkeus}}) scale(1.1);
-    opacity: 0.8;
+  50% {
+    transform: translate(0px, -{{korkeus}}) scale(1.1);
     text-shadow: 0px {{korkeus}} 15px rgba(0, 0, 0, 0.4);
   }
 }
