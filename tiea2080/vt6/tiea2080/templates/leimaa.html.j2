@@ -1,0 +1,20 @@
+{% set kilpailu = joukkue.sarja.get().kilpailu.get() %}
+{% set objekti = joukkue %}
+{% extends 'wtforms.html.j2' %}
+
+{% block title %}{{ _("Rastileimaus: %(joukkue)s", joukkue=joukkue.nimi) }}{% endblock %}
+
+{% block content %}
+<div>
+    {{ super() }}
+    <fieldset class="leimatut">
+        <h3>{{ _("Leimatut") }}</h3>
+        <dl>
+            {% for rasti, aika in rastit|sort(attribute=aika) %}
+                <dt>{{rasti['nimi']|e or '<span class="removed">[ORPO]</span>'}}</dt>
+                <dd><time datetime="{{aike|e}}">{{aika|datetimeformat}}</time></dd>
+            {% endfor %}
+        </dl>
+    </fieldset>
+</div>
+{% endblock %}

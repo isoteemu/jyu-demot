@@ -1,0 +1,18 @@
+{% if objekti.key %}
+    {% set joukkue = objekti %}
+{% endif %}
+{% extends 'wtforms.html.j2' %}
+
+{% block content %}
+    <div>
+    {{ super() }}
+    {% if objekti.key %}
+    <fieldset>
+        <h3>{{_("Leimat")}}</h3>
+        <p>{{_("Joukkuella on suoritettuna %(nr)d rastia", nr=objekti.rastit|length) }}</p>
+        <p>Tehtävän mukaisesti leimaukset ovat <a href="{{ url_for('sivu_leimaa', joukkue=objekti.key.urlsafe(), return=request.base_url)}}">täällä.</a></p>
+    </fieldset>
+    {% endif %}
+    </div>
+
+{% endblock %}
