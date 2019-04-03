@@ -34,7 +34,8 @@ li form[action="/luo/Kilpailu"] {
     margin-top:1em;
 }
 
-input[type=submit] {
+input[type=submit],
+input[type=reset]  {
     cursor: pointer;
 }
 
@@ -54,7 +55,8 @@ form.wtform {
     list-style: none;
 }
 
-.wtform input[type="submit"] {
+.wtform input[type="submit"],
+.wtform input[type="reset"] {
     margin: 1em;
 }
 
@@ -90,7 +92,8 @@ form.wtform {
 #osio-muokkaa_joukkuetta .wtform > div:nth-child(7) {
     justify-content: flex-end;
 }
-.wtform input[type=submit] {
+.wtform input[type=submit],
+.wtform input[type=reset] {
     border: 1px solid #207bbd;
     color: #207bbd;
     background: #fff;
@@ -106,6 +109,19 @@ form.wtform {
     background: #efefef;
     justify-content: flex-end;
     border-top: 1px solid #cecece;
+}
+
+.wtform .toiminnot input[name="tallenna"] {
+    order:0;
+}
+
+.wtform .toiminnot input[type=reset] {
+    border-color: #cecece;
+}
+
+.wtform .toiminnot input[name="poista"] {
+    order:10;
+    border-color:#f00;
 }
 
 input ~ .error,
@@ -232,4 +248,28 @@ nav li {
 #navi-spacer {
     /* take up the rest of the remaining space */
     flex: 1;
+}
+
+/* Tyyli elementeille jotka ovat juuri muokattuja. */
+a[href].aktiivinen {
+    animation: välähdä 1.2s ease-out 1;
+}
+
+@keyframes välähdä {
+    0% {
+        outline: #fff 1px solid;
+        background: #fff;
+    }
+    100% {
+        background: inherit;
+        outline: transparent 6em solid;
+    }
+}
+
+/* Joukkueen jäsenten "kuvat" */
+span.osallistuja {
+    margin-left: 1em;
+}
+span.osallistuja.naamake {
+    margin-left: 0em;
 }
