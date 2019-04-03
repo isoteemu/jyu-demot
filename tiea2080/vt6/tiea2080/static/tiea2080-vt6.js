@@ -27,7 +27,7 @@ $(document).ready(function() {
         if(url_params.has("uusi")) {
             var url = "/" + url_params.get("uusi");
             var scrollattu_toggle = false;
-            $(".content a[href]").each(function() {
+            $(".content a[href*=muokkaa]").each(function() {
                 if(this.pathname.endsWith(url)) {
                     $(this).addClass("aktiivinen");
 
@@ -59,7 +59,6 @@ $(document).ready(function() {
             // Jos urlissa oli "?uusi=", poista se häiritsemästä.
             url_params.delete("uusi");
             url['search'] = url_params.toString();
-
             reset_invoke = () => window.location = url.toString();
         }
         $("form .toiminnot input[type=reset]").each(function(e) {

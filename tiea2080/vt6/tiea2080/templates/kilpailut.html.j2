@@ -25,7 +25,7 @@
 <ul class="kilpailut">
 {% for kilpailu in kilpailut|sort(attribute='nimi') %}
     <li class="kilpailu" id="{{'kilpailu-' ~ kilpailu.key.urlsafe()|safe}}"><a class="Kilpailu" href="{{ url_for('sivu_muokkaa', avain=kilpailu.key.urlsafe(), return=request.base_url) }}">{{kilpailu['nimi']|e}}</a>
-    <div class="ops"><a class="rastit" href="{{ url_for('sivu_rastit', kilpailu=kilpailu.key.urlsafe()) }}#">{{_("Rasteja: %(nr)d", nr=kilpailu.rastit|length or 0 ) }}</a></div>
+    <div class="ops"><a class="rastit" href="{{ url_for('sivu_rastit', kilpailu=kilpailu.key.urlsafe()) }}">{{_("Rasteja: %(nr)d", nr=kilpailu.rastit|length or 0 ) }}</a></div>
     <h4>{{_("Sarjat:") }}</h4>
         <ul>
         {% for sarja in kilpailu.sarjat|sort(attribute='nimi') %}
@@ -36,7 +36,7 @@
             {% for joukkue in sarja.joukkueet|sort(attribute='nimi') %}
                 <li>
                     <a class="Joukkue" href="{{ url_for('sivu_muokkaa', avain=joukkue.key.urlsafe(), return=request.base_url) }}">{{ joukkue['nimi']|e }}</a>
-                    <div class="ops"><a class="rasteja" href="{{ url_for('sivu_leimaa', joukkue=joukkue.key.urlsafe()) }}#">
+                    <div class="ops"><a class="rasteja" href="{{ url_for('sivu_leimaa', joukkue=joukkue.key.urlsafe()) }}">
                         {{_("Leimattu: %(nr)d", nr=joukkue.rastit|length)}}
                     </a></div>
                     <ul>
