@@ -169,4 +169,4 @@ class RastiLeimaus(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super(RastiLeimaus, self).__init__(*args, **kwargs)
-        self.rasti.choices = [(e.key.urlsafe(), e.nimi) for e in Rasti.query()]
+        self.rasti.choices = [(e.key.urlsafe(), u"%s: %s" % (e.kilpailu.get().nimi, e.nimi)) for e in Rasti.query()]

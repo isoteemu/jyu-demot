@@ -9,7 +9,7 @@ Taso 1:
  - Sovellus ei voi kaatua - sisältää salaisen tason ``0``, johon pääsee vain pahasti glitchaamalla.
  - Javascriptillä (``tiea2080/static/tiea2080-vt6.js``) varmistetaan poisto.
  - Kilpailun valinta on toteutettu javasciptillä, jolloin sekä Taso 1 ja Taso 3 kummatkin toteutuvat samalla ratkaisulla.
- - Aikahommeli herjaa, jos ei ole muotoa "%Y-%m-%dT%H:%M:%S". Selaimissa hieman eriäväisiä toetutuksia ``datetime-local``ille, ja viikkotehtävän tuntimäärät täynnä niin siihen ei ole javascript fallbackia.
+ - Aikahommeli herjaa, jos ei ole muotoa ``%Y-%m-%dT%H:%M:%S``. Selaimissa hieman eriäväisiä toetutuksia ``datetime-local``ille, ja viikkotehtävän tuntimäärät täynnä niin siihen ei ole javascript fallbackia.
 
 Taso 3:
  - Koska mallidatassa kaikki joukkueet eivät täytä annettuja ehtoja, ja taso 1:llä erityisesti sanotaan ettei tarkistuksia saa poistaa, skippaan kaikki ``populate()`` -kutsussa joiden ehdot eivät täyty.
@@ -24,4 +24,5 @@ Taso 5:
  - ``Rasti(ndb.Model)`` malli, joka varmistaa lat/lon arvot.
  - Kilpailukohtaisia rasteja pääsee katselemaan ja muokkaaman kilpailulistauksesta valitsemalla ``Rastit`` kilpailun nimen vierestä.
  - Joukkueen leimojen määrä näkyy kilpailulistauksessa, ja ne tallennetaan ``Joukkue`` -tietueeseen ``ndb.JsonProperty()``:na.
+ - Tehtävässä ei määritelty, näytetäänko vain leimauksessa kilpailun rastit, vai kaikki rastit, joka voi olla mahdollista jos joukkue siirtyy kisasta toiseen. Kummatkin on nyt implementoitu.
  - Orvoksi jäävät leimat jäävät kummittelemaan rakenteeseen, mutteivat kaada sovellusta.

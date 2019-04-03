@@ -175,7 +175,7 @@ def sivu_rastit(kilpailu):
 
 
 @app.route("/leimaa/<joukkue>", methods=('GET', 'POST'))
-def sivu_leimaa(joukkue): 
+def sivu_leimaa(joukkue):
     """
     Joukkueen rastien leimauksen sivu
     """
@@ -188,6 +188,7 @@ def sivu_leimaa(joukkue):
         raise Virhe(u"Kilpailua ei löydetty.")
 
     kaava = RastiLeimaus()
+    kaava.rasti.choices = [(e.key.urlsafe(), u"%s" % e.nimi) for e in Rasti.query(Rasti.kilpailu == joukkue_obj.sarja.get().kilpailu)]
     _rastit = list(joukkue_obj.rastit)
 
     if kaava.validate_on_submit():
