@@ -1,4 +1,4 @@
-application: tearautt-tiea2080-vt6
+#application: tearautt-tiea2080-vt6
 runtime: python27
 api_version: 1
 threadsafe: true

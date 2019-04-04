@@ -1,6 +1,6 @@
 {% extends 'base.html.j2' %}
 
-{% block title %}{{ _("%(kilpailu)s rastit", kilpailu=kilpailu.nimi) }}{% endblock %}
+{% block title %}{{ _("%(kilpailu)s rastit", kilpailu=kilpailu.nimi|e) }}{% endblock %}
 
 {% block content %}
 {# Varoitus: Tämä on aika hirmuinen baabelin torni. #}
@@ -15,7 +15,7 @@
     {% endfor %}
 </dl>
 <form action="{{ url_for('sivu_luo', tyyppi='Rasti', return=request.base_url) }}" method="get">
-    <input type="submit" value="{{ '☑️ ' ~ _('Lisää uusi rasti kilpailuun %(kilpailu)s', kilpailu=kilpailu.nimi) }}" />
+    <input type="submit" value="{{ '☑️ ' ~ _('Lisää uusi rasti kilpailuun %(kilpailu)s', kilpailu=kilpailu.nimi|e) }}" />
     <input type="hidden" name="kilpailu" value="{{ kilpailu.key.urlsafe() }}" />
 </form>
 </div>

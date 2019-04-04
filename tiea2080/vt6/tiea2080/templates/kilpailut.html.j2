@@ -30,7 +30,7 @@
         <ul>
         {% for sarja in kilpailu.sarjat|sort(attribute='nimi') %}
             <li><a class="Sarja" href="{{ url_for('sivu_muokkaa', avain=sarja.key.urlsafe(), return=request.base_url) }}">{{ sarja['nimi']|e }}</a>
-            <div class="ops"><time datetime="{{'PT' ~ sarja['kesto']~'H'|e}}"">{{ _("Kesto: %(kesto)sh", kesto=sarja['kesto'])|e }}</time></div>
+            <div class="ops"><time datetime="{{'PT' ~ sarja['kesto']~'H'|e}}">{{ _("Kesto: %(kesto)sh", kesto=sarja['kesto'])|e }}</time></div>
             <h5>{{_("Joukkueet:") }}</h5>
             <ul>
             {% for joukkue in sarja.joukkueet|sort(attribute='nimi') %}
@@ -47,18 +47,18 @@
                 </li>
             {% endfor %}
                 <li><form action="{{ url_for('sivu_luo', tyyppi='Joukkue') }}" method="get">
-                <input type="submit" value="{{ '👭 ' ~ _('Lisää uusi joukkue sarjaan %(sarja)s', sarja=sarja.nimi) }}" />
+                <input type="submit" value="{{ '👭 ' ~ _('Lisää uusi joukkue sarjaan %(sarja)s', sarja=sarja.nimi|e) }}" />
                 <input type="hidden" name="sarja" value="{{ sarja.key.urlsafe() }}" />
                 </form></li>
             </ul>
             </li>
         {% endfor %}
         <li><form action="{{ url_for('sivu_luo', tyyppi='Sarja') }}" method="get">
-            <input type="submit" value="{{ '🏵 ' ~ _('Lisää uusi sarja kisaan %(kilpailu)s', kilpailu=kilpailu.nimi) }}" />
+            <input type="submit" value="{{ '🏵 ' ~ _('Lisää uusi sarja kisaan %(kilpailu)s', kilpailu=kilpailu.nimi|e) }}" />
             <input type="hidden" name="kilpailu" value="{{ kilpailu.key.urlsafe() }}" />
         </form></li>
         <li><form action="{{ url_for('sivu_luo', tyyppi='Rasti', return=request.base_url) }}" method="get">
-            <input type="submit" value="{{ '☑️' ~ _('Lisää uusi rasti kilpailuun %(kilpailu)s', kilpailu=kilpailu.nimi) }}" />
+            <input type="submit" value="{{ '☑️' ~ _('Lisää uusi rasti kilpailuun %(kilpailu)s', kilpailu=kilpailu.nimi|e) }}" />
             <input type="hidden" name="kilpailu" value="{{ kilpailu.key.urlsafe() }}" />
         </form></li>
     </ul></li>
