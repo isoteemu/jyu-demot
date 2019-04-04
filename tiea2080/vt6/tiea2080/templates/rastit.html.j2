@@ -10,8 +10,8 @@
 <dl>
     {% for rasti in rastit|sort(attribute='koodi') %}
     <dt><a class="Rasti" href="{{ url_for('sivu_muokkaa', avain=rasti.key.urlsafe(), return=request.base_url) }}">{{rasti['koodi']|e}}</a></dt>
-    <dd class="latitude">{{ _("Lat: %(lat)f", lat=rasti['lat']) }}</dd>
-    <dd class="longitude">{{ _("Lon: %(lon)f", lon=rasti['lon']) }}</dd>
+    <dd class="latitude">{{ _("Lat: %(lat)f", lat=rasti['lat']|float) }}</dd>
+    <dd class="longitude">{{ _("Lon: %(lon)f", lon=rasti['lon']|float) }}</dd>
     {% endfor %}
 </dl>
 <form action="{{ url_for('sivu_luo', tyyppi='Rasti', return=request.base_url) }}" method="get">
