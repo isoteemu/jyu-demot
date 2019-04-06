@@ -1,0 +1,24 @@
+Tehtävä: SQL-Injektiot
+
+Valitsin Pythonin (3) suhteellisen suositun ``SQLAlchemy`` (1.3) -kirjaston. 
+
+1:  > Mikä on suositeltu tapa tehdä tietokantakyselyjä?
+    > Entäpä mikä on suositeltu tapa tehdä kyselyjä käyttäen SQL-lauseita? 
+
+Yleisesti käytetään ORM lähestymistä. Mutta alla olevaa SQL rajapintaa ei pyritä piilottamaan, vaan kysely ja ORM malli on erillisiä, joten "raakaa" SQL:lää pystyy myös käyttämään, ja silti hyötyä relationship mapperin tuomasta lähestymisestä.
+
+Suositeltu SQL kyselytapa on käyttää ``SQL Expression Language``:a, ja siinä prepared statementteja.
+
+koodiesimerkki kummastakin tiedostossa :file:`t1.py`
+
+2:  > Onko mahdollista tehdä SQL-kysely liimaamalla merkkijonoja yhteen? 
+
+On. Joko '+' operaattorilla, tai :class:`String.Formatter` -toiminnoilla. Esimerkki ensin mainitusta :file:`t2.py`. php:n ``addslashes()`` vastaavaa en kuitenkaan löytänyt, ja liimaamalla mainittu keino on erittäin epäsuositeltu. :func:`text()` tarjoaa funktionaalisen lähestymisen jos haluaa muuttujia sijoitella kyselyihin.
+
+3:  > Miten valitsemassasi työkalussa voidaan käyttää valmisteltuja lausekkeita (Prepared Statement)?
+
+SQLAlchemy luo omia prepared statementteja, joihin voi sitten sitoa muuttujia. Jos haluaa tietokannassa olevia operoida, voi niitä käyttää suorittamalla haluttuja kyselyitä. Mitään erityistä toiminnallisuutta ei näytä kirjasto tähän tarjoavan. Koodiesimerkeissä käytetty sqlite ei tarjoa ko. ominaisuutta.
+
+4:  > Tee CVE-haku käyttämästäsi työkalusta (esim. "java sql"). Löysitkö mitään? Millaisia tietoturvaongelmia tapasit? 
+
+SQL injektioita. Ilmeisesti taulukoiden nimiä ei ole aina validoitu asiallisesti.
