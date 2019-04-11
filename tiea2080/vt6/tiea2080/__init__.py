@@ -88,4 +88,8 @@ def app_init_virhe(app):
             app.logger.error(u"Virhe käsiteltäessä aikasempaa virhettä: %s" % e)
             app.logger.exception(e)
 
-        return Response(virhe_sivu, status=500)
+        status = 500
+        if isinstance(e, werkzeug.exceptions.HTTPException):
+            status = e.code
+
+        return Response(virhe_sivu, status=status)
