@@ -327,10 +327,13 @@ def sivu_luo(tyyppi):
             if hasattr(objekti, arg):
                 apu_setattr(objekti, arg, request.args.get(arg))
 
-    kaava = crud_magic_happens_here(objekti)
+    try:
+        kaava = crud_magic_happens_here(objekti)
 
-    if kaava.Meta.tila is True:
-        return redirect(paluu_url("sivu_kilpailut", uusi=objekti.key.urlsafe()))
+        if kaava.Meta.tila is True:
+            return redirect(paluu_url("sivu_kilpailut", uusi=objekti.key.urlsafe()))
+    except Exception as e:
+        flash(_(u"Tapahtui virhe: %(virhe)s", virhe=e))
 
     return crud_kaava_render(kaava, objekti, tyyppi=tyyppi)
 
@@ -353,10 +356,14 @@ def sivu_muokkaa(avain):
         return abort(404)
 
     tyyppi = objekti._get_kind()
-    kaava = crud_magic_happens_here(objekti)
 
-    if kaava.Meta.tila is True:
-        return redirect(paluu_url("sivu_kilpailut", uusi=objekti.key.urlsafe()))
+    try:
+        kaava = crud_magic_happens_here(objekti)
+
+        if kaava.Meta.tila is True:
+            return redirect(paluu_url("sivu_kilpailut", uusi=objekti.key.urlsafe()))
+    except Exception as e:
+        flash(_(u"Tapahtui virhe: %(virhe)s", virhe=e))
 
     return crud_kaava_render(kaava, objekti, tyyppi=tyyppi)
 

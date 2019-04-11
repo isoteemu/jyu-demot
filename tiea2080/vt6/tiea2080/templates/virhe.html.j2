@@ -8,7 +8,6 @@
     <!-- Jos mietit mitä tämä tekee, RTFS -->
     {#     Joudut lukemaan __init__.py     #}
     <p>{{ _("You have found the secret level select screen") }}</p>
-    {% if config['DEBUG'] %}
     <p>{{ virhe|e }}</p>
     <p>
         <a href="{{ request.base_url }}">Lataa kenttä uudelleen</a>
@@ -16,7 +15,6 @@
             <a href="{{ polku }}" rel="nofollow">{{polku|e}}</a>
         {% endfor %}
         </p>
-    {% endif %}
 </div>
 
 <!-- pomppuefecti on sovellettu https://codepen.io/SteveJRobertson/pen/xwxeGO -->

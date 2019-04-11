@@ -106,8 +106,11 @@ class KilpailuKaava(FlaskForm):
     kesto = IntegerField(_("Kesto"), validators=[v.InputRequired(), v.NumberRange(min=0, max=99)])
 
     def validate_alkuaika(form, field):
-        if form.alkuaika.data > form.loppuaika.data:
-            raise v.ValidationError(u"Ajan tulee olla kronologista")
+        try:
+            if form.alkuaika.data > form.loppuaika.data:
+                raise v.ValidationError(_(u"Ajan tulee olla kronologista"))
+        except:
+            raise v.ValidationError(_(u"Tarkista aika."))
 
 
 class SarjaKaava(FlaskForm):
@@ -147,7 +150,7 @@ class JoukkueKaava(FlaskForm):
 class RastiKaava(FlaskForm):
     koodi = StringField(_("Koodi"), validators=[v.InputRequired(), v.Length(1, 12), validate_rastin_koodi])
     lat = FloatField(_("Lat"), validators=[v.InputRequired(), v.NumberRange(-90, 90)])
-    lon = FloatField(_("Lon"), validators=[v.InputRequired(), v.NumberRange(-90, 90)])
+    lon = FloatField(_("Lon"), validators=[v.InputRequired(), v.NumberRange(-180, 180)])
     kilpailu = Ristiviittaus(_("Kilpailu"), validators=[v.InputRequired()])
 
     def __init__(self, *args, **kwargs):
@@ -164,9 +167,10 @@ class RastiLeimaus(FlaskForm):
     alasvetovalikossa."
     """
 
-    aika = DateTimeLocalField(_(u"Kellonaika"), format="%Y-%m-%dT%H:%M:%S", default=datetime.now())
+    aika = DateTimeLocalField(_(u"Kellonaika"), format="%Y-%m-%dT%H:%M:%S", default=datetime.now(), validators=[v.InputRequired()])
     rasti = SelectField(_(u"Rasti"), validators=[v.InputRequired()])
 
     def __init__(self, *args, **kwargs):
         super(RastiLeimaus, self).__init__(*args, **kwargs)
         self.rasti.choices = [(e.key.urlsafe(), u"%s: %s" % (e.kilpailu.get().nimi, e.nimi)) for e in Rasti.query()]
+
