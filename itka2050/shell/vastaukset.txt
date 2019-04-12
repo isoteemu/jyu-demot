@@ -1,0 +1,15 @@
+
+1:  > Mikä on suositeltu tapa käynnistää toisia ohjelmia?
+    Pythonissa suositeltu tapa on käyttää ``subprocess`` -moduulia, kuten :class:`Popen()` luokkaa tai :func:`run()`.
+
+2:  > Miten käynnistetylle ohjelmalle välitetään syöte ja miten sen paluuarvo ja tulosteet luetaan?
+    :func:`run()` ottaa listan syötteen argumenteista. Lisäksi nimettyinä argumentteina voi määritellä :param:`capture_output=True` jos haluaa palautettavan olion sisältävän suorituksen ulosteen.
+
+3:  > Miten ohjelma käynnistetään komentotulkin kautta ja miten se käynnistetään suoraan?
+    :func:`run()` ottaa nimetyn parametrin :param:`shell`, jolle ``True`` määriteltäessä komento suoritetaan shellissä. Tällöin kuitenkin on sovelluksen itse varmistuttava tarpeellisesta shellin argumenttien turvallisuudesta.
+
+4:  > Kuinka todennäköistä olisi, että kaksi em. tapaa menevät ohjelmoijalta sekaisin?
+    Epätodennäköistä, jos ei kuvittele tietävänsä asiasta enemmän kuin dokumentaatio.
+
+5:  > Miten voit nollata ympäristön ajettavalta ohjelmalta? (ympäristömuuttujat, tiedostokahvat yms.)
+    :class:`Popen`, ja tätä myöten :func:`run()`, voi määritellä parametreinä :param:`close_fds` ja :param:`env`.

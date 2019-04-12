@@ -1,0 +1,5 @@
+Sekä tehtävät 1 & 2 ovat samassa ohjelmassa:
+    $ python3 t1.py echo spam ham
+
+Tehtävä 3 & 5, jossa suoritetaan shellissä ja ympäristö resetoidaan:
+    $ python3 t3.py echo "; cat /etc/passwd"
