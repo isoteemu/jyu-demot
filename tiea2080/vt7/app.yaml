@@ -1,0 +1,16 @@
+application: tearautt-tiea2080-vt7
+runtime: python27
+api_version: 1
+threadsafe: true
+
+libraries:
+- name: ssl
+  version: latest
+
+handlers:
+- url: /static
+  static_dir: tiea2080/static
+
+- url: /.*
+  script: main.app
+  login: required
