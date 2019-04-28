@@ -1,0 +1,14 @@
+Toteutettu käyttäen videoiltakin tuttua logging kirjastoa.
+
+Tehtävä 2:
+$ python3 t2.py $'A-OK\nWARNING:root:Pay 100e to Teemu'
+
+Tehtävä 3:
+$ python3 t3.py $'A-OK\nWARNING:root:Pay 100e to Teemu'
+
+Tehtävä 4:
+$ pip3 install systemd-python
+$ python3 t4.py $'A-OK\nWARNING:root:Pay 100e to Teemu'
+$ journalctl -tt4.py
+
+

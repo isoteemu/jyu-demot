@@ -1,0 +1,21 @@
+
+ITKA2050 Tehtävä: Lokitiedostot
+
+1:  > Mikä on suositeltu kirjasto lokien keräämiselle?
+
+Python sovelluksissa ja kirjastoissa käytetään yleisesti ``logging`` kirjastoa.
+
+
+2:  > Onko tässä kirjastossa mahdollisuus väärentää lokeja (jossain tilanteessa) injektiohyökkäyksellä? Miten tämä tapahtuisi?
+
+On (joissain tilanteissa) - kuten tekstilogeissa, joissa käsitellään käyttäjän inputtia. Mutta lukuunottamatta paikallista sovellusta, yleensä data lähetetään jonkkinnäköiseen binaarikantaan (journald, appengine, tietokanta), jossa ongelmaa ei ole.
+
+
+3:  > Voitko tällä kirjastolla estää injektion käyttämällä rakenteista dataa lokeissa? Miten?
+
+Ei suoraan. Vaatii oman abstractiotason tekemistä. Joskin sille voi heittää rakenteen, ja se muuttaa representaatioksi. Että oikeastaan voi.
+
+
+4:  > Onko kirjastossa muita tapoja estää loginväärennys (esim. tallettaminen tietokantaan?)
+
+On. Kuten tallentaminen tietokantaan, tai käyttöjärjestelmien yleensä tarjoamiin binaarikantoihin, kuten ``journald``:hen.
