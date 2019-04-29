@@ -1,27 +1,41 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 r"""
-Tiedosto joka on kiertänyt viikkotehtävästä toiseen.
+RSS Reader
+~~~~~~~~~~
 
-Vastaa Flaskin sovellustason alustuksesta
 """
 
-__title__ = 'TIEA2080'
-__version__ = 'VT6'
+__title__ = "TIEA2080"
+__description__ = "RSS Reader"
+__author__ = "Teemu Autto"
+__version__ = "VT7"
+__url__ = "https://github.com/isoteemu/jyu-demot/tree/master/tiea2080/vt7"
 
 from flask import Flask, Response, render_template, flash
-from flask_babel import Babel
-from babel.dates import get_timezone
+from flask_caching import Cache
+from flask_babel import Babel, get_locale
+from flask_wtf import CSRFProtect
 from flask.logging import default_handler
+
+from werkzeug.local import LocalProxy
 import werkzeug.exceptions
 
+from google.appengine.api import memcache
+
 import os
+import io
+
+from .utils import *
 
 import logging
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
+
+csrf = CSRFProtect()
+cache = Cache(config={'CACHE_TYPE': 'simple'})
 
 def alusta(**kwargs):
     r"""
@@ -38,11 +52,9 @@ def alusta(**kwargs):
     app = Flask(__name__)
 
     kwargs.setdefault("CHARSET", "utf-8")
-    kwargs.setdefault("SECRET_KEY", b'\xb3\xc3)\x05\xf8\xdf07\t/;F\xca\xe1Z:\x95\xd9\x14\xe9\xd3\xfbx\x94\x9ek\x16w^\xd0\nC')
     kwargs.setdefault("DEBUG", True)
-
     kwargs.setdefault("BABEL_DEFAULT_LOCALE", "fi")
-    #kwargs.setdefault("BABEL_DEFAULT_TIMEZONE", u"Europe/Helsinki")
+    kwargs.setdefault("BABEL_DEFAULT_TIMEZONE", u"EEST")
 
     app.config.update(kwargs)
 
@@ -51,7 +63,21 @@ def alusta(**kwargs):
     except OSError:
         pass
 
+    if not app.config.get("SECRET_KEY"):
+        key_file = os.path.join(app.instance_path, "secret_key")
+
+        try:
+            with io.open(key_file, 'rb') as fd:
+                app.config['SECRET_KEY'] = fd.read()
+        except Exception as e:
+            app.logger.exception(e)
+            app.logger.info("Generating new SECRET_KEY %s", key_file)
+            app.config['SECRET_KEY'] = os.urandom(64)
+            with io.open(key_file, 'wb') as fd:
+                fd.write(app.config['SECRET_KEY'])
+
     Babel(app)
+    app.jinja_env.globals.update(get_locale=get_locale)
 
     logger = logging.getLogger(__name__)
     logger.addHandler(default_handler)
@@ -61,7 +87,7 @@ def alusta(**kwargs):
 
 class Virhe(werkzeug.exceptions.InternalServerError):
     code = 500
-    description = ("Tapahtui virhe.")
+    description = (u"Tapahtui virhe.")
 
 
 def app_init_virhe(app):
@@ -93,3 +119,14 @@ def app_init_virhe(app):
             status = e.code
 
         return Response(virhe_sivu, status=status)
+
+
+def init_app(app):
+    # Alustetaan flaskiin lisättävät moduulit
+    with app.app_context():
+        if not app.config['DEBUG']:
+            # Estä kaatumiset.
+            app_init_virhe(app)
+
+        # Suojausta. Tehtävä ei vaadi, mutta eh.
+        csrf.init_app(app)

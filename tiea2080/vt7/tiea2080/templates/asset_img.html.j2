@@ -1,0 +1,2 @@
+{# .png extension is not needed, but lets use it anyway. #}
+<img src="{{src}}" width={{width}} height={{height}} alt="{{alt|e}}" onerror="this.src='{{url_for('static', filename='application-rss+xml-symbolic.svg')|safe}}'" {%if snippet %}style="background: url({{snippet|safe}}) no-repeat center center; background-size:{{width}}px {{height}}px"{% endif %} />

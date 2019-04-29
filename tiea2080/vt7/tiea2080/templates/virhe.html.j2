@@ -10,7 +10,7 @@
     <p>{{ _("You have found the secret level select screen") }}</p>
     <p>{{ virhe|e }}</p>
     <p>
-        <a href="{{ request.base_url }}">Lataa kenttä uudelleen</a>
+        <a href="{{ request.base_url }}">{{ _("Lataa kenttä uudelleen")}}</a>
         {% for polku in routet %}
             <a href="{{ polku }}" rel="nofollow">{{polku|e}}</a>
         {% endfor %}

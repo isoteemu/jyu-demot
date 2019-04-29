@@ -1,0 +1,39 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+    <section>
+        <form action="{{url_for('feeds.page_reader')}}" method="GET" class="feeds">
+        {% for sub in feeds %}
+            <div class="feed">
+                <button class="subscribed" name="feed" value="{{sub.feed.id()|e}}">
+                    <span class="thumb" title="{{ sub.title|e }}">
+                        {{sub.feed.get()|asset_img}}
+                    </span>
+                    <div class="title">{{sub.title|e}}</div>
+                </button>
+            </div>
+        {% endfor %}
+        </form>
+    </section>
+    <section class="articles">
+        <ul class="thumbs">
+            {% for article in articles %}
+            <li class="zigzag">
+                <a href="{{article.url|e}}">
+                    <span class="thumb" title="{{ article.title|e }}">
+                        {{article|asset_img}}
+                    </span>
+                    <div class="article-title">{{article.title|e}}</div>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+{% endblock content %}
+
+{% block footer %}
+    {{super()}}
+    <div><a href="https://clearbit.com/docs#logo-api">{{_("Uses Clearbit logo api")}}</a></div>
+    <div><a href="https://github.com/GNOME/adwaita-icon-theme">{{_("RSS Logo from Adawait icon theme")}}</a></div>
+{% endblock footer %}

@@ -1,59 +1,52 @@
 <!DOCTYPE html>
-<html lang="fi">
+<html lang="{{get_locale()}}">
 <head>
-    <title>TIEA2080 - VT6 - {% block title %}Google App Engine ja Datastore{% endblock title %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='tyyli.css') }}" />
-
+    <meta charset="{{config['CHARSET']}}" />
+    <title>TIEA2080 - VT6 - {% block title %}{% endblock title %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script>window.jQuery || document.write('<script src="{{ url_for('static', filename='jquery-3.3.1.js') }}">\x3C/script>')</script>
 </head>
 <body class="kirjautunut">
     <header>
-        {% block nav %}
         <nav><ul>
-            {% if kilpailu %}
-                <li><a id="navi-kilpailu" href="{{ url_for('sivu_kilpailut', avain=kilpailu.key.urlsafe()) }}">{{ kilpailu.nimi|e }}</a></li>
+        {% block nav %}
+            <li><a class="navbar-brand" href="{{url_for('feeds.page_reader')}}">{{ _("RSS-reader") }}</a></li>
+            <li><form action="{{url_for("feeds.page_add_feed")}}" method="GET">
+                <input name="url" type="text" required="" placeholder="{{ _('Discover Feed') }}" />
+                <noscript><input type="submit" value="{{ _("Search") }}" /></noscript>
+            </form></li>
+            {% if current_user %}
+                <li><form action="{{url_for('user.page_logout')}}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button>{{_("Log Out")}}</button>
+                </form></li>
             {% else %}
-                <li><a id="navi-kilpailu" href="{{ url_for('sivu_kilpailut') }}" data-puuttuu="true">{{ _("Kilpailut") }}</a></li>
+                <li><form target="{{login_url()}}" action="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button>{{_("Log In")}}</button>
+                </form></li>
             {% endif %}
-            {% if joukkue %}
-                <li id="navi-joukkue"><a href="{{ url_for('sivu_muokkaa', avain=joukkue.key.urlsafe()) }}">{{ joukkue.nimi|e }}</a></li>
-            {% endif %}
-            <li id="navi-spacer">&nbsp;</li>
-            <li id="navi-logout">
-                <form action="{{ url_for('sivu_uloskirjaudu') }}" method="POST">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <input type="submit" value="{{ _("Kirjaudu ulos")|e }}" />
-                </form>
-            </li>
-            {#
-            <li id="navi-kilpailu">{% if current_user is defined %}{{current_user.kilpailun_nimi|e}}{% endif %}</li>
-            <li id="navi-joukkue">{% if current_user is defined %}<a href="{{ url_for('joukkueet.muokkaa', joukkue_id=current_user.id) }}">
-                {{current_user.nimi|e}}</a>{% endif %}
-            </li>
-            <li><a href="{{ url_for('joukkueet.muokkaa', joukkue_id=current_user.id) }}">{{current_user.nimi|e}}</a></li>
-            <li><a href="{{ url_for('joukkueet.index') }}">Joukkueet</a></li>
             
-            #}
-        </ul></nav>
         {% endblock nav%}
+        </ul></nav>
     </header>
-    
     {% block viesti %}
     {% for message in get_flashed_messages() %}
         <div class="flash">
-            <span class="glyph">❗️</span> {{ message|e }}
+            <span class="glyph">❗️</span> {{ message }}
         </div>
     {% endfor %}
     {% endblock viesti %}
-    <section class="content">
+    <div class="content">
         {% block content %}
-            pu-pu-puppidu.
         {% endblock content%}
-    </section>
+    </div>
 
     <footer>
+        {% block footer %}
+        {% endblock footer %}
     </footer>
-    <script src="{{ url_for('static', filename='tiea2080-vt6.js') }}"></script>
 </body>
 </html>

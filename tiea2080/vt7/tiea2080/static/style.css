@@ -1,0 +1,146 @@
+/**
+ * Bootstrap styles
+ */
+ .input-group {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    width: 100%;
+}
+
+.input-group > .form-control {
+    position: relative;
+    flex: 1 1 auto;
+    width: 1%;
+    margin-bottom: 0;
+}
+
+.feed > button {
+    align-items: center;
+    align-self: center;
+    background: 0 0;
+    border: 0;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    padding-top: 0;
+    padding-bottom: 0;
+    text-align: center;
+    width: 64px;
+    position: relative;
+}
+
+.feed > button .title {
+    color: #262626;
+    display: block;
+    font-size: 12px;
+    line-height: 14px;
+    max-width: 64px;
+    overflow: hidden;
+    position: absolute;
+    text-align: center;
+    text-overflow: ellipsis;
+    top: 68px;
+    white-space: nowrap;
+}
+
+.feeds {
+    border: 1px solid #e6e6e6;
+    border-radius: 3px;
+    margin-bottom: 24px;
+
+    background: #fafafa;
+    display: block;
+    padding: 10px 8px;
+    height: 82px;
+
+    display: flex;
+}
+
+.feed .thumb {
+    width: 96px;
+    height: 96px;
+}
+
+.feeds .thumb,
+.articles .thumb {
+    transition: all .15s linear;
+    background-color: #fafafa;
+    border-radius: 50%;
+    box-sizing: border-box;
+    display: block;
+    flex: 0 0 auto;
+    overflow: hidden;
+    position: relative;
+}
+
+
+
+.feeds .thumb:hover {
+    transition: all .15s linear;
+    margin: -4px -4px;
+    width: 104px;
+    height: 104px;
+}
+.feeds .thumb:hover ~ .title {
+    opacity: 0;
+}
+
+.add-feed .thumb::before {
+    transition: all .15s linear;
+    position: absolute;
+    width:100%;
+    height:100%;
+    top:0;
+    left:0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(221, 221, 221, 0.6);
+    z-index: 100;
+    content:"+";
+    color:rgb(68, 68, 68);
+    opacity: 0;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 96px;
+    font-size:96px;
+}
+
+
+.add-feed.subscribed .thumb::before {
+    content:"";
+}
+.add-feed.subscribed .thumb:hover::before {
+    content:"-" !important;
+
+}
+.add-feed.subscribed .thumb::before,
+.add-feed .thumb:hover::before {
+    opacity: 1;
+}
+
+.add-feed .thumb::after {
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 50%;
+    bottom: 0;
+    content: '';
+    left: 0;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.thumb img {
+    height: 100%;
+    width: 100%;
+}
+
+.list-thumbs {}
+
+.articles .thumb {
+    width:200px;
+    height: 200px;
+}
+

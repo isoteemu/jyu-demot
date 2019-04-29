@@ -1,0 +1,36 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+        <fieldset class="discover-feeds">
+            <legend>{{_("Discover feeds")}}</legend>
+
+            <form method="GET" action="{{url_for('feeds.page_add_feed')}}">
+                <div class="row">
+                    <div class="input-group">
+                        <i class="input-group-prepend">🔍</i>
+                        <input class="form-control" id="{{form.url.id}}" name="{{form.url.name}}" value="{{form.url.data or ""|e}}" placeholder="{{form.url.description}}" {% if form.url.flags.required %}required=""{% endif %} />
+                        <button class="btn btn-outline-success">{{_("Search")}}</button>
+                    </div>
+                </div>
+            </form>
+            <form method="POST" action="{{url_for('feeds.page_add_feed')}}" class="feeds">
+            {{ form.hidden_tag() }}
+            {% for feed in feeds %}
+                <div class="feed">
+                    <button class="add-feed {%if feeds[feed].user_subscribed(current_user) %}subscribed{%endif%}" title="{{_("Subscride to feed \"%(feed)s\"", feed=feeds[feed].title)|e}}" name="url" value="{{feeds[feed].url|e}}">
+                        <span class="thumb" title="{{ feeds[feed].title|e }}">
+                            {{feeds[feed]|asset_img}}
+                        </span>
+                        <div class="title">{{feeds[feed].title|e}}</div>
+                    </button>
+                </div>
+            {% endfor %}
+            </form>
+        </fieldset>
+{% endblock content %}
+
+{% block footer %}
+    {{super()}}
+    <div><a href="https://clearbit.com/docs#logo-api">{{_("Uses Clearbit logo api")}}</a></div>
+    <div><a href="https://github.com/GNOME/adwaita-icon-theme">{{_("RSS Logo from Adawait icon theme")}}</a></div>
+{% endblock footer %}

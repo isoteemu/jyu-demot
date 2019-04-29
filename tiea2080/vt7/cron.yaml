@@ -1,0 +1,4 @@
+cron:
+- description: "hourly feed update check"
+  url: /cron/feeds-update
+  schedule: every 1 hours
