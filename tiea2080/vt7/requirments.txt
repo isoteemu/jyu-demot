@@ -1,0 +1,10 @@
+Flask
+Flask-Babel
+flask-wtf
+Flask-Caching
+Werkzeug
+feedparser
+requests
+requests_toolbelt
+url-normalize
+beautifulsoup4

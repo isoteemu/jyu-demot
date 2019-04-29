@@ -1,4 +1,4 @@
-application: tearautt-tiea2080-vt7
+#application: tearautt-tiea2080-vt7
 runtime: python27
 api_version: 1
 threadsafe: true
@@ -11,6 +11,14 @@ handlers:
 - url: /static
   static_dir: tiea2080/static
 
+- url: /cron/.*
+  script: main.app
+  login: admin
+
+- url: /task/.*
+  script: main.app
+
 - url: /.*
   script: main.app
   login: required
+

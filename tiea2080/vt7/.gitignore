@@ -1,4 +1,5 @@
 .vscode/
 lib/
+instance/
 tiea2080/static/jquery-3.3.1.js
 .env
