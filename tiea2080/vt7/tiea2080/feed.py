@@ -57,7 +57,7 @@ ROUTES
 
 @bp.route("/test")
 def page_test():
-    feed_refresh()
+    return repr(_discover_feed("https://www.reddit.com/r/feminism/.rss"))
     return ""
 
 
@@ -452,8 +452,8 @@ def update_feed_with_rss(feed, content):
     # Use both if possible as middleground.
     title = feed.title
     try:
-        title = feed_parser['feed'].get("title", title).decode("utf-8")
-        subtitle = feed_parser['feed'].get('subtitle', "").decode("utf-8")
+        title = feed_parser['feed'].get("title", title)
+        subtitle = feed_parser['feed'].get('subtitle', "")
         if subtitle and subtitle != title:
             if subtitle.startswith(title):
                 title = subtitle
@@ -467,12 +467,17 @@ def update_feed_with_rss(feed, content):
     # Strip unnecessary stuff from title.
     feed.title = Markup(title).striptags()
     if "link" in feed_parser['feed']:
-        feed.link = feed_parser['feed']['link'].decode("utf-8")
+        feed.link = feed_parser['feed'].get("link")
+
+    print(repr(feed_parser["feed"]))
 
     if 'image' in feed_parser['feed'] and 'href' in feed_parser['feed']['image']:
         # Create asset entity from feed image. Thease are usually poor quality.
         img = feed_parser['feed']['image']
-        asset_factory(img['href'].decode("utf-8"), feed, width=img.get("width"), height=img.get("height"))
+        asset_factory(img.get("href"), feed, width=img.get("width", None), height=img.get("height", None))
+
+    if valid_url(feed_parser['feed'].get("logo", None)):
+        asset_factory(feed_parser['feed'].get("logo"), feed, weight=1)
 
 
 def update_feed_articles_with_rss(feed, content):
@@ -496,19 +501,20 @@ def update_feed_articles_with_rss(feed, content):
         try:
             # Find textual stuff
             id = article.get("id", None)
-            title = Markup(article["title"]).striptags()
-            url = article["link"]
+
+            title = Markup(article.get("title", "")).striptags()
+            url = article.get("link")
 
             updated = article.get("updated_parsed") or article.get("published_parsed")
             published = datetime(*updated[:6])
 
             if "content" in article:
                 if type(article['content']) == list:
-                    content = u"%s" % article['content'][0].get("value")
+                    content = article['content'][0].get("value")
                 else:
-                    content = u"%s" % article['content'].get("value")
+                    content = article['content'].get("value")
             else:
-                content = u"%s" % article.get("summary", "")
+                content = article.get("summary", "")
 
             article_entity = article_factory(feed, id=id, title=title, url=url,
                                              published=published, content=content)
