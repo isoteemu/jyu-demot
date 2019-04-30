@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
 r"""
-Asset handling
+Asset handling.
 
-Config params:
-THUMBNAIL_MEDIA_THUMBNAIL_ROOT
+TODO: Use blobstore
 
 """
 from flask import Blueprint, send_from_directory, abort, current_app as app, render_template, url_for, redirect, make_response
@@ -52,6 +51,10 @@ def asset_img(entity, size=None):
         >>> {{ entity|asset_img }}
 
     """
+
+    if not entity:
+        app.logger.warning(u"Can't create image; Entity is missing.")
+        return u'<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="missing-entity" /><!-- Entity missing -->'
 
     if size is None:
         size = entity._get_kind()

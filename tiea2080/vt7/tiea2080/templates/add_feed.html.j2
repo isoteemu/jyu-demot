@@ -1,32 +1,48 @@
 {% extends "base.html.j2" %}
 
-{% block content %}
-        <fieldset class="discover-feeds">
-            <legend>{{_("Discover feeds")}}</legend>
+{% macro feed_subscride(feed) -%}
+    <div class="entity feed">
+        <button class="add-feed {%if feed.user_subscribed(current_user) %}subscribed{%endif%}" title="{{_("Subscride to feed \"%(feed)s\"", feed=feed.title)|e}}" name="url" value="{{feed.url|e}}">
+            <span class="thumb" title="{{ feed.title|e }}">
+                {{feed|asset_img}}
+            </span>
+            <div class="title">{{feed.title|e}}</div>
+            {%if feed.user_subscribed(current_user) %}
+                <span class="bubble-tag btn btn-secondary unsubscribe">-</span>
+            {% else %}
+                <span class="bubble-tag btn btn-primary subscribe">+</span>
+            {% endif %}
+        </button>
+    </div>
+{%- endmacro %}
 
-            <form method="GET" action="{{url_for('feeds.page_add_feed')}}">
-                <div class="row">
-                    <div class="input-group">
-                        <i class="input-group-prepend">🔍</i>
-                        <input class="form-control" id="{{form.url.id}}" name="{{form.url.name}}" value="{{form.url.data or ""|e}}" placeholder="{{form.url.description}}" {% if form.url.flags.required %}required=""{% endif %} />
-                        <button class="btn btn-outline-success">{{_("Search")}}</button>
-                    </div>
-                </div>
-            </form>
-            <form method="POST" action="{{url_for('feeds.page_add_feed')}}" class="feeds">
+{% block content %}
+    <section class="container bg-light">
+        <div class="feeds container ">
+            <form method="POST" action="{{url_for('feeds.page_add_feed')}}" class="row justify-content-center">
             {{ form.hidden_tag() }}
-            {% for feed in feeds %}
-                <div class="feed">
-                    <button class="add-feed {%if feeds[feed].user_subscribed(current_user) %}subscribed{%endif%}" title="{{_("Subscride to feed \"%(feed)s\"", feed=feeds[feed].title)|e}}" name="url" value="{{feeds[feed].url|e}}">
-                        <span class="thumb" title="{{ feeds[feed].title|e }}">
-                            {{feeds[feed]|asset_img}}
-                        </span>
-                        <div class="title">{{feeds[feed].title|e}}</div>
-                    </button>
-                </div>
+            {% for feed in feeds.values() %}
+                {{feed_subscride(feed)}}
             {% endfor %}
             </form>
-        </fieldset>
+        </div>
+    </section>
+
+    {% if discover %}
+    <section class="bg-white box-shadow container-fluid">
+        <form method="POST" action="{{url_for('feeds.page_add_feed')}}" class="row justify-content-center">
+            {{ form.hidden_tag() }}
+            {% for category in discover %}
+            <fieldset class="feeds container">
+                <legend>{{category|e}}</legend>
+                {% for feed in discover[category] %}
+                    {{feed_subscride(feed)}}
+                {% endfor %}
+            </fieldset>
+            {% endfor %}
+        </form>
+    </section>
+    {% endif %}
 {% endblock content %}
 
 {% block footer %}

@@ -1,33 +1,45 @@
 {% extends "base.html.j2" %}
 
 {% block content %}
-    <section>
-        <form action="{{url_for('feeds.page_reader')}}" method="GET" class="feeds">
-        {% for sub in feeds %}
-            <div class="feed">
-                <button class="subscribed" name="feed" value="{{sub.feed.id()|e}}">
-                    <span class="thumb" title="{{ sub.title|e }}">
-                        {{sub.feed.get()|asset_img}}
-                    </span>
-                    <div class="title">{{sub.title|e}}</div>
-                </button>
-            </div>
-        {% endfor %}
-        </form>
+    <section class="container container-fluid">
+        <div class="feeds container justify-content-center">
+            <form action="{{url_for('feeds.page_reader')}}" method="GET" class="row justify-content-center row" >
+                <div class="entity feed feed-stub">
+                    <a class="add-feed" href="{{url_for('feeds.page_add_feed')}}">
+                        <span class="thumb">
+                            <img src="{{url_for('static', filename='application-rss+xml-symbolic.svg')}}" />
+                        </span>
+                        <div class="title">{{ _("Discover new feeds") }}</div>
+                        <span class="bubble-tag btn btn-primary subscribe">+</span>
+                    </a>
+                </div>
+
+                {% for sub in feeds %}
+                <div class="entity feed">
+                    <button class="subscribed" name="feed" value="{{sub.feed.id()|e}}">
+                        <span class="thumb" title="{{ sub.title|e }}">
+                            {{sub.feed.get()|asset_img}}
+                        </span>
+                        <div class="title">{{sub.title|e}}</div>
+                    </button>
+                </div>
+                {% endfor %}
+            </form>
+        </div>
     </section>
-    <section class="articles">
-        <ul class="thumbs">
-            {% for article in articles %}
-            <li class="zigzag">
-                <a href="{{article.url|e}}">
-                    <span class="thumb" title="{{ article.title|e }}">
-                        {{article|asset_img}}
-                    </span>
-                    <div class="article-title">{{article.title|e}}</div>
-                </a>
-            </li>
-            {% endfor %}
-        </ul>
+    <section class="articles container-fluid bg-white box-shadow">
+        <div class="container container-align-center">
+            <ul class="thumbs container justify-content-center col-sm-12 col-md-9">
+                {% for article in articles %}<li class="entity article zigzag container-align-center">
+                    <a href="{{article.url|e}}">
+                        <span class="thumb" title="{{ article.title|e }}">
+                            {{article|asset_img}}
+                        </span>
+                        <div class="title d-flex align-items-center"><h5>{{article.title|e}}<h5></div>
+                    </a>
+                </li>{% endfor %}
+            </ul>
+        </div>
     </section>
 
 {% endblock content %}

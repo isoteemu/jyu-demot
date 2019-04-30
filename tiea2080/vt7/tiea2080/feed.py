@@ -55,6 +55,11 @@ ROUTES
 ======
 """
 
+@bp.route("/test")
+def page_test():
+    feed_refresh()
+    return ""
+
 
 @bp.route("/")
 def page_reader():
@@ -69,8 +74,12 @@ def page_reader():
 
     feeds = []
     articles = []
+    user = get_current_user()
 
-    subscribed = Subscription.query(Subscription.user == get_current_user().key)
+    subscribed = Subscription.query(Subscription.user == user.key)
+
+    if subscribed.count(1) == 0:
+        subscribed = subscribe_into_defaults(user)
 
     for feed_sub in subscribed:
         feeds.append(feed_sub)
@@ -104,6 +113,8 @@ def page_add_feed():
     feed_form = AddFeedForm(data={"url": request.args.get("url")})
     feeds = {}
 
+    discover = {}
+
     # TODO: Implement text searching.
     if feed_form.url.data:
         url = url_normalize(feed_form.url.data)
@@ -114,6 +125,8 @@ def page_add_feed():
 
         if valid_url(url):
             feeds.update(discover_feeds(url))
+            if not feeds:
+                flash(_(u"No feeds found"))
 
             if feed_form.validate_on_submit():
                 # User wants to subscribe into feed.
@@ -145,8 +158,66 @@ def page_add_feed():
                             flash(_(u"Feed %s added. It might take a second to show up." % feed_markup))
                         else:
                             flash(_(u"Feed %s added" % feed_markup))
+        else:
+            flash(_("Invalid url", "error"))
 
-    return render_template("add_feed.html.j2", form=feed_form, feeds=feeds)
+    if not feeds:
+        discover = cool_feeds()
+
+    return render_template("add_feed.html.j2", form=feed_form, feeds=feeds, discover=discover)
+
+
+def subscribe_into_defaults(user):
+    DEFAULTS = [
+        url_for('static', filename="rss.xml", _external=True),
+        u"https://www.hs.fi/rss/tuoreimmat.xml",
+        u"https://www.reddit.com/r/lego/.rss",
+        u"https://xkcd.com/atom.xml",
+    ]
+
+    subs = []
+    for feed_url in DEFAULTS:
+        try:
+            k, feed = discover_feeds(feed_url).popitem()
+            feed.put()
+
+            sub = feed_subscride(feed, user)
+            sub.put()
+
+            schedule_feed_update_if_needed(feed)
+            subs.append(sub)
+        except Exception as e:
+            app.logger.exception(e)
+
+    flash(_(u"Defaults feeds subscrided into"))
+
+    return subs
+
+
+def cool_feeds():
+    feeds = {
+        _(u"Technology"): [
+            _discover_feed("https://lwn.net/headlines/newrss"),
+            _discover_feed("http://rss.slashdot.org/Slashdot/slashdotMain"),
+            _discover_feed("https://news.ycombinator.com/rss"),
+            _discover_feed("https://techcrunch.com/feed/")
+        ],
+        _(u"Culture"): [
+            _discover_feed("https://jezebel.com/rss"),
+            _discover_feed("https://www.reddit.com/r/feminism/.rss"),
+            _discover_feed("https://slutever.com/atom")
+        ],
+        _(u"Entertainmet"): [
+            _discover_feed("https://feeds.yle.fi/uutiset/v1/majorHeadlines/YLE_URHEILU.rss"),
+            _discover_feed("https://www.smbc-comics.com/comic/rss"),
+            _discover_feed("https://nerdist.com/feed/"),
+         ]
+    }
+    return feeds
+
+
+def _discover_feed(url):
+    return discover_feeds(url).values()[0]
 
 
 @bp.route("/cron/feeds-update")
@@ -159,9 +230,8 @@ def feed_refresh():
 
     for feed in Feed.query().fetch():
         schedule_feed_update_if_needed(feed)
-        o.append(u"Scheduling feed %s for update" % repr(feed.url))
 
-    return u"\n".join(o)
+    return "", 202
 
 
 def schedule_feed_update(feed):
@@ -172,7 +242,6 @@ def schedule_feed_update(feed):
         task = taskqueue.add(
             url=url_for('feeds.update_feed_task'),
             params={'feed': key},
-            name=u"feedupdate-%s" % key,
             method='GET',
         )
     except taskqueue.TombstonedTaskError as e:
@@ -189,8 +258,11 @@ def schedule_feed_update_if_needed(feed):
     Schedules feed update, if feed hasn't been updated for a while.
     """
     update = datetime.utcnow() - timedelta(minutes=feed.update_inteval)
-    if not feed.updated or feed.updated < update:
-        return schedule_feed_update(feed)
+    if not feed.updated or feed.updated < update or app.debug:
+        task = schedule_feed_update(feed)
+        if task:
+            app.logger.info(u"Scheduling feed %s for update at %s" % (repr(feed.url), task.eta))
+        return
 
     return False
 
@@ -198,6 +270,10 @@ def schedule_feed_update_if_needed(feed):
 @bp.route("/task/update-feed", methods=('POST','GET'))
 @csrf.exempt
 def update_feed_task():
+    """
+    Task for updating feed.
+    """
+
     feed_key = request.args.get("feed")
 
     # Usual key checks. Notice empty returs in cases feed lookup fails.
@@ -216,16 +292,15 @@ def update_feed_task():
 
 
 def update_feed(feed):
-
     # TODO: Check failure
     r = crawler().get(feed.url)
+    r.raise_for_status()
 
     update_feed_with_rss(feed, r.content)
     update_feed_articles_with_rss(feed, r.content)
 
     feed.updated = datetime.utcnow()
     feed.put()
-
 
 
 def feed_subscride(feed, user=None):
@@ -283,11 +358,12 @@ def discover_feeds(url, redirects=0, fallback_title=""):
         if response_type in feedparser_content_types:
             # If url response was suitable content type, try add it into selection
             feed_entity = feed_factory(url, type="feedparser")
-            if not feed_entity.title:
-                feed_entity.title = fallback_title
-            update_feed_with_rss(feed_entity, r.content)
 
+            update_feed_with_rss(feed_entity, r.content)
             update_feed_articles_with_rss(feed_entity, r.content)
+
+            if not feed_entity.title:
+                feed_entity.title = fallback_title or url
 
             rss_feeds[feed_entity.url] = feed_entity
 

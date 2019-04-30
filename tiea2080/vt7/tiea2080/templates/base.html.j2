@@ -2,51 +2,67 @@
 <html lang="{{get_locale()}}">
 <head>
     <meta charset="{{config['CHARSET']}}" />
-    <title>TIEA2080 - VT6 - {% block title %}{% endblock title %}</title>
+    <title>{% block title %}RSS Reader{% endblock title %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script>window.jQuery || document.write('<script src="{{ url_for('static', filename='jquery-3.3.1.js') }}">\x3C/script>')</script>
+
 </head>
-<body class="kirjautunut">
-    <header>
-        <nav><ul>
-        {% block nav %}
-            <li><a class="navbar-brand" href="{{url_for('feeds.page_reader')}}">{{ _("RSS-reader") }}</a></li>
-            <li><form action="{{url_for("feeds.page_add_feed")}}" method="GET">
-                <input name="url" type="text" required="" placeholder="{{ _('Discover Feed') }}" />
-                <noscript><input type="submit" value="{{ _("Search") }}" /></noscript>
-            </form></li>
+<body class="kirjautunut bg-light">
+    <header class="site-header row sticky-top bg-white box-shadow">
+        <nav class="navbar container navbar-light flex-nowrap d-flex">
+            <a class="navbar-brand" href="{{url_for('feeds.page_reader')}}">{{ _("RSS Reader") }}</a>
+
+            {% block nav %}
+            <form action="{{url_for("feeds.page_add_feed")}}" method="GET" class="form-inline justify-content-center">
+                <div class="input-group search-box">
+                    <label class="input-group-prepend">
+                        <span class="material-icons input-group-text ">&#xe8b6;</span>
+                    </label>
+                    <input id="search-input" name="url" value="{{request.args.get('url', '')}}" class="form-control search" type="text" placeholder="{{ _('Discover Feed') }}" />
+                    <div class="input-group-append">
+                        <input type="reset" class="input-group-text material-icons" value="&#xe5c9;" />
+                    </div>
+                </div>
+            </form>
+
             {% if current_user %}
-                <li><form action="{{url_for('user.page_logout')}}" method="POST">
+                <form action="{{url_for('user.page_logout')}}" method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <button>{{_("Log Out")}}</button>
-                </form></li>
+                </form>
             {% else %}
-                <li><form target="{{login_url()}}" action="POST">
+                <form target="{{login_url()}}" action="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <button>{{_("Log In")}}</button>
-                </form></li>
+                </form>
             {% endif %}
-            
-        {% endblock nav%}
-        </ul></nav>
+
+            {% endblock nav%}
+
+        </nav>
     </header>
     {% block viesti %}
-    {% for message in get_flashed_messages() %}
-        <div class="flash">
-            <span class="glyph">❗️</span> {{ message }}
+    <div class="messages container">
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+        
+            <div class="alert alert-primary {%if category == 'error'%}alert-danger{%endif%}" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
         </div>
-    {% endfor %}
     {% endblock viesti %}
     <div class="content">
         {% block content %}
         {% endblock content%}
     </div>
 
-    <footer>
+    <footer class="container">
         {% block footer %}
         {% endblock footer %}
     </footer>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="//stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </body>
 </html>
