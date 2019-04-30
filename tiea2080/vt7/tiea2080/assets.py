@@ -14,7 +14,7 @@ import os
 from urllib import quote, unquote
 import uuid
 
-from . import memcache
+from . import memcache, logger
 from .utils import url_normalize, valid_url, urlparse, crawler
 from .models import Asset, AssetedModel, ndb, get_by_key, model_storage
 
@@ -90,6 +90,8 @@ def get_asset_dimensions(asset, size):
 
 
 def asset_factory(url, parent, **kwargs):
+
+    app.logger.debug("Creating asset: %s, %s", __name__, url)
     url = url_normalize(url)
     id = u"%s" % uuid.uuid5(uuid.NAMESPACE_URL, url.encode("utf-8"))
     key = ndb.key.Key(Asset, id, parent=parent.key)
@@ -111,11 +113,17 @@ def get_entity_asset(entity):
 
         if isinstance(e, Asset) and e.key.parent() == entity.key:
             _asset = model_storage[k]
-            if not asset or asset.weight < _asset.weight:
+            if not asset or asset.weight > _asset.weight:
                 asset = _asset
 
-    if not asset:
+    if asset:
+        # check storage for heavier asset
+        _asset = Asset.query(Asset.weight > asset.weight, ancestor=entity.key).order(-Asset.weight).get()
+        if _asset:
+            asset = _asset
+    else:
         asset = Asset.query(ancestor=entity.key).order(-Asset.weight).get()
+
 
     return asset
 
@@ -137,12 +145,12 @@ def scrape_asset(asset):
     size = None
 
     # TODO: Implement blobstore
-    # if ratio >= horizontal:
-    #     size = ASSET_SIZES['horizontal']
-    # elif ratio <= vertical:
-    #     size = ASSET_SIZES['vertical']
-    # else:
-    #     size = ASSET_SIZES['square']
+    if ratio >= horizontal:
+        size = ASSET_SIZES['horizontal']
+    elif ratio <= vertical:
+        size = ASSET_SIZES['vertical']
+    else:
+        size = ASSET_SIZES['square']
 
     size = (200, 200)
 
@@ -181,6 +189,7 @@ def page_asset(size, asset):
             entity.put()
 
         resp = make_response(entity.data, 200)
+        resp.headers['Cache-Control'] = u"public, max-age=31536000"
         resp.mimetype = "image/png"
 
         return resp
