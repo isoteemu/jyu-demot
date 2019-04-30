@@ -30,7 +30,7 @@ feedparser_content_types = [
 ]
 
 
-default_limit = 20
+default_limit = 16
 
 bp = Blueprint('feeds', __name__)
 
@@ -57,8 +57,11 @@ ROUTES
 
 @bp.route("/test")
 def page_test():
-    return repr(_discover_feed("https://www.reddit.com/r/feminism/.rss"))
-    return ""
+    o = u""
+    e = discover_feeds("http://rss.slashdot.org/Slashdot/slashdotMain").values()[0]
+    o += repr(e)
+    o += repr(get_entity_asset(e))
+    return o
 
 
 @bp.route("/")
@@ -101,6 +104,10 @@ def page_reader():
         else:
             return 0
     articles = sorted(articles, sort_datetime)
+    # Make divisible by 4, for page layout purposes
+    n = len(articles)
+    if n > 4:
+        articles = articles[:n - n % 4]
 
     return render_template("page-reader.html.j2", feeds=feeds, articles=articles)
 
@@ -173,6 +180,7 @@ def subscribe_into_defaults(user):
         u"https://www.hs.fi/rss/tuoreimmat.xml",
         u"https://www.reddit.com/r/lego/.rss",
         u"https://xkcd.com/atom.xml",
+        u"https://github.com/isoteemu/jyu-demot/commits/master.atom"
     ]
 
     subs = []
@@ -200,7 +208,8 @@ def cool_feeds():
             _discover_feed("https://lwn.net/headlines/newrss"),
             _discover_feed("http://rss.slashdot.org/Slashdot/slashdotMain"),
             _discover_feed("https://news.ycombinator.com/rss"),
-            _discover_feed("https://techcrunch.com/feed/")
+            _discover_feed("https://techcrunch.com/feed/"),
+            _discover_feed("http://feeds.arstechnica.com/arstechnica/technology-lab"),
         ],
         _(u"Culture"): [
             _discover_feed("https://jezebel.com/rss"),
@@ -469,14 +478,12 @@ def update_feed_with_rss(feed, content):
     if "link" in feed_parser['feed']:
         feed.link = feed_parser['feed'].get("link")
 
-    print(repr(feed_parser["feed"]))
-
     if 'image' in feed_parser['feed'] and 'href' in feed_parser['feed']['image']:
         # Create asset entity from feed image. Thease are usually poor quality.
         img = feed_parser['feed']['image']
         asset_factory(img.get("href"), feed, width=img.get("width", None), height=img.get("height", None))
 
-    if valid_url(feed_parser['feed'].get("logo", None)):
+    if valid_url(feed_parser['feed'].get("logo", "")):
         asset_factory(feed_parser['feed'].get("logo"), feed, weight=1)
 
 
@@ -555,6 +562,8 @@ def scrape_logo(soup):
     """
     Look for logo from webpage.
     """
+
+    app.logger.debug("Scraping logo")
 
     # Try lookin suitable meta tag, and return most suitable one.
     # TODO: enumerate candidates.
