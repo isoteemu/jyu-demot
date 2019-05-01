@@ -55,14 +55,6 @@ ROUTES
 ======
 """
 
-@bp.route("/test")
-def page_test():
-    o = u""
-    e = discover_feeds("http://rss.slashdot.org/Slashdot/slashdotMain").values()[0]
-    o += repr(e)
-    o += repr(get_entity_asset(e))
-    return o
-
 
 @bp.route("/")
 def page_reader():
@@ -435,8 +427,9 @@ def feed_factory(url, **kwargs):
 
 def article_factory(feed, id=None, **kwargs):
     if not id:
-        content = "{title}|{published}".format(**kwargs)
-        id = unicode(uuid.uuid5(namespace=uuid.NAMESPACE_OID, name=content.decode("utf-8")))
+        app.logger.info(u"Generating pseudo ID for %s: %s", feed.title, kwargs['title'])
+        content = u"{title}|{published}".format(**kwargs)
+        id = unicode(uuid.uuid5(namespace=uuid.NAMESPACE_OID, name=content))
 
     key = ndb.key.Key(Article, id, parent=feed.key)
 
