@@ -189,7 +189,7 @@ def subscribe_into_defaults(user):
         except Exception as e:
             app.logger.exception(e)
 
-    flash(_(u"Defaults feeds subscrided into"))
+    flash(_(u"Default feeds subscrided into"))
 
     return subs
 
@@ -347,6 +347,7 @@ def discover_feeds(url, redirects=0, fallback_title=""):
 
     try:
         # Fetch page, and generate suitable soup for it.
+        app.logger.debug(u"Looking url %s for feeds.", repr(url))
         r = crawler().get(url)
         soup = html_parser(r.text)
     except Exception as e:
@@ -429,7 +430,7 @@ def article_factory(feed, id=None, **kwargs):
     if not id:
         app.logger.info(u"Generating pseudo ID for %s: %s", feed.title, kwargs['title'])
         content = u"{title}|{published}".format(**kwargs)
-        id = unicode(uuid.uuid5(namespace=uuid.NAMESPACE_OID, name=content))
+        id = unicode(uuid.uuid5(namespace=uuid.NAMESPACE_OID, name=content.encode("utf-8")))
 
     key = ndb.key.Key(Article, id, parent=feed.key)
 
