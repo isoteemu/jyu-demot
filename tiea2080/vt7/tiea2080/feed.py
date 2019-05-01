@@ -18,7 +18,7 @@ from io import BytesIO
 import re
 import uuid
 
-from . import csrf
+from . import csrf, cache
 from .utils import valid_url, url_normalize, html_parser, crawler
 from .models import Feed, Asset, Subscription, Article, User, ndb, get_by_key, subscription_key
 from .user import get_current_user
@@ -160,8 +160,7 @@ def page_add_feed():
         else:
             flash(_("Invalid url", "error"))
 
-    if not feeds:
-        discover = cool_feeds()
+    discover = cool_feeds()
 
     return render_template("add_feed.html.j2", form=feed_form, feeds=feeds, discover=discover)
 
@@ -194,6 +193,7 @@ def subscribe_into_defaults(user):
     return subs
 
 
+@cache.cached(timeout=60 * 60 * 24)
 def cool_feeds():
     feeds = {
         _(u"Technology"): [
