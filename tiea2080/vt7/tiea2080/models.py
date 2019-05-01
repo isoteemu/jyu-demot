@@ -113,11 +113,40 @@ class Feed(AssetedModel):
         for article in self._articles:
             get_by_key(article).put()
 
+    def delete(self, *args, **kwargs):
+        for sub in Subscription.query(Subscription.feed == self.key).fetch():
+            email = "[DELETED]"
+            try:
+                email = sub.user.get().email
+            except:
+                pass
+            app.logger.info(u"Deleting Feed %s subscription for %s", sub.title, email)
+            sub.delete()
+
+        i = 0
+        for article in Article.query(Article.feed == self.key).fetch():
+            article.delete()
+            i += 1
+        app.logger.info("Deleted %d article(s) from %s", i, repr(self.title))
+
+        super(Feed, self).delete(*args, **kwargs)
+
     def user_subscribed(self, user):
         r"""
         Return ``True`` if currently logged in user is subscribed.
         """
-        subscription = get_by_key(subscription_key(user, self))
+        subscription = None
+        try:
+            key = subscription_key(user, self)
+            if not key:
+                return False
+
+            subscription = get_by_key(key)
+            app.logger.debug("user_subscribed(%s, %s, %s): ", self.title, user.email, True if subscription else False)
+
+        except Exception as e:
+            app.logger.exception(e)
+
         if not subscription:
             return False
         else:
@@ -127,6 +156,12 @@ class Feed(AssetedModel):
 class User(Model):
     email = ndb.StringProperty()
     is_authenticated = False
+
+    def delete(self, *args, **kwargs):
+        for sub in Subscription.query(Subscription.user == self.key).fetch():
+            app.logger.info(u"Deleting subscription for user %s", self.user.get().email)
+
+        super(User, self).delete(*args, **kwargs)
 
 
 class Article(AssetedModel):
@@ -162,9 +197,13 @@ def subscription_key(user, feed):
     r"""
     Generate subscription key.
     """
+    try:
+        key_str = "%s|%s" % (repr(user.key.id()), repr(feed.key.id()))
+        id = uuid.uuid5(namespace=uuid.NAMESPACE_OID, name=key_str.encode("utf-8"))
+    except Exception as e:
+        app.logger.error(u"Could not generate subscription key: %s", e)
+        return None
 
-    key_str = "%s|%s" % (repr(user.key.id()), repr(feed.key.id()))
-    id = uuid.uuid5(namespace=uuid.NAMESPACE_OID, name=key_str.encode("utf-8"))
     return ndb.key.Key(Subscription, str(id))
 
 
