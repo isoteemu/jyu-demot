@@ -69,7 +69,7 @@ def asset_img(entity, size=None):
 
     width, height = get_asset_dimensions(entity, size)
     params = {
-        'src': "",
+        'src': "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
         'width': width,
         'height': height,
         'alt': Markup(entity.title).striptags(),
@@ -86,9 +86,15 @@ def asset_img(entity, size=None):
             crop = True if size_px[0] == size_px[1] else False
             secure = request.is_secure
 
-            img_url = images.get_serving_url(blob_key=asset.blob_key, size=size_longest, crop=crop, secure_url=secure)
+            try:
+                img_url = images.get_serving_url(blob_key=asset.blob_key, size=size_longest, crop=crop, secure_url=secure)
+                params['src'] = img_url
+            except Exception as e:
+                # Raises ObjectNotFoundError. TODO: Locate it.
+                app.logger.info(u"Asset blob %s was not found: %s", asset.blob_key, e)
+                asset.blob_key = None
 
-            params['src'] = img_url
+                pass
 
         else:
 
