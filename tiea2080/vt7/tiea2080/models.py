@@ -4,6 +4,7 @@
 from flask import current_app as app, session
 from google.appengine.ext import ndb
 from google.appengine.api import memcache
+from google.appengine.api import images
 
 import random
 import uuid
@@ -49,6 +50,7 @@ class Asset(Model):
     # Snippet contains 10x10px presentation of image in base64 encoded format.
     snippet = ndb.TextProperty(indexed=False)
     data = ndb.BlobProperty()
+    blob_key = ndb.StringProperty()
 
     created = ndb.DateTimeProperty(auto_now_add=True)
     weight = ndb.IntegerProperty()
@@ -65,6 +67,12 @@ class Asset(Model):
     def put(self, *args, **kwargs):
         return super(Asset, self).put(*args, **kwargs)
 
+    def delete(self, *args, **kwargs):
+        if self.blob_key:
+            images.delete_serving_url_async(self.blob_key)
+
+        return super(Asset, self).delete(*args, **kwargs)
+
 
 class AssetedModel(Model):
     def __init__(self, *args, **kwargs):
@@ -75,6 +83,13 @@ class AssetedModel(Model):
         super(AssetedModel, self).put(*args, **kwargs)
         for asset_key in self._assets:
             get_by_key(asset_key).put()
+
+    def delete(self, *args, **kwargs):
+        q = Asset.query(ancestor=self.key)
+        for e in q.fetch():
+            e.delete()
+
+        return super(AssetedModel, self).delete(*args, **kwargs)
 
 
 class Feed(AssetedModel):
@@ -102,7 +117,7 @@ class Feed(AssetedModel):
         r"""
         Return ``True`` if currently logged in user is subscribed.
         """
-        subscription = subscription_key(user, self).get()
+        subscription = get_by_key(subscription_key(user, self))
         if not subscription:
             return False
         else:

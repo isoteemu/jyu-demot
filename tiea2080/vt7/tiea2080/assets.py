@@ -6,23 +6,27 @@ Asset handling.
 TODO: Use blobstore
 
 """
-from flask import Blueprint, send_from_directory, abort, current_app as app, render_template, url_for, redirect, make_response
-import werkzeug.exceptions
+from flask import (Blueprint, abort, current_app as app, request,
+                   render_template, url_for, redirect, Markup, jsonify)
+from werkzeug import parse_options_header
+
 from google.appengine.api import images
+from google.appengine.api import blobstore
+from google.appengine.api import taskqueue
+
 from base64 import b64encode
 import os
 from urllib import quote, unquote
 import uuid
 
-from . import memcache, logger
+from . import memcache, csrf
 from .utils import url_normalize, valid_url, urlparse, crawler
-from .models import Asset, AssetedModel, ndb, get_by_key, model_storage
-
-from io import BytesIO
+from .models import Asset, ndb, get_by_key, model_storage
 
 ASSET_SIZES = {
     'Feed': (96, 96),
     'Article': (200, 200),
+
     # Thease seems to be what instagram uses
     'square': (1080, 1080),
     'vertical': (1080, 1350),
@@ -36,7 +40,7 @@ def init_app(app):
     if media_url[0] != "/":
         media_url = u"/%s" % media_url
 
-    app.register_blueprint(bp, url_prefix=media_url)
+    app.register_blueprint(bp)
 
     app.jinja_env.filters.update(
         asset_img=asset_img
@@ -49,6 +53,7 @@ def asset_img(entity, size=None):
 
     ..usage:
         >>> {{ entity|asset_img }}
+        >>> {{ entity|asset_img('<ASSET_SIZE>') }}
 
     """
 
@@ -67,14 +72,43 @@ def asset_img(entity, size=None):
         'src': "",
         'width': width,
         'height': height,
-        'alt': entity.title
+        'alt': Markup(entity.title).striptags(),
     }
 
     asset = get_entity_asset(entity)
 
     # TODO: Recurse into parents.
     if asset:
-        params['src'] = url_for("assets.page_asset", size=size, asset=asset.key.urlsafe())
+        if asset.blob_key:
+            size_px = ASSET_SIZES[size]
+            size_longest = max(size_px)
+
+            crop = True if size_px[0] == size_px[1] else False
+            secure = request.is_secure
+
+            img_url = images.get_serving_url(blob_key=asset.blob_key, size=size_longest, crop=crop, secure_url=secure)
+
+            params['src'] = img_url
+
+        else:
+
+            db_asset = asset.key.get()
+
+            if db_asset and asset.blob_key is not False:
+                try:
+                    asset_key = asset.key.urlsafe()
+                    taskqueue.add(
+                        url=url_for('assets.scrape_asset_task'),
+                        params={'asset': asset_key},
+                        method='GET',
+                        name="asset-scrape-%s" % asset_key
+                    )
+                except (taskqueue.TombstonedTaskError, taskqueue.TaskAlreadyExistsError) as e:
+                    app.logger.info(u"Asset scraping task recently scheduled for url: %s (key: %s)", asset.url, asset_key)
+                    pass
+
+            params['src'] = asset.url
+
         if asset.snippet:
             params['snippet'] = asset.snippet
 
@@ -129,6 +163,13 @@ def get_entity_asset(entity):
 
 
 def scrape_asset(asset):
+    r"""
+    Download image, and store cropped version.
+
+    """
+
+    app.logger.debug("Scraping image %s", repr(asset.url))
+
     r = crawler().get(asset.url)
 
     # Stops if request failed.
@@ -144,7 +185,6 @@ def scrape_asset(asset):
 
     size = None
 
-    # TODO: Implement blobstore
     if ratio >= horizontal:
         size = ASSET_SIZES['horizontal']
     elif ratio <= vertical:
@@ -152,13 +192,14 @@ def scrape_asset(asset):
     else:
         size = ASSET_SIZES['square']
 
-    size = (200, 200)
-
     i.resize(*size, crop_to_fit=True)
 
     asset.width = size[0]
     asset.height = size[1]
-    asset.data = i.execute_transforms(output_encoding=images.PNG)
+
+    img_data = i.execute_transforms(output_encoding=images.JPEG)
+    key = send_into_blobstore(img_data, asset.key.urlsafe())
+    asset.blob_key = key
 
     # Create small snippet image.
     # TODO: Optimize png
@@ -169,35 +210,70 @@ def scrape_asset(asset):
     return asset
 
 
-@bp.route('/<size>/<asset>.png')
-def page_asset(size, asset):
+def send_into_blobstore(img_data, filename):
+    r"""
+    Send data into blobstore.
 
-    if size not in ASSET_SIZES:
-        app.logger.debug("Unknown image size requested: %s", repr(size))
-        abort(404)
+    We need to create our own http request for it.
+    """
+    handler_url = url_for('assets.send_into_blobstore_handler')
+    post_url = blobstore.create_upload_url(handler_url)
 
-    entity = get_by_key(ndb.key.Key(urlsafe=asset))
+    r = crawler().post(post_url, files={'file': (filename, img_data)})
+    r.raise_for_status()
+
+    json = r.json()
+
+    app.logger.info("Submitted asset into filestore: %s", repr(json))
+    return json['blob_key']
+
+
+
+@bp.route('/task/store-into-blobstore', methods=('POST',))
+@csrf.exempt
+def send_into_blobstore_handler():
+
+    blob = request.files.values()[0]
+
+    blob_key = parse_options_header(blob.headers['Content-Type'])[1]['blob-key']
+
+    return jsonify({
+        'status': 'OK',
+        'filename': blob.filename,
+        'blob_key': blob_key
+    })
+
+
+@bp.route("/task/scrape-asset")
+def scrape_asset_task():
+
+    asset = request.args.get("asset")
+
+    # Look datastore only for asset
+    entity = ndb.key.Key(urlsafe=asset).get()
     if not entity:
-        abort(404)
+        app.logger.warning(u"Missing entity:")
+        return "Asset not in datastore"
     elif not isinstance(entity, Asset):
-        app.logger.warning(u"Invalid Model type requested")
-        abort(404)
+        app.logger.warning(u"Model type not `Asset`: %s", type(entity))
+        abort(500)
 
     try:
-        if not entity.data:
+
+        if not entity.blob_key:
             entity = scrape_asset(entity)
             entity.put()
+            return "Added: %s" % repr(entity.blob_key), 202
+        else:
+            return "Asset already in storage", 200
 
-        resp = make_response(entity.data, 200)
-        resp.headers['Cache-Control'] = u"public, max-age=31536000"
-        resp.mimetype = "image/png"
-
-        return resp
     except Exception as e:
         app.logger.exception(e)
         # return redirect(entity.url)
+        abort(500)
 
-@bp.route("/logo/<size>/<url>")
+
+@bp.route("/asset/<size>/<url>")
 def fallback_asset(size, url):
     """
     Fallback for asset image lookup.
@@ -209,10 +285,12 @@ def fallback_asset(size, url):
 
     if not valid_url(url):
         abort(404)
-    url = url_normalize(url)
 
+    size_px = max(ASSET_SIZES.get(size, (200,200)))
+
+    url = url_normalize(url)
     urlparts = urlparse(url)
 
-    return redirect(u"https://logo.clearbit.com/%s" % urlparts.netloc)
+    return redirect(u"https://logo.clearbit.com/%s?size=%d" % (urlparts.netloc, size_px))
 
 
