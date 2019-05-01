@@ -8,7 +8,7 @@
             </span>
             <div class="title">{{feed.title|e}}</div>
             {%if feed.user_subscribed(current_user) %}
-                <span class="bubble-tag btn btn-secondary unsubscribe">-</span>
+                <span class="bubble-tag btn btn-danger unsubscribe">-</span>
             {% else %}
                 <span class="bubble-tag btn btn-primary subscribe">+</span>
             {% endif %}

@@ -107,11 +107,6 @@ header + .content {
     line-height: 2rem !important;
 }
 
-.feed > button,
-.feed > a {
-    width: 96px;
-}
-
 .entity.feed .title {
     max-width: 96px;
     top: 96px;
@@ -124,6 +119,8 @@ header + .content {
 
 .entity .thumb img {
     background-color: #fff;
+    min-width: 96px;
+    min-height: 96px;
 }
 
 
@@ -154,9 +151,9 @@ header + .content {
 
 .feeds .thumb:hover {
     transition: all .15s linear;
-    margin: 4px 4px;
+    /* margin: 4px 4px;
     width: 88px;
-    height: 88px;
+    height: 88px; */
     z-index:5;
     box-shadow: 0px 0px 0px 1rem var(--gray);
 }
@@ -174,7 +171,7 @@ header + .content {
     left:0;
     right: 0;
     bottom: 0;
-    background-color: #007bff;
+    background-color: var(--primary);
     z-index: 100;
     content:"+";
     color:#fff;
@@ -190,6 +187,7 @@ header + .content {
     content:"";
 }
 .add-feed.subscribed .thumb:hover::before {
+    background-color: var(--danger);
     content:"-" !important;
 }
 
@@ -211,8 +209,10 @@ header + .content {
 }
 
 .thumb img {
+    min-height: 100%;
+    min-width: 100%;
+    /* Fails when image is vertical. But good enough for now. */
     height: 100%;
-    width: 100%;
 }
 
 
@@ -228,6 +228,12 @@ header + .content {
 .articles .thumb {
     width: 200px;
     height: 200px;
+    background-color: var(--white);
+}
+
+.articles .thumb .img {
+    min-width: 200px;
+    min-height: 200px;
 }
 
 .articles .entity .title {
@@ -267,7 +273,10 @@ header + .content {
     padding: 0.75rem;
 }
 
+.articles .no-asset.entity .title {
+    opacity: 1;
+}
+
 .articles .entity:hover .title {
     opacity: 1;
-
 }
