@@ -14,13 +14,13 @@
                     </a>
                 </div>
 
-                {% for sub in feeds %}
+                {% for feed in feeds %}
                 <div class="entity feed">
-                    <button class="subscribed" name="feed" value="{{sub.feed.id()|e}}">
-                        <span class="thumb" title="{{ sub.title|e }}">
-                            {{sub.feed.get()|asset_img}}
+                    <button class="subscribed" name="feed" value="{{feed.key.id()|e}}">
+                        <span class="thumb" title="{{ feed.title|e }}">
+                            {{feed|asset_img}}
                         </span>
-                        <div class="title">{{sub.title|e}}</div>
+                        <div class="title">{{feed.title|e}}</div>
                     </button>
                 </div>
                 {% endfor %}
@@ -35,7 +35,7 @@
                         <span class="thumb" title="{{ article.title|e }}">
                             {{article|asset_img}}
                         </span>
-                        <div class="title d-flex align-items-center justify-content-center"><h5>{{article.title|e}}<h5></div>
+                        <div class="title d-flex align-items-center justify-content-center"><h5>{{article.title|e}}</h5></div>
                     </a>
                 </li>{% endfor %}
             </ul>
