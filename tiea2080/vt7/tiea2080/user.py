@@ -100,7 +100,7 @@ def get_notifications(offset=0, limit=None):
         notifications = cached_notifications + notifications
     else:
         print("!!! REFRESH")
-        q = Notification.query(ancestor=user.key).order(-Notification.datetime)
+        q = Notification.query(ancestor=user.key).order(-Notification.timestamp)
         for n in q.fetch(offset=offset, limit=limit):
             notifications.append(n)
 
