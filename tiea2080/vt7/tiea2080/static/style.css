@@ -69,6 +69,18 @@ form#nav-profile *:active .material-icons {
     display: none;
 }
 
+.nav-icons button,
+.nav-icons a.nav-link {
+    color: var(--black);
+}
+
+.nav-icons button:focus,
+.nav-icons a.nav-link:focus {
+    color: var(--gray);
+}
+
+
+
 .nav-icons button {
     border: 0 none;
     padding: 0;

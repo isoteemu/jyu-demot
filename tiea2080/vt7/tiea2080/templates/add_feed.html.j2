@@ -30,6 +30,7 @@
 
     {% if discover %}
     <section class="bg-white box-shadow container-fluid">
+        <a name="discover"></a>
         <form method="POST" action="{{url_for('feeds.page_add_feed')}}" class="row justify-content-center">
             {{ form.hidden_tag() }}
             {% for category in discover %}

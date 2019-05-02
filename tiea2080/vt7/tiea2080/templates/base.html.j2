@@ -29,19 +29,19 @@
 
             <ul class="nav nav-icons">
                 <li class="nav-item">
-                    <a href="{{url_for('feeds.page_add_feed')}}" id="nav-discover" class="nav-link">
+                    <a href="{{url_for('feeds.page_add_feed')}}#discover" id="nav-discover" class="nav-link">
                         <span class="material-icons">whatshot</span>
                         <span class="input-text">{{_("Discover Feeds")}}</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{url_for('user.page_notifications')}}" id="nav-notification" class="nav-link" data-container="body" role="button" data-toggle="popover" data-placement="bottom">
-                        <span class="material-icons">notifications</span>
+                    <a href="{{url_for('user.page_notifications')}}" id="nav-notification" class="nav-link" data-container="body" role="button" data-toggle="popover" data-trigger="focus" data-placement="bottom">
+                        <span class="material-icons">notifications_none</span>
                         <span class="input-text">{{_("Notifications")}}</span>
                     </a>
                     <div id="_notifications" class="d-none">
                         {% for alert in get_notifications()[:7] %}
-                            <div class="alert {%if alert.category == 'error'%}alert-danger{%elif alert._new %}alert-primary{%else%}alert-light{%endif%}" role="alert"">{{alert.message}}</div>
+                            <div class="alert {%if alert._new and alert.category == 'error'%}alert-danger{%elif alert._new %}alert-primary{%else%}alert-light{%endif%}" role="alert"">{{alert.message}}</div>
                         {% endfor %}
                     </div>
                 </li>
