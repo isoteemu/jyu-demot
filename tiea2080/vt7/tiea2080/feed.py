@@ -31,6 +31,9 @@ feedparser_content_types = [
 
 default_limit = 16
 
+memcache_key_latest = "feeds.latest:%s"
+memcache_key_subscriptions = "feeds.subscribed:%s"
+
 bp = Blueprint('feeds', __name__)
 
 
@@ -54,9 +57,11 @@ ROUTES
 """
 
 
-
 @bp.route("/")
 def page_reader():
+    r"""
+    Default reader page.
+    """
 
     # If url has param `feed`, show only that.
     feed_id = request.args.get("feed")
@@ -70,21 +75,19 @@ def page_reader():
     articles = []
     user = get_current_user()
 
-    subscribed = Subscription.query(Subscription.user == user.key)
+    subscriptions = user_subscriptions(user)
 
-    if subscribed.count(1) == 0:
-        subscribed = subscribe_into_defaults(user)
+    for feed_sub in subscriptions:
 
-    for feed_sub in subscribed:
-        feeds.append(feed_sub)
+        feed = get_by_key(feed_sub.feed)
+        feeds.append(feed)
 
         if show_only_feed and feed_sub.feed != show_only_feed.key:
             # Skip filtered feeds.
             continue
 
-        feed_articles = Article.query(Article.feed == feed_sub.feed).order(-Article.published)
-        for article in feed_articles.fetch(default_limit):
-            articles.append(article)
+        articles = articles + get_latest_articles(feed)
+
 
     # Quick hack
     def sort_datetime(a, b):
@@ -101,6 +104,39 @@ def page_reader():
         articles = articles[:n - n % 4]
 
     return render_template("page-reader.html.j2", feeds=feeds, articles=articles)
+
+
+def user_subscriptions(user):
+    r"""
+    Return :class:`Subscription`s user has subscribed into.
+
+    If user hasn't subscribed into anything, invokes :func:`subscribe_into_defaults()`
+    """
+
+    memcache_key = memcache_key_subscriptions % user.key.id()
+    subscribed = memcache.get(memcache_key)
+
+    if not subscribed:
+        subscribed = list(Subscription.query(Subscription.user == user.key).fetch())
+        memcache.set(memcache_key_subscriptions, subscribed)
+
+    if len(subscribed) == 0:
+        subscribed = subscribe_into_defaults(user)
+
+    return subscribed
+
+
+def get_latest_articles(feed):
+    memcache_key = memcache_key_subscriptions % feed.key.id()
+
+    articles = memcache.get(memcache_key)
+    if not articles:
+        feed_articles = Article.query(Article.feed == feed.key).order(-Article.published)
+        articles = list(feed_articles.fetch(default_limit))
+        memcache.set(memcache_key, articles)
+
+    return articles
+
 
 
 @bp.route("/add", methods=('POST', 'GET'))
@@ -298,6 +334,7 @@ def update_feed_task():
     return ""
 
 
+# @ndb.transactional(xg=True)
 def update_feed(feed):
     # TODO: Check failure
     r = crawler().get(feed.url)
@@ -305,6 +342,11 @@ def update_feed(feed):
 
     update_feed_with_rss(feed, r.content)
     update_feed_articles_with_rss(feed, r.content)
+
+    memcache_key = memcache_key_latest % feed.key.id()
+    memcache.delete(memcache_key)
+
+    update_feed_interval(feed)
 
     feed.updated = datetime.utcnow()
     feed.put()
@@ -329,6 +371,9 @@ def feed_subscride(feed, user=None):
     entity.feed = feed.key
     entity.user = user.key
     entity.title = feed.title
+
+    memcache_key = memcache_key_subscriptions % user.key.id()
+    memcache.delete(memcache_key)
 
     return entity
 
@@ -552,6 +597,35 @@ def update_feed_articles_with_rss(feed, content):
             app.logger.exception(e)
 
     return articles
+
+
+def update_feed_interval(feed):
+    r"""
+    Calculates average interval between articles.
+    """
+    previous = datetime.utcnow()
+    time = timedelta()
+
+    articles = get_latest_articles(feed)
+
+    i = 0
+    for article in articles:
+        if article.published == previous:
+            continue
+        i += 1
+        time += previous - article.published
+        previous = article.published
+
+    interval = time / i
+    interval = interval.total_seconds() / 60
+
+    # Make sure interval is between 30min - 1.5days
+    interval = min(60 * 24 * 1.5, interval)
+    interval = max(30, interval)
+
+    feed.interval = interval
+
+    app.logger.debug(u"Set feed %s update interval to %d", feed.url, interval)
 
 
 def filter_content(html):
