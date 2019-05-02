@@ -1,4 +1,3 @@
-#!/usr/bin/python2
 # -*- coding: utf-8 -*-
 
 from flask import (
@@ -18,7 +17,7 @@ from io import BytesIO
 import re
 import uuid
 
-from . import csrf, cache
+from . import csrf, cache, memcache
 from .utils import valid_url, url_normalize, html_parser, crawler
 from .models import Feed, Asset, Subscription, Article, User, ndb, get_by_key, subscription_key
 from .user import get_current_user
@@ -36,8 +35,7 @@ bp = Blueprint('feeds', __name__)
 
 
 def init_app(app):
-    with app.app_context():
-        app.register_blueprint(bp)
+    app.register_blueprint(bp)
 
 
 r"""
@@ -54,6 +52,7 @@ r"""
 ROUTES
 ======
 """
+
 
 
 @bp.route("/")
@@ -206,7 +205,7 @@ def cool_feeds():
         _(u"Culture"): [
             _discover_feed("https://jezebel.com/rss"),
             _discover_feed("https://www.reddit.com/r/feminism/.rss"),
-            _discover_feed("https://slutever.com/atom")
+            _discover_feed("https://slutever.com/feed/atom")
         ],
         _(u"Entertainmet"): [
             _discover_feed("https://feeds.yle.fi/uutiset/v1/majorHeadlines/YLE_URHEILU.rss"),
@@ -228,11 +227,17 @@ def feed_refresh():
     """
 
     o = []
+    force = request.args.get("force", False)
+    o.append("Force: %s" % force)
 
     for feed in Feed.query().fetch():
-        schedule_feed_update_if_needed(feed)
+        if not force:
+            schedule_feed_update_if_needed(feed)
+        else:
+            task = schedule_feed_update(feed)
+            o.append(u"Scheduling feed %s for update at %s" % (repr(feed.url), task.eta))
 
-    return "", 202
+    return u"\n".join(o), 202
 
 
 def schedule_feed_update(feed):
@@ -287,6 +292,7 @@ def update_feed_task():
         app.logger.error(u"Feed %s was not found." % repr(feed_key))
         return ""
 
+    app.logger.info("Updating feed %s -> %s", repr(feed.title), repr(feed.url))
     # run actual updater.
     update_feed(feed)
     return ""
@@ -428,7 +434,7 @@ def feed_factory(url, **kwargs):
 
 def article_factory(feed, id=None, **kwargs):
     if not id:
-        app.logger.info(u"Generating pseudo ID for %s: %s", feed.title, kwargs['title'])
+        app.logger.debug(u"Generating pseudo ID for %s: %s", feed.title, kwargs['title'])
         content = u"{title}|{published}".format(**kwargs)
         id = unicode(uuid.uuid5(namespace=uuid.NAMESPACE_OID, name=content.encode("utf-8")))
 
