@@ -77,51 +77,86 @@ def asset_img(entity, size=None):
 
     asset = get_entity_asset(entity)
 
+
     # TODO: Recurse into parents.
     if asset:
-        if asset.blob_key:
-            size_px = ASSET_SIZES[size]
-            size_longest = max(size_px)
-
-            crop = True if size_px[0] == size_px[1] else False
-            secure = request.is_secure
-
-            try:
-                img_url = images.get_serving_url(blob_key=asset.blob_key, size=size_longest, crop=crop, secure_url=secure)
-                params['src'] = img_url
-            except Exception as e:
-                # Raises ObjectNotFoundError. TODO: Locate it.
-                app.logger.info(u"Asset blob %s was not found: %s", asset.blob_key, e)
-                asset.blob_key = None
-
-                pass
-
-        else:
-
-            db_asset = asset.key.get()
-
-            if db_asset and asset.blob_key is not False:
-                try:
-                    asset_key = asset.key.urlsafe()
-                    taskqueue.add(
-                        url=url_for('assets.scrape_asset_task'),
-                        params={'asset': asset_key},
-                        method='GET',
-                        name="asset-scrape-%s" % asset_key
-                    )
-                except (taskqueue.TombstonedTaskError, taskqueue.TaskAlreadyExistsError) as e:
-                    app.logger.info(u"Asset scraping task recently scheduled for url: %s (key: %s)", asset.url, asset_key)
-                    pass
-
-            params['src'] = asset.url
-
-        if asset.snippet:
-            params['snippet'] = asset.snippet
-
+        params['src'] = url_for("assets.redirect_to_asset", size=size, asset=asset.key.urlsafe())
     else:
-        params['src'] = url_for("assets.fallback_asset", size=size, url=quote(entity.url, safe=""))
+        params['src'] = asset_img_fallback(entity, (width, height))
 
     return render_template("asset_img.html.j2", **params)
+
+
+def asset_img_fallback(asset, size=(200, 200)):
+
+    if isinstance(asset, Asset):
+        asset = get_by_key(asset.key.parent())
+
+    size_longest = max(size)
+    url = url_normalize(asset.url)
+    urlparts = urlparse(url)
+
+    return u"https://logo.clearbit.com/%s?size=%d" % (urlparts.netloc, size_longest)
+
+
+@bp.route("/asset/<size>/<asset>")
+def redirect_to_asset(size, asset):
+    if size not in ASSET_SIZES:
+        app.logger.debug("Requested unknown size: %s", repr(size))
+        abort(404)
+
+    try:
+        key = ndb.key.Key(urlsafe=asset)
+        entity = get_by_key(key)
+    except Exception as e:
+        app.logger.exception(e)
+        abort(404)
+
+    if not entity:
+        abort(404)
+
+    url = url_normalize(entity.url)
+
+    size_px = ASSET_SIZES[size]
+    size_longest = max(size_px)
+
+    if entity.blob_key:
+        crop = True if size_px[0] == size_px[1] else False
+        secure = request.is_secure
+
+        try:
+            # Get google provided asset, and redirect to it.
+            img_url = images.get_serving_url(blob_key=entity.blob_key, size=size_longest, crop=crop, secure_url=secure)
+            return redirect(img_url)
+        except Exception as e:
+            # TODO: Handle ObjectNotFoundError.
+            app.logger.info(u"Asset blob %s was not found: %s", entity.blob_key, e)
+            entity.blob_key = None
+    elif url:
+        # Check that entity is really in datastore, and not just stub from memcache.
+        db_asset = entity.key.get()
+
+        if db_asset and entity.blob_key is not False:
+            # Schedule asset scraping. Until it has been done, redirect into associated image.
+            try:
+                asset_key = entity.key.urlsafe()
+                taskqueue.add(
+                    url=url_for('assets.scrape_asset_task'),
+                    params={'asset': asset_key},
+                    method='GET',
+                    name="asset-scrape-%s" % asset_key
+                )
+            except (taskqueue.TombstonedTaskError, taskqueue.TaskAlreadyExistsError) as e:
+                app.logger.debug(u"Asset scraping task recently scheduled for url: %s (key: %s)", entity.url, asset_key)
+                pass
+
+        return redirect(entity.url)
+    else:
+        # Redirect into entity url
+        return redirect(asset_img_fallback(entity, size_px))
+
+    app.logger.warning(u"This should not happen; Nothing found for suitable asset resource")
+    abort(404)
 
 
 def get_asset_dimensions(asset, size):
@@ -204,7 +239,7 @@ def scrape_asset(asset):
     asset.height = size[1]
 
     img_data = i.execute_transforms(output_encoding=images.JPEG)
-    key = send_into_blobstore(img_data, asset.key.urlsafe())
+    key = send_into_blobstore(img_data, u"%s" % asset.key.id())
     asset.blob_key = key
 
     # Create small snippet image.
@@ -232,7 +267,6 @@ def send_into_blobstore(img_data, filename):
 
     app.logger.info("Submitted asset into filestore: %s", repr(json))
     return json['blob_key']
-
 
 
 @bp.route('/task/store-into-blobstore', methods=('POST',))
@@ -277,26 +311,4 @@ def scrape_asset_task():
         app.logger.exception(e)
         # return redirect(entity.url)
         abort(500)
-
-
-@bp.route("/asset/<size>/<url>")
-def fallback_asset(size, url):
-    """
-    Fallback for asset image lookup.
-
-    :param url: Url for original asset.
-    """
-
-    url = unquote(url)
-
-    if not valid_url(url):
-        abort(404)
-
-    size_px = max(ASSET_SIZES.get(size, (200,200)))
-
-    url = url_normalize(url)
-    urlparts = urlparse(url)
-
-    return redirect(u"https://logo.clearbit.com/%s?size=%d" % (urlparts.netloc, size_px))
-
 
