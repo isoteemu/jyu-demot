@@ -22,6 +22,12 @@ indexes:
   - name: weight
     direction: desc
 
+- kind: Notification
+  ancestor: yes
+  properties:
+  - name: datetime
+    direction: desc
+
 - kind: Subscription
   properties:
   - name: user

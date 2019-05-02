@@ -18,7 +18,7 @@
             <form action="{{url_for("feeds.page_add_feed")}}" method="GET" class="form-inline justify-content-center">
                 <div class="input-group search-box">
                     <label class="input-group-prepend">
-                        <span class="material-icons input-group-text ">&#xe8b6;</span>
+                        <span class="material-icons input-group-text">&#xe8b6;</span>
                     </label>
                     <input id="search-input" name="url" value="{{request.args.get('url', '')}}" class="form-control search" type="text" placeholder="{{ _('Discover Feed') }}" />
                     <div class="input-group-append">
@@ -27,17 +27,44 @@
                 </div>
             </form>
 
-            {% if current_user %}
-                <form action="{{url_for('user.page_logout')}}" method="POST">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button>{{_("Log Out")}}</button>
-                </form>
-            {% else %}
-                <form target="{{login_url()}}" action="POST">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button>{{_("Log In")}}</button>
-                </form>
-            {% endif %}
+            <ul class="nav nav-icons">
+                <li class="nav-item">
+                    <a href="{{url_for('feeds.page_add_feed')}}" id="nav-discover" class="nav-link">
+                        <span class="material-icons">whatshot</span>
+                        <span class="input-text">{{_("Discover Feeds")}}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{url_for('user.page_notifications')}}" id="nav-notification" class="nav-link" data-container="body" role="button" data-toggle="popover" data-placement="bottom">
+                        <span class="material-icons">notifications</span>
+                        <span class="input-text">{{_("Notifications")}}</span>
+                    </a>
+                    <div id="_notifications" class="d-none">
+                        {% for alert in get_notifications()[:7] %}
+                            <div class="alert {%if alert.category == 'error'%}alert-danger{%elif alert._new %}alert-primary{%else%}alert-light{%endif%}" role="alert"">{{alert.message}}</div>
+                        {% endfor %}
+                    </div>
+                </li>
+                <li class="nav-item">
+                {% if current_user %}
+                    <form id="nav-profile" action="{{url_for('user.page_logout')}}" method="POST" class="nav-link">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button>
+                            <span class="material-icons">person_outline</span>
+                            <span class="input-text">{{_("Log Out")}}</span>
+                        </button>
+                    </form>
+                {% else %}
+                    <form id="nav-profile" target="{{login_url()}}" action="POST" class="form-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button class="nav-link">
+                            <span class="material-icons">person</span>
+                            <span class="input-text">{{_("Log In")}}</span>
+                        </button>
+                    </form>
+                {% endif %}
+                </li>
+            </ul>
 
             {% endblock nav%}
 
@@ -64,5 +91,6 @@
     </footer>
     <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="//stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="{{url_for('static', filename='app.js')}}"></script>
 </body>
 </html>

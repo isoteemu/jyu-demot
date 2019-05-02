@@ -160,8 +160,24 @@ class User(Model):
     def delete(self, *args, **kwargs):
         for sub in Subscription.query(Subscription.user == self.key).fetch():
             app.logger.info(u"Deleting subscription for user %s", self.user.get().email)
+            sub.delete()
+
+        for msg in Notification.query(ancestor=self.key).fetch():
+            msg.delete()
 
         super(User, self).delete(*args, **kwargs)
+
+
+class Notification(ndb.Model):
+    r"""
+    Notifications are attached to :class:`User` as parent.
+    """
+    _new = False
+
+    message = ndb.TextProperty()
+    category = ndb.StringProperty()
+
+    timestamp = ndb.DateTimeProperty(auto_now_add=True)
 
 
 class Article(AssetedModel):

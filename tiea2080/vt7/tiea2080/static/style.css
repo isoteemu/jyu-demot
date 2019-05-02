@@ -52,6 +52,30 @@ header {
     opacity: 0;
 }
 
+form#nav-profile *:active .material-icons {
+    color:var(--primary);
+}
+
+#_notifications {
+    display: none;
+}
+
+.popover div.alert {
+    margin:0;
+    padding:0.25rem 1rem;
+} 
+
+.nav-icons .input-text {
+    display: none;
+}
+
+.nav-icons button {
+    border: 0 none;
+    padding: 0;
+    background-color: inherit;
+}
+
+
 header + .content {
     border-top: #fff 1px solid;
 }
