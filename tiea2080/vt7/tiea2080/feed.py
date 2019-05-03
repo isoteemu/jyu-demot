@@ -206,7 +206,8 @@ def subscribe_into_defaults(user):
         u"https://www.hs.fi/rss/tuoreimmat.xml",
         u"https://www.reddit.com/r/lego/.rss",
         u"https://xkcd.com/atom.xml",
-        u"https://github.com/isoteemu/jyu-demot/commits/master.atom"
+        u"https://github.com/isoteemu/jyu-demot/commits/master.atom",
+        u"https://divamag.co.uk/feed"
     ]
 
     subs = []
@@ -241,7 +242,8 @@ def cool_feeds():
         _(u"Culture"): [
             _discover_feed("https://jezebel.com/rss"),
             _discover_feed("https://www.reddit.com/r/feminism/.rss"),
-            _discover_feed("https://slutever.com/feed/atom")
+            _discover_feed("https://slutever.com/feed/atom"),
+            _discover_feed("https://www.radiohelsinki.fi/feed/")
         ],
         _(u"Entertainmet"): [
             _discover_feed("https://feeds.yle.fi/uutiset/v1/majorHeadlines/YLE_URHEILU.rss"),
@@ -630,6 +632,10 @@ def update_feed_interval(feed):
         i += 1
         time += previous - article.published
         previous = article.published
+
+    if i == 0:
+        app.logger.debug("Feed %s had no suitable articles.", repr(feed.url))
+        return None
 
     interval = time / i
     interval = interval.total_seconds() / 60
