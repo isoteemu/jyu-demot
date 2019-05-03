@@ -57,6 +57,7 @@ form#nav-profile *:active .material-icons {
 }
 
 #_notifications {
+    /* Hide notifications placeholder. Popover reads this element */
     display: none;
 }
 
@@ -118,6 +119,10 @@ header + .content {
     position: relative;
 }
 
+.entity .thumb img {
+    background-color: #fff;
+}
+
 .entity .title {
     color: #262626;
     display: block;
@@ -148,13 +153,12 @@ header + .content {
     top: 96px;
 }
 
-.feed .thumb {
+.entity.feed .thumb {
     width: 96px;
     height: 96px;
 }
 
-.entity .thumb img {
-    background-color: #fff;
+.feed .thumb img {
     min-width: 96px;
     min-height: 96px;
 }
