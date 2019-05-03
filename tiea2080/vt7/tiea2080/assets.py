@@ -73,6 +73,7 @@ def asset_img(entity, size=None):
         'width': width,
         'height': height,
         'alt': Markup(entity.title).striptags(),
+        'aspect': 1
     }
 
     asset = get_entity_asset(entity)
@@ -80,6 +81,9 @@ def asset_img(entity, size=None):
     # TODO: Recurse into parents.
     if asset:
         params['src'] = url_for("assets.redirect_to_asset", size=size, asset=asset.key.urlsafe())
+        if asset.width and asset.height:
+            params['aspect'] = float(asset.width) / float(asset.height)
+
         params['snippet'] = asset.snippet
     else:
         params['src'] = asset_img_fallback(entity, (width, height))
@@ -136,7 +140,7 @@ def redirect_to_asset(size, asset):
         # Check that entity is really in datastore, and not just stub from memcache.
         db_asset = entity.key.get()
 
-        if db_asset and entity.blob_key is not False:
+        if db_asset and entity.blob_key is None:
             # Schedule asset scraping. Until it has been done, redirect into associated image.
             try:
                 asset_key = entity.key.urlsafe()
@@ -146,7 +150,7 @@ def redirect_to_asset(size, asset):
                     method='GET',
                     name="asset-scrape-%s" % asset_key
                 )
-            except (taskqueue.TombstonedTaskError, taskqueue.TaskAlreadyExistsError) as e:
+            except (taskqueue.TombstonedTaskError, taskqueue.TaskAlreadyExistsError):
                 app.logger.debug(u"Asset scraping task recently scheduled for url: %s (key: %s)", entity.url, asset_key)
                 pass
 
