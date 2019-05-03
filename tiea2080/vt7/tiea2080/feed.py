@@ -479,9 +479,14 @@ def feed_factory(url, **kwargs):
 
 def article_factory(feed, id=None, **kwargs):
     if not id:
-        app.logger.debug(u"Generating pseudo ID for %s: %s", feed.title, kwargs['title'])
-        content = u"{title}|{published}".format(**kwargs)
-        id = unicode(uuid.uuid5(namespace=uuid.NAMESPACE_OID, name=content.encode("utf-8")))
+        if kwargs.get("url", None):
+            id = kwargs["url"]
+        elif kwargs.get("title", None):
+            app.logger.debug(u"Generating pseudo ID for %s: %s", feed.title, kwargs['title'])
+            content = u"{title}|{published}".format(**kwargs)
+            id = unicode(uuid.uuid5(namespace=uuid.NAMESPACE_OID, name=content.encode("utf-8")))
+        else:
+            raise KeyError("Missing feed ID, or suitable params for ID generation.")
 
     key = ndb.key.Key(Article, id, parent=feed.key)
 
@@ -557,7 +562,7 @@ def update_feed_articles_with_rss(feed, content):
             title = Markup(article.get("title", "")).striptags()
             url = article.get("link")
 
-            updated = article.get("updated_parsed") or article.get("published_parsed")
+            updated = article.get("published_parsed") or article.get("updated_parsed")
             published = datetime(*updated[:6])
 
             if "content" in article:
@@ -579,6 +584,15 @@ def update_feed_articles_with_rss(feed, content):
             if img:
                 asset_factory(img['src'], article_entity, weight=10)
 
+            for media in article.get("media_thumbnail", []):
+                if "url" not in media:
+                    continue
+                if not valid_url(media["url"]):
+                    continue
+
+                asset_factory(media['url'], article_entity, weight=20)
+                app.logger.debug("Found media thumbnail for article: %s", media['url'])
+
             for media in article.get("media_content", []):
                 if "url" not in media:
                     continue
@@ -590,6 +604,7 @@ def update_feed_articles_with_rss(feed, content):
                     continue
 
                 asset_factory(media['url'], article_entity, weight=50)
+                app.logger.debug("Found media content for article: %s", media['url'])
 
             # TODO: Enclosure myös
 
