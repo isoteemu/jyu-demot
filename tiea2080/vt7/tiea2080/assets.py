@@ -77,10 +77,10 @@ def asset_img(entity, size=None):
 
     asset = get_entity_asset(entity)
 
-
     # TODO: Recurse into parents.
     if asset:
         params['src'] = url_for("assets.redirect_to_asset", size=size, asset=asset.key.urlsafe())
+        params['snippet'] = asset.snippet
     else:
         params['src'] = asset_img_fallback(entity, (width, height))
 
