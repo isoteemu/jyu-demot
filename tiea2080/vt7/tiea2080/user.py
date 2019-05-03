@@ -2,7 +2,7 @@
 
 from flask import Blueprint, redirect, request, current_app as app, get_flashed_messages
 
-from flask import flash
+from flask import _request_ctx_stack
 
 from google.appengine.api import users
 
@@ -19,7 +19,6 @@ bp = Blueprint("user", __name__)
 def init_app(app):
     app.register_blueprint(bp)
     with app.app_context():
-
         current_user = get_current_user()
         app.jinja_env.globals.update(
             login_link=login_link, current_user=current_user,
@@ -80,46 +79,51 @@ def page_notifications():
     return repr(notifications)
 
 
-def get_notifications(offset=0, limit=None):
+def get_notifications(limit=None):
     r"""
     Return all notifications for user, sorted by recency.
 
     Looks also for :class:`Flask.helper.flash` messages.
     """
+    if hasattr(_request_ctx_stack.top, "user_notifications"):
+        # Fetch notifications only once.
+        return _request_ctx_stack.top.user_notifications
 
-    if offset:
-        raise NotImplementedError("Implement limit and offset")
     notifications = []
 
     user = get_current_user()
 
     memcache_key = "user.notifications:%s" % user.key.id()
+
     cached_notifications = memcache.get(memcache_key)
 
     if cached_notifications:
-        notifications = cached_notifications + notifications
+        notifications = notifications + cached_notifications
     else:
-        print("!!! REFRESH")
         q = Notification.query(ancestor=user.key).order(-Notification.timestamp)
-        for n in q.fetch(offset=offset, limit=limit):
+        for n in q.fetch(limit=limit):
             notifications.append(n)
 
-    if offset == 0:
-        flashes = get_flashed_messages(with_categories=True)
-        if flashes:
-            memcache.delete(memcache_key)
-            new_notifications = []
-            for category, message in flashes:
-                notification_entity = Notification(
-                    parent=user.key,
-                    message=message, category=category, timestamp=datetime.utcnow()
-                )
-                notification_entity._new = True
-                new_notifications.append(notification_entity)
+    flashes = get_flashed_messages(with_categories=True)
 
-            ndb.put_multi(new_notifications)
-            notifications = new_notifications + notifications
-            memcache.set(memcache_key, notifications)
+    if flashes:
+        memcache.delete(memcache_key)
+        new_notifications = []
+        for category, message in flashes:
+            app.logger.info("New notification %s", repr(message))
+            notification_entity = Notification(
+                parent=user.key,
+                message=message, category=category, timestamp=datetime.utcnow()
+            )
+            notification_entity._new = True
+            new_notifications.append(notification_entity)
+
+        notifications = new_notifications + notifications
+
+        ndb.put_multi(new_notifications)
+
+    memcache.set(memcache_key, notifications)
+    _request_ctx_stack.top.user_notifications = notifications
 
     return notifications[0:limit]
 
