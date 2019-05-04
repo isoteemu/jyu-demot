@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from flask import Blueprint, redirect, request, current_app as app, get_flashed_messages
+from flask import (
+    Blueprint,
+    redirect,
+    abort,
+    request,
+    current_app as app,
+    get_flashed_messages
+)
 
 from flask import _request_ctx_stack
 
@@ -19,7 +26,10 @@ bp = Blueprint("user", __name__)
 def init_app(app):
     app.register_blueprint(bp)
     with app.app_context():
+
         current_user = get_current_user()
+        app.teardown_appcontext(_save_last_seen)
+
         app.jinja_env.globals.update(
             login_link=login_link, current_user=current_user,
             get_notifications=get_notifications,
@@ -143,3 +153,13 @@ def get_flashed_messages_override(with_categories=False, category_filter=[]):
 
     return [m.message for m in messages]
 
+
+def _save_last_seen(exception):
+    """
+    Hook to save user object when request is completed.
+    This is to trigger saving `User.seen` property.
+    """
+
+    user = get_current_user()
+    user.seen = datetime.utcnow()
+    user.put_async()

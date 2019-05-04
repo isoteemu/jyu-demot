@@ -156,8 +156,14 @@ class Feed(AssetedModel):
 
 
 class User(Model):
+    r"""
+    Key is google user key.
+    """
+
     email = ndb.StringProperty()
     is_authenticated = False
+
+    seen = ndb.DateTimeProperty(auto_now=True)
 
     def delete(self, *args, **kwargs):
         for sub in Subscription.query(Subscription.user == self.key).fetch():
@@ -227,10 +233,10 @@ def subscription_key(user, feed):
 
 def init_app(app):
     with app.app_context():
-        app.teardown_appcontext(teardown)
+        app.teardown_appcontext(store_models)
 
 
-def teardown(exception):
+def store_models(exception):
     """
     On teardown, store temporary objects.
     """
