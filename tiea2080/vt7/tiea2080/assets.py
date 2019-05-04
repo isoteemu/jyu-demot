@@ -131,7 +131,9 @@ def redirect_to_asset(size, asset):
         try:
             # Get google provided asset, and redirect to it.
             img_url = images.get_serving_url(blob_key=entity.blob_key, size=size_longest, crop=crop, secure_url=secure)
-            return redirect(img_url)
+            response = redirect(img_url, code=301)
+            response.headers['Cache-Control'] = "public, max-age=31536000"
+            return response
         except Exception as e:
             # TODO: Handle ObjectNotFoundError.
             app.logger.info(u"Asset blob %s was not found: %s", entity.blob_key, e)
@@ -157,7 +159,7 @@ def redirect_to_asset(size, asset):
         return redirect(entity.url)
     else:
         # Redirect into entity url
-        return redirect(asset_img_fallback(entity, size_px), code=301)
+        return redirect(asset_img_fallback(entity, size_px))
 
     app.logger.warning(u"This should not happen; Nothing found for suitable asset resource")
     abort(404)
@@ -170,7 +172,7 @@ def get_asset_dimensions(asset, size):
 
 def asset_factory(url, parent, **kwargs):
 
-    app.logger.debug("Creating asset: %s for %s", url, repr(parent))
+    app.logger.debug("Creating asset: %s for %s", url, repr(parent.key.id()))
     url = url_normalize(url)
     id = u"%s" % uuid.uuid5(uuid.NAMESPACE_URL, url.encode("utf-8"))
     key = ndb.key.Key(Asset, id, parent=parent.key)
