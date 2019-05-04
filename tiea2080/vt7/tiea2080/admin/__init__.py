@@ -19,9 +19,11 @@ from google.appengine.api import memcache
 
 from io import BytesIO
 import feedparser
+import logging
+import os
 
 from tiea2080 import (
-    crawler
+    crawler,
 )
 from tiea2080.models import (
     ndb,
@@ -31,11 +33,24 @@ from tiea2080.models import (
 )
 from tiea2080.feed import update_feed
 
+
+class FlashHandler(logging.StreamHandler):
+    def emit(self, record):
+        msg = self.format(record)
+        name = os.path.basename(record.pathname)
+        line = record.lineno
+        flash(Markup("<var>%s</var>[<var>%d</var>]: %s" % (name, line, msg)), record.levelname)
+
+
 bp = Blueprint('admin', __name__, template_folder='templates')
+
 
 
 def init_app(app):
     app.register_blueprint(bp, url_prefix="/admin")
+
+    app.logger.addHandler(FlashHandler())
+
     app.config.setdefault("DEBUG", True)
 
 
@@ -44,20 +59,21 @@ def page_list_feeds():
     feeds = []
 
     if request.method == "POST":
+        
         if "force-refresh" in request.form:
             feed_to_refresh = get_by_key(ndb.key.Key(urlsafe=request.form["force-refresh"]))
-            flash(_("Refreshing feed %(feed)s", feed=Markup(feed_to_refresh.title).striptags()))
+            flash(_("Refreshing feed %(feed)s", feed=Markup.escape(feed_to_refresh.title)))
             update_feed(feed_to_refresh)
 
         if "delete-feed" in request.form:
             feed = ndb.key.Key(urlsafe=request.form["delete-feed"]).get()
 
-            flash(_("Removed feed %(feed)s", feed=Markup(feed.title).striptags()))
+            flash(_("Removed feed %(feed)s", feed=Markup.escape(feed.title)))
             app.logger.info("Deleted feed %s", repr(feed))
 
             feed.delete()
-            memcache.flush_all()
 
+        memcache.flush_all()
 
     feed_q = Feed.query()
     for feed in feed_q:
