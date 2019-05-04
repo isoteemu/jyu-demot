@@ -6,6 +6,7 @@ $(document).ready(function() {
         e.preventDefault();
     });
 
+    /* Currently this doesnt' work, as notifications are stored on <template> tag */
     if($('#_notifications .alert-danger').length) {
         $('#nav-notification .material-icons').text('notification_important');
     } else if($('#_notifications .alert-primary').length) {

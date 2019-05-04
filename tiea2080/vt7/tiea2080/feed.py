@@ -243,12 +243,13 @@ def cool_feeds():
             _discover_feed("https://jezebel.com/rss"),
             _discover_feed("https://www.reddit.com/r/feminism/.rss"),
             _discover_feed("https://slutever.com/feed/atom"),
-            _discover_feed("https://www.radiohelsinki.fi/feed/")
+            _discover_feed("https://www.radiohelsinki.fi/feed/"),
         ],
         _(u"Entertainmet"): [
             _discover_feed("https://feeds.yle.fi/uutiset/v1/majorHeadlines/YLE_URHEILU.rss"),
             _discover_feed("https://www.smbc-comics.com/comic/rss"),
             _discover_feed("https://nerdist.com/feed/"),
+            _discover_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCLx053rWZxCiYWsBETgdKrQ"),
          ]
     }
     return feeds

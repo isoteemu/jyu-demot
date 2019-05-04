@@ -78,9 +78,13 @@ def asset_img(entity, size=None):
 
     asset = get_entity_asset(entity)
 
-    # TODO: Recurse into parents.
     if asset:
-        params['src'] = url_for("assets.redirect_to_asset", size=size, asset=asset.key.urlsafe())
+        # If blob url is already known, hot link to it. If not,
+        # set into redirection url.
+
+        blob_url = bloburl(asset, size)
+        params['src'] = blob_url if blob_url else url_for("assets.redirect_to_asset", size=size, asset=asset.key.urlsafe())
+
         if asset.width and asset.height:
             params['aspect'] = float(asset.width) / float(asset.height)
 
@@ -89,6 +93,31 @@ def asset_img(entity, size=None):
         params['src'] = asset_img_fallback(entity, (width, height))
 
     return render_template("asset_img.html.j2", **params)
+
+
+def bloburl(entity, size):
+    r"""
+    Retrieves serving url for Asset.
+    """
+    if not isinstance(entity, Asset):
+        raise TypeError("Expected `Asset` as entity type.")
+
+    if not entity.blob_key:
+        return None
+
+    size_px = ASSET_SIZES[size]
+    size_longest = max(size_px)
+
+    crop = True if size_px[0] == size_px[1] else False
+    secure = request.is_secure
+
+    key = u"blobstore_asset:%s:%s" % (entity.blob_key, size)
+    img_url = memcache.get(key)
+    if not img_url:
+        img_url = images.get_serving_url(blob_key=entity.blob_key, size=size_longest, crop=crop, secure_url=secure)
+        memcache.set(key, img_url)
+
+    return img_url
 
 
 def asset_img_fallback(asset, size=(200, 200)):
@@ -121,16 +150,10 @@ def redirect_to_asset(size, asset):
 
     url = url_normalize(entity.url)
 
-    size_px = ASSET_SIZES[size]
-    size_longest = max(size_px)
-
     if entity.blob_key:
-        crop = True if size_px[0] == size_px[1] else False
-        secure = request.is_secure
-
         try:
+            img_url = bloburl(entity, size)
             # Get google provided asset, and redirect to it.
-            img_url = images.get_serving_url(blob_key=entity.blob_key, size=size_longest, crop=crop, secure_url=secure)
             response = redirect(img_url, code=301)
             response.headers['Cache-Control'] = "public, max-age=31536000"
             return response
@@ -318,4 +341,3 @@ def scrape_asset_task():
         app.logger.exception(e)
         # return redirect(entity.url)
         abort(500)
-
