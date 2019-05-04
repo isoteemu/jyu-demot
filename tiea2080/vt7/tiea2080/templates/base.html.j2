@@ -6,13 +6,18 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
+    {# prefetch javascript sources #}
+    <link rel="dns-prefetch" href="//ajax.googleapis.com/">
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com/">
 </head>
 <body class="kirjautunut bg-light">
     <header class="site-header row sticky-top bg-white box-shadow">
         <nav class="navbar container navbar-light flex-nowrap d-flex">
-            <a class="navbar-brand" href="{{url_for('feeds.page_reader')}}">{{ _("RSS Reader") }}</a>
+            <a class="navbar-brand" href="{{url_for('feeds.page_reader')}}">
+                <span class="d-inline-block align-top material-icons logo">book</span>
+                <span class=""> | {{ _("RSS Reader") }}</span>
+            </a>
 
             {% block nav %}
             <form action="{{url_for("feeds.page_add_feed")}}" method="GET" class="form-inline justify-content-center">
@@ -28,12 +33,14 @@
             </form>
 
             <ul class="nav nav-icons">
+                {#
                 <li class="nav-item">
                     <a href="{{url_for('feeds.page_add_feed')}}#discover" id="nav-discover" class="nav-link">
                         <span class="material-icons">whatshot</span>
                         <span class="input-text">{{_("Discover Feeds")}}</span>
                     </a>
                 </li>
+                #}
                 <li class="nav-item">
                     <a href="{{url_for('user.page_notifications')}}" id="nav-notification" class="nav-link" data-container="body" role="button" data-toggle="popover" data-trigger="focus" data-placement="bottom">
                         <span class="material-icons">notifications_none</span>
@@ -89,6 +96,7 @@
         {% block footer %}
         {% endblock footer %}
     </footer>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="//stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script src="{{url_for('static', filename='app.js')}}"></script>
