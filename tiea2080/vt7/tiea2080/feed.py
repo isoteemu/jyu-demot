@@ -173,11 +173,11 @@ def page_add_feed():
 
                 else:
                     # Make title safe for display purposes.
-                    feed_markup = Markup(u"<em class=\"feed\">%s</em>") % feeds[feed_url].title
+                    feed_markup = Markup(feeds[feed_url].title).striptags()
 
                     if feeds[feed_url].user_subscribed(user):
                         feed_subscride(feeds[feed_url], user).delete()
-                        flash(_(u"Feed %s removed." % feed_markup))
+                        flash(_(u"Feed <em class=\"feed\">%s</em> removed." % feed_markup))
 
                     else:
 
@@ -533,10 +533,10 @@ def update_feed_with_rss(feed, content):
     if 'image' in feed_parser['feed'] and 'href' in feed_parser['feed']['image']:
         # Create asset entity from feed image. Thease are usually poor quality.
         img = feed_parser['feed']['image']
-        asset_factory(img.get("href"), feed, width=img.get("width", None), height=img.get("height", None))
+        asset_factory(img.get("href"), feed, width=img.get("width", None), height=img.get("height", None), weight=20)
 
     if valid_url(feed_parser['feed'].get("logo", "")):
-        asset_factory(feed_parser['feed'].get("logo"), feed, weight=1)
+        asset_factory(feed_parser['feed'].get("logo"), feed, weight=10)
 
 
 def update_feed_articles_with_rss(feed, content):
@@ -587,28 +587,33 @@ def update_feed_articles_with_rss(feed, content):
                 asset_factory(img['src'], article_entity, weight=10)
 
             for media in article.get("media_thumbnail", []):
-                if "url" not in media:
-                    continue
-                if not valid_url(media["url"]):
+                if not valid_url(media.get("url", "")):
                     continue
 
                 asset_factory(media['url'], article_entity, weight=20)
                 app.logger.debug("Found media thumbnail for article: %s", media['url'])
 
             for media in article.get("media_content", []):
-                if "url" not in media:
-                    continue
-                if not valid_url(media["url"]):
+                if not valid_url(media.get("url", "")):
                     continue
 
-                if "type" in media and not media['type'].startswith("image/"):
+                if not media.get("type", "").lower().startswith("image/"):
                     app.logger.debug(u"Found media content, but its not declared as image: %s" % repr(media['url']))
                     continue
 
                 asset_factory(media['url'], article_entity, weight=50)
                 app.logger.debug("Found media content for article: %s", media['url'])
 
-            # TODO: Enclosure myös
+            for media in article.get("links", []):
+                if not valid_url(media.get("href", "")):
+                    continue
+
+                if not media.get("type", "").lower().startswith("image/"):
+                    app.logger.debug(u"Found link content, but its not declared as image: %s" % repr(media['href']))
+                    continue
+
+                asset_factory(media['href'], article_entity, weight=50)
+                app.logger.debug("Found media thumbnail for article: %s", media['href'])
 
         except Exception as e:
             app.logger.exception(e)
@@ -644,7 +649,7 @@ def update_feed_interval(feed):
     interval = min(60 * 24 * 1.5, interval)
     interval = max(30, interval)
 
-    feed.interval = interval
+    feed.update_inteval = int(interval)
 
     app.logger.debug(u"Set feed %s update interval to %d", feed.url, interval)
 
