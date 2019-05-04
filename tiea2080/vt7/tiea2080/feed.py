@@ -173,11 +173,11 @@ def page_add_feed():
 
                 else:
                     # Make title safe for display purposes.
-                    feed_markup = Markup(feeds[feed_url].title).striptags()
+                    feed_markup = Markup("<em class=\"feed\">%s</em>") % feeds[feed_url].title
 
                     if feeds[feed_url].user_subscribed(user):
                         feed_subscride(feeds[feed_url], user).delete()
-                        flash(_(u"Feed <em class=\"feed\">%s</em> removed." % feed_markup))
+                        flash(_(u"Feed %s removed." % feed_markup))
 
                     else:
 
@@ -343,15 +343,18 @@ def update_feed(feed):
     r.raise_for_status()
 
     update_feed_with_rss(feed, r.content)
-    update_feed_articles_with_rss(feed, r.content)
+    feed.updated = datetime.utcnow()
+
+    articles = update_feed_articles_with_rss(feed, r.content)
 
     memcache_key = memcache_key_latest % feed.key.id()
     memcache.delete(memcache_key)
 
     update_feed_interval(feed)
 
-    feed.updated = datetime.utcnow()
-    feed.put()
+    ndb.put_multi(articles + [feed])
+
+
 
 
 def feed_subscride(feed, user=None):
@@ -550,7 +553,9 @@ def update_feed_articles_with_rss(feed, content):
     articles = []
     feed_parser = feedparser.parse(BytesIO(content))
 
-    for article in feed_parser['entries']:
+    app.logger.debug("Found %d entries for feed %s", len(feed_parser['entries']), feed.url)
+
+    for article in feed_parser.get("entries", []):
 
         id = None
         title = ""
@@ -605,7 +610,10 @@ def update_feed_articles_with_rss(feed, content):
                 app.logger.debug("Found media content for article: %s", media['url'])
 
             for media in article.get("links", []):
+                # Look for enclosure links
                 if not valid_url(media.get("href", "")):
+                    continue
+                if not media.get("rel", "").lower() == "enclosure":
                     continue
 
                 if not media.get("type", "").lower().startswith("image/"):
