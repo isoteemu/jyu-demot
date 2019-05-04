@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from flask import g, request, current_app as app
+from flask_wtf.csrf import generate_csrf
 from bs4 import BeautifulSoup
 import requests
 from url_normalize import url_normalize
@@ -9,6 +10,7 @@ from urlparse import urlparse
 from urllib import urlencode
 
 from . import __title__, __version__, __url__
+
 
 def html_parser(*args, **kwargs):
     r"""
@@ -35,7 +37,10 @@ def crawler():
 
 
 def valid_url(url):
-    # TODO: Use better working validator.
+
+    if not url:
+        return False
+
     try:
         # TODO: Use url validator
 
@@ -43,11 +48,11 @@ def valid_url(url):
         own_parsed = urlparse(request.host_url)
 
         if url_parsed.netloc == "":
-            app.logger.debug(u"Url is missing ``netloc``: %s", url)
+            app.logger.debug(u"Url is missing ``netloc``: %s", repr(url))
             return False
 
         if url_parsed.scheme not in ['http', 'https']:
-            app.logger.debug(u"Unknown url scheme: %s", url)
+            app.logger.debug(u"Unknown url scheme: %s", repr(url))
             return False
 
         # Check for not being on our domain.
@@ -80,3 +85,19 @@ def crawler_user_agent():
         'version': __version__,
         'url': url
     })
+
+
+def csrf_token():
+    token = {}
+    if not app.config['WTF_CSRF_ENABLED']:
+        return token
+
+    key = app.config.get('WTF_CSRF_FIELD_NAME', None)
+
+    if not key:
+        return token
+
+    token = {key: generate_csrf()}
+
+    return token
+
