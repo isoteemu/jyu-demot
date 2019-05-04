@@ -1,0 +1,23 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+<ul>
+{% for feed in feeds %}
+    <li><h5>[{{feed['articles']|count()}}] <a href="#articles-{{feed['key']}}" data-toggle="collapse">{{feed['title']|e}}:</a> (<a href="{{feed['url']|e}}">{{feed['url']|e}}</a>)
+        <form class="form-inline" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button class="btn"  name="force-refresh"  value="{{feed['key']}}">{{_("Refresh")}}</button>
+            <button class="btn"  name="delete-feed"  value="{{feed['key']}}" onclick="config({{_("Really?")|tojson}});">{{_("Remove")}}</button>
+            <div class="form-inline">
+                <a class="btn" href="{{url_for('admin.page_debug_feedparser', key=feed['key'])}}">Feeparser</a>
+            </div>
+        </form>
+        <ul id="articles-{{feed['key']}}" class="collapse">
+        {% for article in feed['articles'] %}
+            <li>{{article['title']|e}}</li>
+        {% endfor %}
+        </ul>
+    </li>
+{% endfor %}
+</ul>
+{% endblock content %}
