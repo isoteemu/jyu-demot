@@ -47,11 +47,11 @@ bp = Blueprint('admin', __name__, template_folder='templates')
 
 
 def init_app(app):
-    app.register_blueprint(bp, url_prefix="/admin")
 
     app.logger.addHandler(FlashHandler())
-
     app.config.setdefault("DEBUG", True)
+    app.register_blueprint(bp, url_prefix="/admin")
+
 
 
 @bp.route("/feeds", methods=('POST', 'GET'))
@@ -59,7 +59,6 @@ def page_list_feeds():
     feeds = []
 
     if request.method == "POST":
-        
         if "force-refresh" in request.form:
             feed_to_refresh = get_by_key(ndb.key.Key(urlsafe=request.form["force-refresh"]))
             flash(_("Refreshing feed %(feed)s", feed=Markup.escape(feed_to_refresh.title)))
