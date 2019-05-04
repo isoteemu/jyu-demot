@@ -39,7 +39,7 @@ class FlashHandler(logging.StreamHandler):
         msg = self.format(record)
         name = os.path.basename(record.pathname)
         line = record.lineno
-        flash(Markup("<var>%s</var>[<var>%d</var>]: %s" % (name, line, msg)), record.levelname)
+        flash(Markup(u"<var>%s</var>[<var>%d</var>]: %s") % (name, line, msg), record.levelname)
 
 
 bp = Blueprint('admin', __name__, template_folder='templates')
