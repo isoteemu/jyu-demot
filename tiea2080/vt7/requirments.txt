@@ -3,6 +3,7 @@ Flask-Babel
 flask-wtf
 Flask-Caching
 Werkzeug
+lxml
 feedparser
 requests
 requests_toolbelt

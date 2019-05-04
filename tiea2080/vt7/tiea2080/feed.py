@@ -88,7 +88,6 @@ def page_reader():
 
         articles = articles + get_latest_articles(feed)
 
-
     # Quick hack
     def sort_datetime(a, b):
         if a.published > b.published:
@@ -97,6 +96,7 @@ def page_reader():
             return 1
         else:
             return 0
+
     articles = sorted(articles, sort_datetime)
     # Make divisible by 4, for page layout purposes
     n = len(articles)

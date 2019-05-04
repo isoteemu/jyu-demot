@@ -18,7 +18,6 @@ function since(datetime) {
             r = Math.round(d) + k;
     }
     return r;
-
 }
 
 $(document).ready(function() {
@@ -70,7 +69,6 @@ $(document).ready(function() {
             var $article_i = $($articles[i]);
 
             var $large_url = $article_i.find("img[data-large]").data("large");
-            if(!$large_url) continue;
 
             var $slide = $($item_tmpl);
             var $indicator = $($indicator_tmpl);
@@ -80,7 +78,7 @@ $(document).ready(function() {
             $slide.find("img").attr("src", $large_url);
             $slide.find(".carousel-caption").html(
                 DOMPurify.sanitize($article_i.find(".content").html(), {
-                    ALLOWED_TAGS: ['b', 'strong', 'p', 'a', 'br']
+                    ALLOWED_TAGS: ['b', 'strong', 'em', 'p', 'a', 'br', 'tt']
                 })
             );
 

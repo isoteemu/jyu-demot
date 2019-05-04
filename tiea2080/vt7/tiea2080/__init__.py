@@ -130,3 +130,4 @@ def init_app(app):
 
         # Suojausta. Tehtävä ei vaadi, mutta eh.
         csrf.init_app(app)
+        app.jinja_env.filters.update(purify=sanitize_html)

@@ -41,9 +41,8 @@
                         </span>
                         <div class="title d-flex align-items-center justify-content-center"><h5>{{article.title|e}}</h5></div>
                         {# <iframe scrolling=no sandbox src="data:text/html;charset=utf-8,{{article.content|e}}"></iframe> #}
-                        <template class="content">{{article.content}}</template>
+                        <template class="content">{{article.content|purify}}</template>
                     </a>
-                    <template class="d-none">{{article.content}}</template>
                 </li>{% endfor %}
             </ul>
         </div>

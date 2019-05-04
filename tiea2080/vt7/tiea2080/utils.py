@@ -9,6 +9,7 @@ from url_normalize import url_normalize
 from urlparse import urlparse
 from urllib import urlencode
 
+
 from . import __title__, __version__, __url__
 
 
@@ -101,3 +102,8 @@ def csrf_token():
 
     return token
 
+
+def sanitize_html(html):
+    soup = html_parser(html)
+    [template_tag.decompose() for template_tag in soup.findAll("template")]
+    return unicode(soup)
