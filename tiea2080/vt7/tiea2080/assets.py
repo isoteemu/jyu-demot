@@ -73,7 +73,8 @@ def asset_img(entity, size=None):
         'width': width,
         'height': height,
         'alt': Markup(entity.title).striptags(),
-        'aspect': 1
+        'aspect': 1,
+        'large': ""
     }
 
     asset = get_entity_asset(entity)
@@ -82,10 +83,12 @@ def asset_img(entity, size=None):
         # If blob url is already known, hot link to it. If not,
         # set into redirection url.
 
-        blob_url = bloburl(asset, size)
-        params['src'] = blob_url if blob_url else url_for("assets.redirect_to_asset", size=size, asset=asset.key.urlsafe())
+        params['src'] = bloburl(asset, size, url_for("assets.redirect_to_asset", size=size, asset=asset.key.urlsafe()))
+        params['large'] = asset.url
 
         if asset.width and asset.height:
+            large_size = get_large_size(asset.width, asset.height)
+            params['large'] = bloburl(asset, large_size, url_for("assets.redirect_to_asset", size=large_size, asset=asset.key.urlsafe()))
             params['aspect'] = float(asset.width) / float(asset.height)
 
         params['snippet'] = asset.snippet
@@ -95,7 +98,7 @@ def asset_img(entity, size=None):
     return render_template("asset_img.html.j2", **params)
 
 
-def bloburl(entity, size):
+def bloburl(entity, size, fallback=None):
     r"""
     Retrieves serving url for Asset.
     """
@@ -103,21 +106,23 @@ def bloburl(entity, size):
         raise TypeError("Expected `Asset` as entity type.")
 
     if not entity.blob_key:
-        return None
+        return fallback
 
     size_px = ASSET_SIZES[size]
     size_longest = max(size_px)
 
+    # TODO: Tarkista järkevyys.
     crop = True if size_px[0] == size_px[1] else False
     secure = request.is_secure
 
+    # Look serving url from memcache. Create one if not found.
     key = u"blobstore_asset:%s:%s" % (entity.blob_key, size)
     img_url = memcache.get(key)
     if not img_url:
         img_url = images.get_serving_url(blob_key=entity.blob_key, size=size_longest, crop=crop, secure_url=secure)
         memcache.set(key, img_url)
 
-    return img_url
+    return img_url if img_url else fallback
 
 
 def asset_img_fallback(asset, size=(200, 200)):
@@ -193,6 +198,27 @@ def get_asset_dimensions(asset, size):
     return ASSET_SIZES[size]
 
 
+def get_large_size(width, height):
+    r"""
+    Returns best match for large size image.
+    """
+
+    horizontal_ratio = ASSET_SIZES['horizontal'][0] / ASSET_SIZES['horizontal'][1]
+    vertical_ratio = ASSET_SIZES['vertical'][0] / ASSET_SIZES['vertical'][1]
+
+    # Select suitable cropping.
+
+    ratio = float(width) / float(height)
+    if ratio >= horizontal_ratio:
+        size = "horizontal"
+    elif ratio <= vertical_ratio:
+        size = "vertical"
+    else:
+        size = "square"
+
+    return size
+
+
 def asset_factory(url, parent, **kwargs):
 
     app.logger.debug("Creating asset: %s for %s", url, repr(parent.key.id()))
@@ -248,20 +274,8 @@ def scrape_asset(asset):
 
     i = images.Image(response.content)
 
-    # Select suitable cropping.
-    ratio = float(i.width) / float(i.height)
-
-    horizontal = ASSET_SIZES['horizontal'][0] / ASSET_SIZES['horizontal'][1]
-    vertical = ASSET_SIZES['vertical'][0] / ASSET_SIZES['vertical'][1]
-
-    size = None
-
-    if ratio >= horizontal:
-        size = ASSET_SIZES['horizontal']
-    elif ratio <= vertical:
-        size = ASSET_SIZES['vertical']
-    else:
-        size = ASSET_SIZES['square']
+    size_key = get_large_size(i.width, i.height)
+    size = ASSET_SIZES[size_key]
 
     i.resize(*size, crop_to_fit=True)
 
