@@ -8,3 +8,4 @@ requests
 requests_toolbelt
 url-normalize
 beautifulsoup4
+chardet
