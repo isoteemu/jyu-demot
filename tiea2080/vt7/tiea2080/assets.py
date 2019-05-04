@@ -157,7 +157,7 @@ def redirect_to_asset(size, asset):
         return redirect(entity.url)
     else:
         # Redirect into entity url
-        return redirect(asset_img_fallback(entity, size_px))
+        return redirect(asset_img_fallback(entity, size_px), code=301)
 
     app.logger.warning(u"This should not happen; Nothing found for suitable asset resource")
     abort(404)
@@ -170,7 +170,7 @@ def get_asset_dimensions(asset, size):
 
 def asset_factory(url, parent, **kwargs):
 
-    app.logger.debug("Creating asset: %s, %s", __name__, url)
+    app.logger.debug("Creating asset: %s for %s", url, repr(parent))
     url = url_normalize(url)
     id = u"%s" % uuid.uuid5(uuid.NAMESPACE_URL, url.encode("utf-8"))
     key = ndb.key.Key(Asset, id, parent=parent.key)
@@ -199,10 +199,11 @@ def get_entity_asset(entity):
         # check storage for heavier asset
         _asset = Asset.query(Asset.weight > asset.weight, ancestor=entity.key).order(-Asset.weight).get()
         if _asset:
+            # Put into temporary asset storage, and swap.
+            model_storage[_asset.key] = _asset
             asset = _asset
     else:
         asset = Asset.query(ancestor=entity.key).order(-Asset.weight).get()
-
 
     return asset
 
@@ -215,12 +216,12 @@ def scrape_asset(asset):
 
     app.logger.debug("Scraping image %s", repr(asset.url))
 
-    r = crawler().get(asset.url)
+    response = crawler().get(asset.url)
 
     # Stops if request failed.
-    r.raise_for_status()
+    response.raise_for_status()
 
-    i = images.Image(r.content)
+    i = images.Image(response.content)
 
     # Select suitable cropping.
     ratio = float(i.width) / float(i.height)
@@ -243,7 +244,7 @@ def scrape_asset(asset):
     asset.height = size[1]
 
     img_data = i.execute_transforms(output_encoding=images.JPEG)
-    key = send_into_blobstore(img_data, u"%s" % asset.key.id())
+    key = send_into_blobstore(img_data, u"%s" % response.url)
     asset.blob_key = key
 
     # Create small snippet image.
