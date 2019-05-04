@@ -1,10 +1,3 @@
-header {
-    border-bottom:1px solid #ced4da;
-}
-
-header .logo {
-
-}
 
 .box-shadow {
     box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05), 0 -.25rem .75rem rgba(0, 0, 0, .05);
@@ -166,11 +159,6 @@ header + .content {
     height: 96px;
 }
 
-.feed .thumb img {
-    min-width: 96px;
-    min-height: 96px;
-}
-
 .feeds .feed.feed-stub + .feed {
     margin-left:3rem !important;
 }
@@ -180,8 +168,8 @@ header + .content {
     margin: 0.75rem;
 }
 
-.feeds .thumb,
-.articles .thumb {
+.feed .thumb,
+.article .thumb {
     transition: all .15s linear;
     background-color: #fafafa;
     border-radius: 50%;
@@ -338,3 +326,143 @@ header + .content {
     opacity: 1;
     padding-bottom: 0.75rem;
 }
+
+/* Modal stuff */
+.modal .modal-content {
+    color:var(--white);
+}
+.modal {
+    background: rgba(0,0,0,0.9);
+}
+
+.modal .not-modal-dialog {
+    position: relative;
+    width: auto;
+
+    border-left: 46px none transparent;
+    border-right: 46px none transparent;
+}
+
+/* Modal Header @{ */
+.modal header {
+    padding: 0;
+}
+
+.modal .close {
+    color:var(--light);
+    text-shadow: #000;
+}
+.modal .close:hover,
+.modal .close:focus {
+    color:var(--white);
+    text-shadow: #000;
+}
+
+
+.modal header .entity .thumb {
+    width: 32px;
+    height: 32px;
+}
+.modal header .entity .title {
+    display: none;
+}
+.modal #modal-title-title {
+    margin-left:0.75rem;
+    margin-right: 0.75rem;
+}
+
+.modal #modal-title-published {
+    color: var(--light);
+    font-weight: lighter;
+}
+/* @} end of Modal Header */
+
+.modal .modal-content {
+    max-height: calc(100vh);
+}
+
+.modal .modal-body {
+    padding:0;
+}
+
+/* Carousel @{ */
+.modal .carousel {
+    background-color: var(--black);
+    justify-content: center;
+    align-items: center;
+    /* height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%; */
+}
+
+.modal .carousel-indicators {
+    justify-content: space-between;
+    margin: 0 0;
+    position: relative;
+}
+.modal .carousel-indicators li.col {
+    flex:auto;
+    width:inherit;
+    flex-grow:1;
+    padding: 0;
+    margin-right: 3px;
+    margin-left: 0;
+}
+
+.modal .carousel-item {
+    border-top:1px solid rgba(0, 0, 0, .2);
+    border-left:1px solid rgba(0, 0, 0, .2);
+    border-right:1px solid rgba(255, 255, 255, .2);
+    border-bottom:1px solid rgba(255, 255, 255, .2);
+}
+
+.modal .carousel-item img {
+    max-width: 100%;
+    max-height: 100%;
+
+    width: auto;
+    height: auto;
+}
+
+.modal .carousel-caption {
+    padding:0;
+    bottom: 1rem;
+    text-shadow: 0px 1px 2px black;
+}
+.modal .carousel-control-next,
+.modal .carousel-control-prev {
+    width:48px;
+}
+.modal .carousel-control-prev {
+    margin-left:-48px;
+}
+.modal .carousel-control-next {
+    margin-right:-48px;
+}
+
+.carousel .bottom-shadow {
+    background: linear-gradient(to top,rgba(0,0,0,.35), transparent);
+    bottom: 0;
+    height: 150px;
+    left: 0;
+    pointer-events: none;
+    position: absolute;
+    width: 100%;
+}
+
+.carousel .carousel-caption iframe {
+    border:0;
+    width: 100%;
+    height: 100%;
+}
+
+.carousel .carousel-caption iframe * {
+    color:#fff;
+}
+.carousel .carousel-caption iframe img {
+    display:none;
+}
+
+/* @} End of Carousel */

@@ -3,7 +3,7 @@
 {% block content %}
     <section class="container container-fluid">
         <div class="feeds container justify-content-center">
-            <form action="{{url_for('feeds.page_reader')}}" method="GET" class="row justify-content-center row" >
+            <form action="{{url_for('feeds.page_reader')}}" method="GET" class="row justify-content-center row">
                 <div class="entity feed feed-stub">
                     <a class="add-feed" href="{{url_for('feeds.page_add_feed')}}">
                         <span class="thumb">
@@ -30,18 +30,75 @@
     <section class="articles container-fluid bg-white box-shadow">
         <div class="container container-align-center">
             <ul class="thumbs container justify-content-center col-sm-12 col-md-9">
+                {# for loop needs to be conjucated to gether with <li>.
+                   Whitespace breaks page layout by introducing empty text node.
+                #}
                 {% for article in articles %}<li class="entity article zigzag container-align-center">
-                    <a href="{{article.url|e}}">
+                    <a href="{{article.url|e}}" data-toggle="modal" data-feed="{{article.feed.id()|e}}" data-published="{{article.published.isoformat()}}+00:00" data-target="#article-modal">
                         {# <span class="bubble-tag btn favorite"><span class="material-icons">favorite_border</span></span> #}
                         <span class="thumb" title="{{ article.title|e }}">
                             {{article|asset_img}}
                         </span>
                         <div class="title d-flex align-items-center justify-content-center"><h5>{{article.title|e}}</h5></div>
+                        {# <iframe scrolling=no sandbox src="data:text/html;charset=utf-8,{{article.content|e}}"></iframe> #}
+                        <template class="content">{{article.content}}</template>
                     </a>
+                    <template class="d-none">{{article.content}}</template>
                 </li>{% endfor %}
             </ul>
         </div>
     </section>
+
+    <div class="modal" id="article-modal" tabindex="-1" role="dialog">
+        <section class="container not-modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content bg-transparent border-0">
+                <header class="modal-header border-0 align-items-center">
+                    <h5 class="modal-title align-items-center d-flex text-truncate">
+                        <a class="feed entity d-inline-block d-flex">{# FEED #}</a>
+                        <a id="modal-title-title" class="text-truncate text-white">{# Article title #}</a>
+                        <time id="modal-title-published" class="d-inline-block"></time>
+                    </h5>
+
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span class="material-icons" aria-hidden="true">&times;</span>
+                    </button>
+                </header>
+
+                <div class="modal-body justify-content-center">
+
+                    <div id="article-carousel" class="carousel carousel-fade" data-ride="carousel">
+                        <template id="carousel-indicator">
+                            <li class="col" data-target="#article-carousel" data-slide-to=""></li>
+                        </template>
+                        <template id="carousel-item">
+                            <div class="carousel-item">
+                                <img src="" class="img-responsive" />
+                                <div class="carousel-caption">
+                                    {# ARTICLE CONTENT #}
+                                </div>
+                                <div class="bottom-shadow"></div>
+                            </div>
+                        </template>
+                        <ol class="carousel-indicators row">
+                            {# <li #carousel-indicator> INDICATOR </li> #}
+                        </ol>
+                        <div class="carousel-inner col justify-content-center">
+                            {# <li #carousel-item> ARTICLE ITEM </li> #}
+                        </div>
+                    </div>
+
+                    <a class="carousel-control-prev" href="#article-carousel" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">{{_("Previous") }}</span>
+                    </a>
+                    <a class="carousel-control-next" href="#article-carousel" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">{{_("Next") }}</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </div>
 
 {% endblock content %}
 

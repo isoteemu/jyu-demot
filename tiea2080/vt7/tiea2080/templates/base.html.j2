@@ -4,8 +4,8 @@
     <meta charset="{{config['CHARSET']}}" />
     <title>{% block title %}RSS Reader{% endblock title %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="//stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="//fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     {# prefetch javascript sources #}
     <link rel="dns-prefetch" href="//ajax.googleapis.com/">
@@ -14,7 +14,7 @@
     <link rel="dns-prefetch" href="//lh3.googleusercontent.com">
 </head>
 <body class="kirjautunut bg-light">
-    <header class="site-header row sticky-top bg-white box-shadow">
+    <header class="site-header row sticky-top bg-white box-shadow border-bottom">
         <nav class="navbar container navbar-light flex-nowrap d-flex">
             <a class="navbar-brand" href="{{url_for('feeds.page_reader')}}">
                 <span class="d-inline-block align-top material-icons logo">book</span>
@@ -102,5 +102,6 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="//stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script src="{{url_for('static', filename='app.js')}}"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/dompurify/1.0.10/purify.min.js"></script>
 </body>
 </html>
