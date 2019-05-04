@@ -2,6 +2,10 @@ header {
     border-bottom:1px solid #ced4da;
 }
 
+header .logo {
+
+}
+
 .box-shadow {
     box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05), 0 -.25rem .75rem rgba(0, 0, 0, .05);
 }
@@ -141,11 +145,15 @@ header + .content {
     height: 2rem;
     position: absolute;
     right: 0;
-    bottom: 0;
     z-index: 5;
     border-radius: 50% !important;
     padding: 0 0 !important; 
     line-height: 2rem !important;
+}
+
+.entity .bubble-tag.subscribe,
+.entity .bubble-tag.unsubscribe {
+    bottom: 0;
 }
 
 .entity.feed .title {
@@ -162,7 +170,6 @@ header + .content {
     min-width: 96px;
     min-height: 96px;
 }
-
 
 .feeds .feed.feed-stub + .feed {
     margin-left:3rem !important;
@@ -220,39 +227,50 @@ header + .content {
     vertical-align: middle;
     line-height: 88px;
     font-size:96px;
+
+    padding-top: 0.75rem;
 }
 
 
 .add-feed.subscribed .thumb::before {
     content:"";
 }
+
 .add-feed.subscribed .thumb:hover::before {
     background-color: var(--danger);
     content:"-" !important;
 }
 
 .add-feed .thumb:hover::before {
+    padding-top: 0;
     opacity: 1;
 }
 
 .feed .thumb::after {
-    border: 2px solid var(--light);
-    outline: 1px solid var(--light);
+    border: 2px solid rgba(255,255,255,0.9);
+
     border-radius: 50%;
-    bottom: 0;
+    box-shadow: inset 0px 0.1rem 0.05rem 0px rgba(0,0,0,0.2);
+
     content: '';
-    left: 0;
     pointer-events: none;
     position: absolute;
+    left: 0;
     right: 0;
     top: 0;
+    bottom: 0;
 }
 
 .thumb img {
+    transition: all .15s linear;
     min-height: 100%;
     min-width: 100%;
     /* Fails when image is vertical. But good enough for now. */
     height: 100%;
+}
+
+.thumb:hover {
+    transform: scale(0.9);
 }
 
 
@@ -310,13 +328,13 @@ header + .content {
     transition: 0.5s all;
     background-color:var(--info);
     color:var(--white);
-    padding: 0.75rem;
-}
-
-.articles .no-asset.entity .title {
-    opacity: 1;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    padding-top: 0.75rem;
+    padding-bottom: -0.25rem;
 }
 
 .articles .entity:hover .title {
     opacity: 1;
+    padding-bottom: 0.75rem;
 }
