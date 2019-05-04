@@ -129,7 +129,6 @@ class Feed(AssetedModel):
 
         super(Feed, self).delete(*args, **kwargs)
 
-    @classmethod
     def user_subscribed(self, user):
         r"""
         Return ``True`` if currently logged in user is subscribed.
