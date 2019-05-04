@@ -131,6 +131,7 @@ class Feed(AssetedModel):
 
         super(Feed, self).delete(*args, **kwargs)
 
+    @classmethod
     def user_subscribed(self, user):
         r"""
         Return ``True`` if currently logged in user is subscribed.
@@ -142,7 +143,6 @@ class Feed(AssetedModel):
                 return False
 
             subscription = get_by_key(key)
-            app.logger.debug("user_subscribed(%s, %s, %s): ", self.title, user.email, True if subscription else False)
 
         except Exception as e:
             app.logger.exception(e)
@@ -151,6 +151,11 @@ class Feed(AssetedModel):
             return False
         else:
             return True
+
+    def articles(self):
+        return Article.query(
+            Article.feed == self.key
+        ).fetch()
 
 
 class User(Model):
