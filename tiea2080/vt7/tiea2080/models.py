@@ -110,8 +110,6 @@ class Feed(AssetedModel):
 
     def put(self, *args, **kwargs):
         super(Feed, self).put(*args, **kwargs)
-        for article in self._articles:
-            get_by_key(article).put()
 
     def delete(self, *args, **kwargs):
         for sub in Subscription.query(Subscription.feed == self.key).fetch():
