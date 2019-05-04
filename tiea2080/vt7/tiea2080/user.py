@@ -110,7 +110,6 @@ def get_notifications(limit=None):
         memcache.delete(memcache_key)
         new_notifications = []
         for category, message in flashes:
-            app.logger.info("New notification %s", repr(message))
             notification_entity = Notification(
                 parent=user.key,
                 message=message, category=category, timestamp=datetime.utcnow()
