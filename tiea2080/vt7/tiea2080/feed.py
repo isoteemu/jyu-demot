@@ -352,7 +352,10 @@ def update_feed(feed):
 
     update_feed_interval(feed)
 
-    ndb.put_multi(articles + [feed])
+    # Collect assets.
+    assets = filter(None, [get_entity_asset(e) for e in articles + [feed]])
+
+    ndb.put_multi([feed] + articles + assets)
 
 
 
