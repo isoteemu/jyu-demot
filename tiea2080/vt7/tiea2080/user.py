@@ -161,5 +161,6 @@ def _save_last_seen(exception):
     """
 
     user = get_current_user()
-    user.seen = datetime.utcnow()
-    user.put_async()
+    if user.is_authenticated:
+        user.seen = datetime.utcnow()
+        user.put_async()
