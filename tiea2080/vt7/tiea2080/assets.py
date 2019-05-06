@@ -238,7 +238,11 @@ def asset_factory(url, parent, **kwargs):
 def get_entity_asset(entity):
     asset = None
 
-    for k in model_storage:
+    # Make own copy of model_storage. As we might be  adding stuff back into it,
+    # model_storage size can change in mid ideration.
+    own_copy = [e for e in model_storage]
+
+    for k in own_copy:
         e = model_storage[k]
 
         if isinstance(e, Asset) and e.key.parent() == entity.key:
