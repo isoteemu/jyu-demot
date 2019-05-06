@@ -101,18 +101,18 @@ def get_notifications(limit=None):
 
     notifications = []
 
+    memcache_key = None
     user = get_current_user()
+    if user.is_authenticated:
+        memcache_key = "user.notifications:%s" % user.key.id()
+        cached_notifications = memcache.get(memcache_key)
 
-    memcache_key = "user.notifications:%s" % user.key.id()
-
-    cached_notifications = memcache.get(memcache_key)
-
-    if cached_notifications:
-        notifications = notifications + cached_notifications
-    else:
-        q = Notification.query(ancestor=user.key).order(-Notification.timestamp)
-        for n in q.fetch(limit=limit):
-            notifications.append(n)
+        if cached_notifications:
+            notifications = notifications + cached_notifications
+        else:
+            q = Notification.query(ancestor=user.key).order(-Notification.timestamp)
+            for n in q.fetch(limit=limit):
+                notifications.append(n)
 
     flashes = get_flashed_messages(with_categories=True)
 
@@ -128,10 +128,12 @@ def get_notifications(limit=None):
             new_notifications.append(notification_entity)
 
         notifications = new_notifications + notifications
+        if user.is_authenticated:
+            ndb.put_multi(new_notifications)
 
-        ndb.put_multi(new_notifications)
+    if user.is_authenticated:
+        memcache.set(memcache_key, notifications)
 
-    memcache.set(memcache_key, notifications)
     _request_ctx_stack.top.user_notifications = notifications
 
     return notifications[0:limit]
