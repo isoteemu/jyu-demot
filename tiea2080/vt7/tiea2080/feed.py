@@ -1,7 +1,16 @@
 # -*- coding: utf-8 -*-
 
 from flask import (
-    Blueprint, g, abort, flash, redirect, render_template, url_for, request, Markup
+    Blueprint,
+    g,
+    flash,
+    render_template,
+    url_for,
+    Markup,
+    redirect,
+    request,
+    abort,
+    jsonify,
 )
 from flask import current_app as app
 from flask_babel import _
@@ -19,8 +28,22 @@ import uuid
 
 from . import csrf, cache, memcache
 from .utils import valid_url, url_normalize, html_parser, crawler
-from .models import Feed, Asset, Subscription, Article, User, ndb, get_by_key, subscription_key
+from .models import (
+    Feed,
+    Asset,
+    Subscription,
+    Article,
+    User,
+    Saved,
+    ndb,
+    get_by_key,
+    subscription_key,
+)
 from .user import get_current_user
+from .subsctiptions import (
+    user_subscriptions,
+    memcache_key_subscriptions,
+)
 from .assets import asset_factory, get_entity_asset
 
 feedparser_content_types = [
@@ -29,10 +52,9 @@ feedparser_content_types = [
 ]
 
 
-default_limit = 16
+default_limit = 24
 
 memcache_key_latest = "feeds.latest:%s"
-memcache_key_subscriptions = "feeds.subscribed:%s"
 
 bp = Blueprint('feeds', __name__)
 
@@ -97,46 +119,61 @@ def page_reader():
         else:
             return 0
 
-    articles = sorted(articles, sort_datetime)
-    # Make divisible by 4, for page layout purposes
-    n = len(articles)
-    if n > 4:
-        articles = articles[:n - n % 4]
+    articles.sort(sort_datetime)
+
+    articles = articles[0:default_limit]
 
     return render_template("page-reader.html.j2", feeds=feeds, articles=articles)
 
 
-def user_subscriptions(user):
-    r"""
-    Return :class:`Subscription`s user has subscribed into.
-
-    If user hasn't subscribed into anything, invokes :func:`subscribe_into_defaults()`
-    """
-
-    memcache_key = memcache_key_subscriptions % user.key.id()
-    subscribed = memcache.get(memcache_key)
-
-    if not subscribed:
-        subscribed = list(Subscription.query(Subscription.user == user.key).fetch())
-        memcache.set(memcache_key_subscriptions, subscribed)
-
-    if len(subscribed) == 0:
-        subscribed = subscribe_into_defaults(user)
-
-    return subscribed
-
-
-def get_latest_articles(feed):
+def get_latest_articles(feed, force_refresh=False):
     memcache_key = memcache_key_subscriptions % feed.key.id()
 
     articles = memcache.get(memcache_key)
-    if not articles:
+    if not articles or force_refresh:
         feed_articles = Article.query(Article.feed == feed.key).order(-Article.published)
         articles = list(feed_articles.fetch(default_limit))
         memcache.set(memcache_key, articles)
 
     return articles
 
+
+@bp.route("/save/<article_id>", methods=('POST', 'DELETE','GET'))
+def article_save(article_id):
+    r"""
+    Web callback for saving articles.
+    """
+
+    status = {"status": "OK"}
+
+    user = get_current_user()
+    if not user.is_authenticated:
+        abort(403)
+
+    # Load associated article
+    key = ndb.key.Key(urlsafe=article_id)
+    if key.kind() != "Article":
+        abort(404)
+
+    article = get_by_key(key)
+    if not article:
+        abort(404)
+
+    save = saved_factory(article, user)
+
+    try:
+        if request.method == "POST":
+            save.put()
+            status['status'] = "OK"
+        elif request.method == "DELETE":
+            save.delete()
+            status['status'] = "OK"
+    except Exception as e:
+        app.logger.exception(e)
+        status['status'] = "ERROR"
+        status['message'] = unicode(e)
+
+    return jsonify(status)
 
 
 @bp.route("/add", methods=('POST', 'GET'))
@@ -168,19 +205,19 @@ def page_add_feed():
                 feed_url = url
 
                 if feed_url not in feeds:
-                    flash(_("Could not subscride into feed: Feed seems to be missing"), "error")
+                    flash(_("Could not subscride into feed."), "error")
                     app.logger.warning(u"Tried to subscride into feed %s, but its missing from discovered feeds." % repr(feed_url))
 
                 else:
                     # Make title safe for display purposes.
                     feed_markup = Markup("<em class=\"feed\">%s</em>") % feeds[feed_url].title
 
-                    if feeds[feed_url].user_subscribed(user):
-                        feed_subscride(feeds[feed_url], user).delete()
+                    subscription = user.has_subscribed(feeds[feed_url])
+                    if subscription:
+                        subscription.delete()
                         flash(_(u"Feed %s removed." % feed_markup))
 
                     else:
-
                         feeds[feed_url].put()
                         asset = get_entity_asset(feeds[feed_url])
                         if asset:
@@ -193,40 +230,11 @@ def page_add_feed():
                         else:
                             flash(_(u"Feed %s added" % feed_markup))
         else:
-            flash(_("Invalid url", "error"))
+            flash(_("Invalid url"), "error")
 
     discover = cool_feeds()
 
     return render_template("add_feed.html.j2", form=feed_form, feeds=feeds, discover=discover)
-
-
-def subscribe_into_defaults(user):
-    DEFAULTS = [
-        url_for('static', filename="rss.xml", _external=True),
-        u"https://www.hs.fi/rss/tuoreimmat.xml",
-        u"https://www.reddit.com/r/lego/.rss",
-        u"https://xkcd.com/atom.xml",
-        u"https://github.com/isoteemu/jyu-demot/commits/master.atom",
-        u"https://divamag.co.uk/feed"
-    ]
-
-    subs = []
-    for feed_url in DEFAULTS:
-        try:
-            k, feed = discover_feeds(feed_url).popitem()
-            feed.put()
-
-            sub = feed_subscride(feed, user)
-            sub.put()
-
-            schedule_feed_update_if_needed(feed)
-            subs.append(sub)
-        except Exception as e:
-            app.logger.exception(e)
-
-    flash(_(u"Default feeds subscrided into"))
-
-    return subs
 
 
 @cache.cached(timeout=60 * 60 * 24)
@@ -234,21 +242,24 @@ def cool_feeds():
     feeds = {
         _(u"Technology"): [
             _discover_feed("https://lwn.net/headlines/newrss"),
-            _discover_feed("http://rss.slashdot.org/Slashdot/slashdotMain"),
             _discover_feed("https://news.ycombinator.com/rss"),
             _discover_feed("https://techcrunch.com/feed/"),
             _discover_feed("http://feeds.arstechnica.com/arstechnica/technology-lab"),
+            _discover_feed("https://github.com/isoteemu/jyu-demot/commits/master.atom"),
         ],
         _(u"Culture"): [
             _discover_feed("https://jezebel.com/rss"),
             _discover_feed("https://www.reddit.com/r/feminism/.rss"),
             _discover_feed("https://slutever.com/feed/atom"),
+            _discover_feed("https://divamag.co.uk/feed"),
             _discover_feed("https://www.radiohelsinki.fi/feed/"),
+            _discover_feed("https://balletbeautifulnyc.tumblr.com/rss"),
         ],
         _(u"Entertainmet"): [
             _discover_feed("https://feeds.yle.fi/uutiset/v1/majorHeadlines/YLE_URHEILU.rss"),
             _discover_feed("https://www.smbc-comics.com/comic/rss"),
             _discover_feed("https://nerdist.com/feed/"),
+            _discover_feed("https://xkcd.com/atom.xml"),
             _discover_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCLx053rWZxCiYWsBETgdKrQ"),
          ]
     }
@@ -356,9 +367,14 @@ def update_feed(feed):
     # Collect assets.
     assets = filter(None, [get_entity_asset(e) for e in articles + [feed]])
 
-    ndb.put_multi([feed] + articles + assets)
+    futures = ndb.put_multi_async([feed] + articles + assets)
 
+    # Wait for everything to be committed.
+    for future in futures:
+        future.wait()
 
+    # Force cache refresh
+    get_latest_articles(feed, force_refresh=True)
 
 
 def feed_subscride(feed, user=None):
@@ -371,7 +387,7 @@ def feed_subscride(feed, user=None):
     if not user:
         user = get_current_user()
 
-    key = subscription_key(user, feed)
+    key = Subscription.generate_key(user, feed)
 
     entity = get_by_key(key)
     if not entity:
@@ -503,6 +519,31 @@ def article_factory(feed, id=None, **kwargs):
 
     article.populate(**kwargs)
     return article
+
+
+def saved_factory(article, user, **kwargs):
+    r"""
+    Create :class:`Saved` entity for article.
+
+    :param article: Associated :class:`Article` instance.
+    :param user: Associated :class:`User` instance.
+    """
+
+    if not isinstance(article, Article):
+        raise TypeError("article needs to be instance of `Article`")
+
+    if not isinstance(user, User):
+        raise TypeError("`user` needs to be instance of `User`")
+
+    kwargs['article'] = article.key
+    kwargs['user'] = user.key
+
+    key = Saved.generate_key(user.key, article.key)
+
+    saved = get_by_key(key) or Saved(key=key, user=user.key, article=article.key)
+    saved.populate(**kwargs)
+
+    return saved
 
 
 def update_feed_with_rss(feed, content):

@@ -38,3 +38,12 @@ indexes:
   properties:
   - name: user
   - name: weight
+    direction: desc
+
+- kind: Subscription
+  properties:
+  - name: user
+  - name: weight
+    direction: desc
+  - name: title
+    direction: desc

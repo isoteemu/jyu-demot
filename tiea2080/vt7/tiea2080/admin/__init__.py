@@ -18,12 +18,15 @@ from flask_babel import _
 from google.appengine.api import memcache
 
 from io import BytesIO
-import feedparser
+# import feedparse
 import logging
 import os
 
 from tiea2080 import (
     crawler,
+)
+from tiea2080.utils import (
+    html_parser,
 )
 from tiea2080.models import (
     ndb,
@@ -45,13 +48,24 @@ class FlashHandler(logging.StreamHandler):
 bp = Blueprint('admin', __name__, template_folder='templates')
 
 
-
 def init_app(app):
-
     app.logger.addHandler(FlashHandler())
     app.config.setdefault("DEBUG", True)
     app.register_blueprint(bp, url_prefix="/admin")
 
+
+@bp.route("/test", methods=('POST', 'GET'))
+def test():
+
+    s = r"""</template><noscript><p title="></noscript><img src=x onerror=alert(1)></p></noscript>">"""
+
+    return render_template("test.html.j2", foo=s)
+
+    r = crawler().get("https://feeds.yle.fi/uutiset/v1/mostRead/YLE_UUTISET.rss")
+    r.raise_for_status()
+
+    soup = html_parser(r.text)
+    return u"%s" % (soup.find("rss", {"version": True}))
 
 
 @bp.route("/feeds", methods=('POST', 'GET'))
@@ -86,11 +100,25 @@ def page_list_feeds():
         for article in feed.articles():
             data['articles'].append({
                 'title': article.title,
+                'published': article.published
             })
 
         feeds.append(data)
 
     return render_template("feeds.html.j2", feeds=feeds)
+
+
+@bp.route("/users", methods=('GET', 'POST'))
+def page_users():
+
+    if request.method == "POST":
+        if "remove" in request.form:
+            ndb.key.Key(urlsafe=request.form.get("remove")).get().delete()
+            flash(_("User removed"))
+
+    users = User.query().fetch()
+    return render_template("users.html.j2", users=users)
+
 
 @bp.route("/feedparser/<key>")
 def page_debug_feedparser(key):
@@ -111,6 +139,7 @@ def page_delete_user():
     if user_id:
         user = ndb.key.Key(urlsafe=user_id).get()
         user.delete()
+        app.logger.info("User deleted")
         memcache.flush_all()
 
     msg = []

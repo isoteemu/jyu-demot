@@ -13,13 +13,16 @@ __author__ = "Teemu Autto"
 __version__ = "VT7"
 __url__ = "https://github.com/isoteemu/jyu-demot/tree/master/tiea2080/vt7"
 
-from flask import Flask, Response, render_template, flash
+from flask import (
+    Flask,
+    Response,
+    render_template,
+    flash,
+)
 from flask_caching import Cache
 from flask_babel import Babel, get_locale
-from flask_wtf import CSRFProtect
 from flask.logging import default_handler
 
-from werkzeug.local import LocalProxy
 import werkzeug.exceptions
 
 from google.appengine.api import memcache
@@ -27,6 +30,7 @@ from google.appengine.api import memcache
 import os
 import io
 
+from .utils import CSRFProtect
 from .utils import *
 
 import logging
@@ -37,7 +41,8 @@ logger.addHandler(logging.NullHandler())
 csrf = CSRFProtect()
 cache = Cache(config={'CACHE_TYPE': 'simple'})
 
-def alusta(**kwargs):
+
+def alusta(name=__name__, **kwargs):
     r"""
     Alustaa flask ympäristön.
     
@@ -49,12 +54,12 @@ def alusta(**kwargs):
     :param DATABASE:
     """
 
-    app = Flask(__name__)
+    app = Flask(name)
 
     kwargs.setdefault("CHARSET", "utf-8")
     kwargs.setdefault("DEBUG", True)
     kwargs.setdefault("BABEL_DEFAULT_LOCALE", "fi")
-    kwargs.setdefault("BABEL_DEFAULT_TIMEZONE", u"EEST")
+    kwargs.setdefault("BABEL_DEFAULT_TIMEZONE", u"Europe/Helsinki")
 
     app.config.update(kwargs)
 
@@ -104,14 +109,14 @@ def app_init_virhe(app):
     def handle_internal_server_error(e):
         virhe_sivu = u"Palvelimen virhe:\n %s" % e
         try:
-            app.logger.error(u"Kohdattiin virhe ladattaessa sivua: %s " % e)
+            app.logger.error(u"Kohdattiin virhe ladattaessa sivua")
             app.logger.exception(e)
             if isinstance(e, Virhe):
                 flash(u"%s" % e, "error")
 
             virhe_sivu = render_template("virhe.html.j2", virhe=unicode(e), routet=app.url_map.iter_rules())
         except Exception as e:
-            app.logger.error(u"Virhe käsiteltäessä aikasempaa virhettä: %s" % e)
+            app.logger.error(u"Virhe käsiteltäessä aikasempaa virhettä")
             app.logger.exception(e)
 
         status = 500
@@ -128,6 +133,8 @@ def init_app(app):
             # Estä kaatumiset.
             app_init_virhe(app)
 
-        # Suojausta. Tehtävä ei vaadi, mutta eh.
+        # CSRF protection
         csrf.init_app(app)
+
         app.jinja_env.filters.update(purify=sanitize_html)
+

@@ -16,12 +16,16 @@ from google.appengine.api import taskqueue
 
 from base64 import b64encode
 import os
-from urllib import quote, unquote
-import uuid
+from datetime import datetime
 
 from . import memcache, csrf
-from .utils import url_normalize, valid_url, urlparse, crawler
-from .models import Asset, ndb, get_by_key, model_storage
+from .utils import url_normalize, valid_url, urlparse, crawler, requests
+from .models import (
+    Asset,
+    AssetedModel,
+    ndb,
+    get_by_key,
+)
 
 ASSET_SIZES = {
     'Feed': (96, 96),
@@ -57,9 +61,12 @@ def asset_img(entity, size=None):
 
     """
 
+    if isinstance(entity, ndb.Key):
+        entity = get_by_key(entity)
+
     if not entity:
         app.logger.warning(u"Can't create image; Entity is missing.")
-        return u'<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="missing-entity" /><!-- Entity missing -->'
+        return Markup(u'<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="missing-entity" /><!-- Entity missing -->')
 
     if size is None:
         size = entity._get_kind()
@@ -83,12 +90,15 @@ def asset_img(entity, size=None):
         # If blob url is already known, hot link to it. If not,
         # set into redirection url.
 
-        params['src'] = bloburl(asset, size, url_for("assets.redirect_to_asset", size=size, asset=asset.key.urlsafe()))
+        params['src'] = bloburl(asset, size,
+                                url_for("assets.redirect_to_asset", size=size, asset=asset.key.urlsafe()),
+                                fast=True)
+
         params['large'] = asset.url
 
         if asset.width and asset.height:
             large_size = get_large_size(asset.width, asset.height)
-            params['large'] = bloburl(asset, large_size, url_for("assets.redirect_to_asset", size=large_size, asset=asset.key.urlsafe()))
+            params['large'] = bloburl(asset, large_size, url_for("assets.redirect_to_asset", size=large_size, asset=asset.key.urlsafe()), fast=True)
             params['aspect'] = float(asset.width) / float(asset.height)
 
         params['snippet'] = asset.snippet
@@ -98,9 +108,13 @@ def asset_img(entity, size=None):
     return render_template("asset_img.html.j2", **params)
 
 
-def bloburl(entity, size, fallback=None):
+def bloburl(entity, size, fallback=None, fast=False):
     r"""
     Retrieves serving url for Asset.
+
+    :param fast: Don't try creating asset serving url. Only return
+                 from memcache.
+
     """
     if not isinstance(entity, Asset):
         raise TypeError("Expected `Asset` as entity type.")
@@ -118,7 +132,7 @@ def bloburl(entity, size, fallback=None):
     # Look serving url from memcache. Create one if not found.
     key = u"blobstore_asset:%s:%s" % (entity.blob_key, size)
     img_url = memcache.get(key)
-    if not img_url:
+    if not img_url and not fast:
         img_url = images.get_serving_url(blob_key=entity.blob_key, size=size_longest, crop=crop, secure_url=secure)
         memcache.set(key, img_url)
 
@@ -143,14 +157,10 @@ def redirect_to_asset(size, asset):
         app.logger.debug("Requested unknown size: %s", repr(size))
         abort(404)
 
-    try:
-        key = ndb.key.Key(urlsafe=asset)
-        entity = get_by_key(key)
-    except Exception as e:
-        app.logger.exception(e)
-        abort(404)
+    key = ndb.key.Key(urlsafe=asset)
+    entity = get_by_key(key)
 
-    if not entity:
+    if not isinstance(entity, Asset):
         abort(404)
 
     url = url_normalize(entity.url)
@@ -223,58 +233,41 @@ def asset_factory(url, parent, **kwargs):
 
     app.logger.debug("Creating asset: %s for %s", url, repr(parent.key.id()))
     url = url_normalize(url)
-    id = u"%s" % uuid.uuid5(uuid.NAMESPACE_URL, url.encode("utf-8"))
+    id = u"%s" % url
+
     key = ndb.key.Key(Asset, id, parent=parent.key)
     asset = get_by_key(key) or Asset(key=key)
 
-    if key not in model_storage:
-        raise UserWarning("Asset %s not in storage!" % repr(key))
-
     kwargs["url"] = url
     asset.populate(**kwargs)
+    parent.tell_about_asset(asset)
+
     return asset
 
 
 def get_entity_asset(entity):
-    asset = None
+    if not isinstance(entity, AssetedModel):
+        raise TypeError("`entity` needs to be AssetedModel")
 
-    # Make own copy of model_storage. As we might be  adding stuff back into it,
-    # model_storage size can change in mid ideration.
-    own_copy = [e for e in model_storage]
-
-    for k in own_copy:
-        e = model_storage[k]
-
-        if isinstance(e, Asset) and e.key.parent() == entity.key:
-            _asset = model_storage[k]
-            if not asset or asset.weight > _asset.weight:
-                asset = _asset
-
-    if asset:
-        # check storage for heavier asset
-        _asset = Asset.query(Asset.weight > asset.weight, ancestor=entity.key).order(-Asset.weight).get()
-        if _asset:
-            # Put into temporary asset storage, and swap.
-            model_storage[_asset.key] = _asset
-            asset = _asset
-    else:
-        asset = Asset.query(ancestor=entity.key).order(-Asset.weight).get()
-
+    asset = entity.Asset()
     return asset
 
 
 def scrape_asset(asset):
     r"""
     Download image, and store cropped version.
-
     """
 
     app.logger.debug("Scraping image %s", repr(asset.url))
 
+    asset.updated = datetime.utcnow()
+
     response = crawler().get(asset.url)
 
     # Stops if request failed.
-    response.raise_for_status()
+    if response.status_code != requests.codes.ok:
+        app.logger.info("Scaping returned error code %s", response.status_code)
+        return None
 
     i = images.Image(response.content)
 

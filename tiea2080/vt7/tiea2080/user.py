@@ -1,49 +1,87 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
+# TODO: Muuta check_user_access() -decoraattoriksi.
+
 from flask import (
     Blueprint,
+    g,
     redirect,
     abort,
+    flash,
     request,
+    url_for,
+    jsonify,
     current_app as app,
+    render_template,
     get_flashed_messages
 )
 
 from flask import _request_ctx_stack
+from flask_babel import _
+from flask_gravatar import Gravatar
 
 from google.appengine.api import users
 
 from datetime import datetime
 
-from .models import User, Notification, ndb
-from . import memcache
+from .models import (
+    User,
+    Notification,
+    Subscription,
+    Saved,
+    ndb,
+    get_by_key
+)
+from . import (
+    memcache,
+    csrf,
+)
+from .subsctiptions import (
+    user_subscriptions,
+    unsubscribe,
+    memcache_key_subscriptions,
+)
 
-current_user = None
+gravatar = None
 
 bp = Blueprint("user", __name__)
 
 
 def init_app(app):
     app.register_blueprint(bp)
+    gravatar = Gravatar(app,
+                        size=150,
+                        rating='r'
+                        )
+    app.teardown_appcontext(_save_last_seen)
+
     with app.app_context():
 
-        current_user = get_current_user()
-        app.teardown_appcontext(_save_last_seen)
-
         app.jinja_env.globals.update(
-            login_link=login_link, current_user=current_user,
+            login_link=login_link,
             get_notifications=get_notifications,
             get_flashed_messages=get_flashed_messages_override
         )
+
+        app.context_processor(_get_current_user)
+
+
+def _get_current_user():
+    return dict(current_user=get_current_user())
 
 
 def get_current_user():
     r""" Return current user Model.
     """
+
+    current_user = g.get('current_user', None)
     if current_user:
         return current_user
 
     user = User()
+
     try:
         framework_user = users.get_current_user()
         id = u"%s" % framework_user.user_id()
@@ -51,26 +89,179 @@ def get_current_user():
         user = User.get_or_insert(id)
 
         email = framework_user.email()
-        if email != user.email:
+        if email and email != user.email:
             user.email = email
             user.put()
+        elif not email:
+            user.email = ""
 
         user.is_authenticated = True
+        user.nickname = framework_user.nickname() or _("Anonymous")
 
     except (users.UserNotFoundError, AttributeError):
         pass
 
+    g.current_user = user
+
     return user
 
 
+def check_user_access(email):
+    user = get_current_user()
+
+    if user.email != email:
+        app.logger.warning("Access denied. Espected email %s, got %s", user.email, email)
+        # Show only current user.
+        abort(403)
+
+
+@bp.route("/<email>/")
+def page_profile(email):
+    r"""
+    User profile page.
+    """
+    user = get_current_user()
+    check_user_access(email)
+
+    subscriptions = user_subscriptions(user)
+    saved = list(Saved.query(Saved.user == user.key).fetch())
+    saved.sort(key=lambda x: x.weight or x.Article().title)
+
+    return render_template("user.html.j2", subscriptions=subscriptions, saved=saved)
+
+
+@bp.route("/<email>/subscriptions.json", methods=('GET', 'POST'))
+def subscription_weights_json(email):
+    user = get_current_user()
+    check_user_access(email)
+
+    status = {"status": "OK"}
+    subs = user_subscriptions(user)
+
+    dirty = []
+
+    if request.method == "POST":
+        try:
+            for sub in subs:
+                # Update weights if weight is changed
+                weight = request.form.get(sub.feed.urlsafe(), None)
+                if weight and weight.isdigit():
+                    weight = int(weight)
+                    if sub.weight != weight:
+
+                        sub.weight = int(weight)
+                        dirty.append(sub)
+
+            if len(dirty):
+                # If weight has changed, update them into datastore
+                ndb.put_multi(dirty)
+
+                # Force refreshing memstore
+                user_subscriptions(user, force_refresh=True)
+
+        except Exception as e:
+            app.logger.exception(e)
+            status['status'] = "FAIL"
+            status['message'] = u"%s" % e
+
+    return jsonify(status)
+
+
+@bp.route("/<email>/saved.json", methods=('GET', 'POST'))
+def saved_weights_json(email):
+    user = get_current_user()
+    check_user_access(email)
+
+    status = {"status": "OK"}
+    saved = Saved.query(Saved.user == user.key).fetch()
+    dirty = []
+
+    if request.method == "POST":
+        try:
+            for sub in saved:
+                # Update weights if weight is changed
+                weight = request.form.get(sub.key.urlsafe(), None)
+                if weight and weight.isdigit():
+                    weight = int(weight)
+                    if sub.weight != weight:
+
+                        sub.weight = int(weight)
+                        dirty.append(sub)
+
+            if len(dirty):
+                # If weight has changed, update them into datastore
+                ndb.put_multi(dirty)
+
+        except Exception as e:
+            app.logger.exception(e)
+            status['status'] = "FAIL"
+            status['message'] = u"%s" % e
+
+    return jsonify(status)
+
+
+@bp.route("/<email>/delete-account", methods=('POST',))
+def page_delete_account(email):
+    user = get_current_user()
+
+    check_user_access(email)
+
+    app.logger.info("User account will be deleted: %s", user.email)
+    deletion_url = url_for('static', filename='account-deleted.html')
+
+    user.is_authenticated = False
+    user.delete()
+
+    return redirect(users.create_logout_url(deletion_url), code=303)
+
+
+@bp.route("/<email>/feed", methods=('POST', 'GET'))
+def modify_subscription(email):
+    r"""
+    Page for modifying subscription info.
+    """
+
+    user = get_current_user()
+    check_user_access(email)
+
+    sub_id = request.form.get("subscription") or request.args.get("subscription") or abort(404)
+
+    subscription = get_by_key(ndb.key.Key(Subscription, sub_id, parent=user.key))
+
+    if not subscription:
+        abort(404)
+
+    if request.method == "POST":
+        action = request.form.get("action", None)
+        feed_removed = False
+        try:
+            if action == "save":
+                subscription.title = request.form.get("title", subscription.title)
+                subscription.put()
+                user_subscriptions(user, force_refresh=True)
+                flash(_("Feed updated"))
+            elif action == "remove":
+                unsubscribe(subscription)
+                flash(_("Feed removed."))
+                feed_removed = True
+
+        except Exception as e:
+            flash(_("Could not save feed"), "error")
+            app.logger.exception(e)
+
+        if feed_removed:
+            return redirect(url_for("user.page_profile", email=user.email))
+
+    return render_template("modify-subscription.html.j2", subscription=subscription)
+
+
 def login_link():
-    print(request.base_url)
-    users.create_login_url('/')
+    return users.create_login_url('/')
 
 
 @bp.route("/logout", methods=('POST',))
 def page_logout():
-    url = ""
+    url = url_for('static', filename='account-logout.html')
     return redirect(users.create_logout_url(url), code=303)
 
 

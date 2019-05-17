@@ -6,10 +6,24 @@ threadsafe: true
 libraries:
 - name: ssl
   version: latest
+- name: lxml    
+  version: latest
 
 handlers:
 - url: /static
   static_dir: tiea2080/static
+
+- url: /account-deleted.html
+  static_files: tiea2080/static/account-deleted.html
+  upload: tiea2080/static/account-deleted.html
+
+- url: /account-logout.html
+  static_files: tiea2080/static/account-logout.html
+  upload: tiea2080/static/account-logout.html
+
+- url: /favicon.ico
+  static_files: tiea2080/static/favicon.ico
+  upload: tiea2080/static/favicon.ico
 
 - url: /cron/.*
   script: main.app
@@ -20,7 +34,7 @@ handlers:
   login: admin
 
 - url: /admin/.*
-  script: admin.app
+  script: admin.admin_app
   login: admin
 
 - url: /.*

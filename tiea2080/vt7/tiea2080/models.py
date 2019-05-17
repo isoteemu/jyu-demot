@@ -10,8 +10,11 @@ import random
 import uuid
 
 # Factories should store models into model_storage.
+# TODO: tämän pitäisi olla request kontekstissa.
 model_storage = {}
 memcache_namespace = u"%s" % __name__
+
+memcache_key_subscriptions = "subscribed:%s"
 
 r"""
 MODELS
@@ -31,11 +34,12 @@ class Model(ndb.Model):
         return r
 
     def delete(self):
-        if self.key in model_storage:
-            del model_storage[self.key]
-            memcache.delete(repr(self.key), namespace=memcache_namespace)
+        key = self.key
+        if key in model_storage:
+            del model_storage[key]
 
-        self.key.delete()
+        memcache.delete(repr(key), namespace=memcache_namespace)
+        self.key.delete_async()
 
     def _post_put_hook(self, future):
         memcache.set(repr(self.key), self, namespace=memcache_namespace)
@@ -53,43 +57,76 @@ class Asset(Model):
     blob_key = ndb.StringProperty()
 
     created = ndb.DateTimeProperty(auto_now_add=True)
+    updated = ndb.DateTimeProperty(auto_now=True)
+
     weight = ndb.IntegerProperty()
 
     def __init__(self, *args, **kwargs):
         r = super(Asset, self).__init__(*args, **kwargs)
 
-        # If entity has parent, add self into its hidden asset stash.
         if self.key:
-            get_by_key(self.key.parent())._assets.append(self.key)
+            parent = self.key.parent()
+
+            if parent:
+                # Tell about self to parent instance.
+                get_by_key(parent).tell_about_asset(self)
 
         return r
 
-    def put(self, *args, **kwargs):
-        return super(Asset, self).put(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
+    def delete(self):
         if self.blob_key:
             images.delete_serving_url_async(self.blob_key)
 
-        return super(Asset, self).delete(*args, **kwargs)
+        return super(Asset, self).delete()
 
 
 class AssetedModel(Model):
+
+    _asset_memcache_key = "Asset-for:%s"
+
     def __init__(self, *args, **kwargs):
-        self._assets = []
+        # Preferred asset
+        self._asset = None
+
         super(AssetedModel, self).__init__(*args, **kwargs)
 
-    def put(self, *args, **kwargs):
-        super(AssetedModel, self).put(*args, **kwargs)
-        for asset_key in self._assets:
-            get_by_key(asset_key).put()
+    def Asset(self):
+        r"""
+        Returns associated asset.
+        """
+        memcache_key = self._asset_memcache_key % repr(self.key)
 
-    def delete(self, *args, **kwargs):
-        q = Asset.query(ancestor=self.key)
-        for e in q.fetch():
-            e.delete()
+        if not self._asset:
+            self._asset = memcache.get(memcache_key, namespace=memcache_namespace)
 
-        return super(AssetedModel, self).delete(*args, **kwargs)
+        if not self._asset:
+            # Fetch only key.
+            asset = Asset.query(ancestor=self.key).order(-Asset.weight).get()
+            if asset:
+                self._asset = asset.key
+                memcache.set(memcache_key, self._asset, namespace=memcache_namespace)
+
+        if self._asset:
+            return get_by_key(self._asset)
+
+        return None
+
+    def tell_about_asset(self, asset):
+        r"""
+        Tell AssetedModel about new/changed asset. Updates internal pointer and memcache.
+        """
+        old_asset = self.Asset()
+        if not old_asset or old_asset.weight < asset.weight:
+            # If old asset is lighter, update to new, preferred asset.
+            self._asset = asset.key
+
+            memcache_key = self._asset_memcache_key % repr(self.key)
+            memcache.set(memcache_key, self._asset, namespace=memcache_namespace)
+
+    def delete(self, key, future):
+        q = Asset.query(ancestor=key)
+        ndb.multi_delete_async(q.fetch())
+        return super(AssetedModel, self).delete()
 
 
 class Feed(AssetedModel):
@@ -111,43 +148,20 @@ class Feed(AssetedModel):
     def put(self, *args, **kwargs):
         super(Feed, self).put(*args, **kwargs)
 
-    def delete(self, *args, **kwargs):
-        for sub in Subscription.query(Subscription.feed == self.key).fetch():
-            email = "[DELETED]"
-            try:
-                email = sub.user.get().email
-            except:
-                pass
-            app.logger.info(u"Deleting Feed %s subscription for %s", sub.title, email)
-            sub.delete()
+    def delete(self):
+        delete = []
 
-        i = 0
-        for article in Article.query(Article.feed == self.key).fetch():
-            article.delete()
-            i += 1
-        app.logger.info("Deleted %d article(s) from %s", i, repr(self.title))
+        # Collect all subscriptions and articles for deletion
+        delete.append(Subscription.query(Subscription.feed == self.key).fetch())
+        delete.append(Article.query(Article.feed == self.key).fetch())
+        delete.append(Saved.query(Saved.feed == self.key).fetch())
 
-        super(Feed, self).delete(*args, **kwargs)
+        ndb.multi_delete_async(delete)
+
+        super(Feed, self).delete()
 
     def user_subscribed(self, user):
-        r"""
-        Return ``True`` if currently logged in user is subscribed.
-        """
-        subscription = None
-        try:
-            key = subscription_key(user, self)
-            if not key:
-                return False
-
-            subscription = get_by_key(key)
-
-        except Exception as e:
-            app.logger.exception(e)
-
-        if not subscription:
-            return False
-        else:
-            return True
+        raise DeprecationWarning("Replaced by `User.has_subscribed()`")
 
     def articles(self):
         return Article.query(
@@ -163,17 +177,42 @@ class User(Model):
     email = ndb.StringProperty()
     is_authenticated = False
 
+    nickname = "Anonymous"
+
     seen = ndb.DateTimeProperty(auto_now=True)
 
-    def delete(self, *args, **kwargs):
-        for sub in Subscription.query(Subscription.user == self.key).fetch():
-            app.logger.info(u"Deleting subscription for user %s", self.user.get().email)
-            sub.delete()
+    def Subscriptions(self):
+        return Subscription.query(Subscription.user == self.key).fetch()
 
-        for msg in Notification.query(ancestor=self.key).fetch():
-            msg.delete()
+    def Saved(self):
+        return Saved.query(Saved.user == self.key).fetch()
 
-        super(User, self).delete(*args, **kwargs)
+    def has_saved(self, article):
+        r"""
+        Return :class:`Saved` instance for :param:`article`.
+
+        Note that it does NOT return :type:`bool`, but rather `None` or `Saved`
+
+        :return: :class:`Saved` instance if :param:`article` is saved, ``None`` if not.
+        """
+
+        key = Saved.generate_key(self.key, article.key)
+        return get_by_key(key)
+
+    def has_subscribed(self, feed):
+        key = Subscription.generate_key(self, feed)
+        return get_by_key(key)
+
+    def delete(self):
+        delete = []
+        key = self.key
+
+        # Collect items for deletion
+        delete.append(Subscription.query(Subscription.user == key).fetch())
+        delete.append(Notification.query(ancestor=key).fetch())
+        delete.append(Saved.query(ancestor=key).fetch())
+
+        super(User, self).delete()
 
 
 class Notification(ndb.Model):
@@ -187,26 +226,22 @@ class Notification(ndb.Model):
 
     timestamp = ndb.DateTimeProperty(auto_now_add=True)
 
+    def delete(self):
+        return self.key.delete()
+
 
 class Article(AssetedModel):
+    id = ndb.StringProperty()
     title = ndb.StringProperty()
     url = ndb.StringProperty(indexed=False)
     content = ndb.TextProperty()
     published = ndb.DateTimeProperty(required=True)
     feed = ndb.KeyProperty(kind=Feed)
 
-    def __init__(self, *args, **kwargs):
-        r = super(Article, self).__init__(*args, **kwargs)
-
-        # If entity has parent, add self into its hidden asset stash.
-        if self.key:
-            get_by_key(self.key.parent())._articles.append(self.key)
-        return r
-
 
 class Subscription(Model):
     r"""
-    Keys are formed by :class:`Feed` and :class:`User`.
+    Keys are formed by :class:`Feed` id as id and :class:`User` as parent.
     """
     title = ndb.StringProperty(indexed=False)
     created = ndb.DateTimeProperty(auto_now_add=True)
@@ -216,24 +251,70 @@ class Subscription(Model):
 
     weight = ndb.IntegerProperty()
 
+    def Feed(self):
+        return get_by_key(self.feed)
+
+    @staticmethod
+    def generate_key(user, feed):
+        r"""
+        Generate subscription key.
+        """
+        user_key = get_entity_key(user)
+        feed_key = get_entity_key(feed)
+
+        key = ndb.key.Key(Subscription, feed_key.id(), parent=user_key)
+        return key
+
+    def delete(self):
+        memcache.delete(memcache_key_subscriptions % self.user.id())
+        return super(Subscription, self).delete()
+
+
+class Saved(Model):
+    article = ndb.KeyProperty(kind=Article, required=True)
+    user = ndb.KeyProperty(kind=User, required=True)
+
+    weight = ndb.IntegerProperty()
+
+    created = ndb.DateTimeProperty(auto_now_add=True)
+
+    def Article(self):
+        return get_by_key(self.article)
+
+    @staticmethod
+    def generate_key(user, article):
+        r"""
+        Generate suitable key instance.
+        """
+        if not isinstance(user, ndb.Key) or not isinstance(article, ndb.Key):
+            raise TypeError("`user` and `article` needs to be key instances.")
+
+        # use article id for own id, and make user as parent.
+        return ndb.key.Key(Saved, article.id(), parent=user)
+
 
 def subscription_key(user, feed):
-    r"""
-    Generate subscription key.
-    """
-    try:
-        key_str = "%s|%s" % (repr(user.key.id()), repr(feed.key.id()))
-        id = uuid.uuid5(namespace=uuid.NAMESPACE_OID, name=key_str.encode("utf-8"))
-    except Exception as e:
-        app.logger.error(u"Could not generate subscription key: %s", e)
-        return None
-
-    return ndb.key.Key(Subscription, str(id))
+    raise DeprecationWarning("Replaced by Subscription.generate_key")
 
 
 def init_app(app):
     with app.app_context():
         app.teardown_appcontext(store_models)
+
+
+def get_entity_key(entity):
+    r"""
+    Return key instance.
+    """
+    key = None
+    if isinstance(entity, ndb.Key):
+        key = entity
+    elif isinstance(entity, ndb.Model):
+        key = entity.key
+    else:
+        raise TypeError("Entity needs to be either ndb.Key or ndb.Model")
+
+    return key
 
 
 def store_models(exception):
@@ -244,10 +325,12 @@ def store_models(exception):
     memcache.set_multi(entities, namespace=memcache_namespace)
 
 
-def get_by_key(key):
+def get_by_key(key, only_local=False):
     r"""
     Retrieve entity by key.
     """
+    if not key:
+        return None
 
     # Look for entity in different storages
     if key in model_storage:
@@ -258,11 +341,13 @@ def get_by_key(key):
         mem = memcache.get(repr(key), namespace=memcache_namespace)
         if mem:
             model_storage[key] = mem
-        else:
+        elif not only_local:
             # Try loading entity from datastore
             ent = key.get()
             if ent:
                 model_storage[key] = ent
+                # Item is not stored yet on memcache. It's triggered when
+                # request context is in teardown phase.
 
     if key in model_storage:
         return model_storage[key]

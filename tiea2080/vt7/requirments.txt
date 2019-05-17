@@ -2,11 +2,14 @@ Flask
 Flask-Babel
 flask-wtf
 Flask-Caching
+Flask-Gravatar
 Werkzeug
 lxml
+html-sanitizer
 feedparser
 requests
 requests_toolbelt
 url-normalize
 beautifulsoup4
 chardet
+google-api-python-client

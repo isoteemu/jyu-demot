@@ -1,0 +1,216 @@
+{% extends "base.html.j2" %}
+{% import "entitys.html.j2" as entity with context %}
+
+{% block content %}
+<section class="container-fluid">
+    <div class="user-info container justify-content-center">
+        <div class="row">
+            <div class="col entity">
+                <div class="profile">
+                    <span class="thumb rounded-circle">
+                        <img src="{{current_user.email|gravatar}}">
+                    </span>
+                </div>
+            </div>
+            <div class="col">
+                <h3>{{current_user.email|e}}</h3>
+                <div class="row">
+                    <div class="col">{{_("<val>%(nr)d</val> Subscriptions", nr=subscriptions|count)}}</div>
+                    <div class="col">{{_("<val>%(nr)d</val> Saved", nr=saved|count)}}</div>
+                </div>
+                <div class="row">
+                    <div class="col">{{current_user.nickname|e}}</div>
+                </div>
+            </div>
+        </div>
+    <nav class="container">
+        <ul class="nav nav-fill justify-content-center" role="tablist">
+            <li class="nav-item border-top">
+                <a class="nav-link" href="#subscriptions" data-toggle="tab" role="tab" aria-controls="subscriptions">
+                    <span class="material-icons align-middle">book</span>
+                    {{_("Feeds")}}
+                </a>
+            </li>
+            <li class="nav-item border-top">
+                <a class="nav-link" href="#saved" data-toggle="tab" role="tab" aria-controls="saved">
+                    <span class="material-icons align-middle">bookmark_border</span>
+                    {{_("Saved")}}
+                </a>
+            </li>
+            <li class="nav-item border-top">
+                <a class="nav-link" href="#account" data-toggle="tab" role="tab" aria-controls="account">
+                    <span class="material-icons align-middle">person_outline</span>
+                    {{_("Account")}}
+                </a>
+            </li>
+        </ul>
+    </nav>
+</section>
+<div class="container-fluid bg-white box-shadow">
+    <div class="row">
+        <div class="container user-actions tab-content" id="profile-tabs">
+            <fieldset id="subscriptions" class="tab-pane fade" role="tabpanel">
+                <a name="subscriptions"></a>
+                <legend class="d-none">
+                    <span class="material-icons align-middle">book</span>
+                    {{_("Feeds")}}
+                </legend>
+                <div class="hint text-muted">
+                {% trans %}Hint: you can drag 'n drop feeds to sort them.{% endtrans %}
+                </div>
+                <ul class="sortable list-group">
+                    {% for sub in subscriptions %}
+                        <li class="feed entity d-flex flex-row align-items-center list-group-item" data-key="{{sub.feed.urlsafe()|e}}">
+                            <div class="col-1">
+                                <span class="thumb">
+                                    {{sub.feed|asset_img}}
+                                </span>
+                            </div>
+                            <div class="flex-grow-1 align-items-start d-flex flex-column col-10 text-left">
+                                <h6 class="text-truncate mb-0 w-100 ">{{sub.title|e}}</h6>
+                                <div class="font-weight-light">
+                                    <a href="{{sub.Feed().link|e}}" class="text-truncate">{{sub.Feed().link|e}}</a>
+                                </div>
+                                <div class="font-weight-light">
+                                {% trans period="<time datetime=\"PT" ~ sub.Feed().update_inteval ~ "M\">" ~ sub.Feed().update_inteval ~ "</time>" %}Updates every {{period}} minutes{% endtrans %}
+                                </div>
+                            </div>
+
+                            <div class="col-1 btn-group" role="group">
+                                <form action="{{url_for('feeds.page_add_feed')}}" method=POST>
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button name="url" value="{{sub.Feed().url|e}}" class="btn btn-danger unsubscribe" title="{{_('Unsubscribe feed %(feed)s', feed=sub.title)|e}}">{{_("Remove") }}</button>
+                                </form>
+                                <form action="{{url_for('user.modify_subscription', email=current_user.email)}}" method=GET>
+                                    <button name="subscription" value="{{sub.key.id()|e}}" class="btn btn-secondary" title="{{_('Modify feed')}}">{{_("Modify") }}</button>
+                                </form>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </fieldset>
+
+            <fieldset id="saved" class="tab-pane fade" role="tabpanel">
+                <a name="saved"></a>
+                <legend class="justify-content-center mb-4 mx-auto text-center {% if saved|count() %}d-none{% endif %}">
+                        <h3 class="material-icons h1 border border-dark rounded-circle p-2">bookmark_border</h3>
+                        <div>{{_("Saved")}}</div>
+                </legend>
+                <ul class="articles saved sortable clearfix">
+                {% for save in saved %}
+                <li class="entity article" data-key="{{save.key.urlsafe()}}">
+                    {{ entity.article(save.Article()) }}
+                </li>
+                {% endfor %}
+                </ul>
+
+                <div class="lead col-md-6 offset-md-3 justify-content-center">
+                    {% trans %}
+                    Save photos and articles that you want to see again. No one is notified, and only you can see what you've saved.
+                    {% endtrans %}
+                </div>
+            </fieldset>
+            
+            <fieldset id="account" class="tab-pane fade" role="tabpanel">
+
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header"><h5>{{_("Remove Account")}}</h5></div>
+            <div class="card-body">
+                <p class="card-text">
+                    {% trans %}
+                    Remove account and all associated info. You can always return, but all your information will be lost from previous account.
+                    {% endtrans %}
+                </p>
+                <form action="{{url_for('user.page_delete_account', email=current_user.email)}}" method="POST" class="nav-link">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button class="btn btn-warning" data-confirm="{{_('All your personal stuff will be deleted. Are you sure?')}}">
+                        <span class="material-icons align-middle">cancel</span>
+                        <span class="input-text">{{_("Delete Account")}}</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card">
+            <div class="card-header"><h5>{{_("Logout")}}</h5></div>
+            <div class="card-body">
+                <p class="card-text">
+                    {% trans %}
+                    Logout from service.
+                    {% endtrans %}
+                </p>
+                <form action="{{url_for('user.page_logout')}}" method="POST" class="nav-link">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button class="btn btn-info">
+                        <span class="material-icons align-middle">exit_to_app</span>
+                        <span class="input-text">{{_("Log Out")}}</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+            </fieldset>
+        </div>
+    </div>
+</div>
+
+{{ entity.article_modal() }}
+
+{% endblock content %}
+
+{% block footer %}
+    {{super()}}
+<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script>
+$(function() {
+    /* Activate correct tab */
+    var hash = window.location.hash;
+    var tab = "account";
+    if(hash) {
+        var nav_link = $(".nav-link[href=\""+hash+"\"]");
+        if(nav_link) tab = hash.substring(1);
+    }
+    $(".nav-link[href=\"#"+tab+"\"]").addClass("active");
+    $("#"+tab).addClass("active show");
+
+});
+
+$(function() {
+    /* Make feeds sortable */
+    var subscription_weights_url = {{ url_for('user.subscription_weights_json', email=current_user.email)|tojson|safe }};
+    var saved_weights_url = {{ url_for('user.saved_weights_json', email=current_user.email)|tojson|safe }};
+
+    function get_sorted(list) {
+        var feeds = {};
+        var i = 1;
+        $feeds = $(list).children();
+        $feeds.each(function() {
+            console.log(this);
+            var feed = $(this).data("key");
+            if(! feed) return;
+            feeds[feed] = i++;
+        });
+        return feeds;
+    }
+
+    $( ".sortable" ).sortable();
+    $( ".sortable" ).disableSelection();
+    $( "#subscriptions .sortable" ).on("sortstop", function(e) {
+        var weights = get_sorted(e.currentTarget);
+        $.post(subscription_weights_url, weights);
+    });
+
+    $( "#saved .sortable" ).on("sortstop", function(e) {
+        var weights = get_sorted(e.currentTarget);
+        $.post(saved_weights_url, weights);
+    });
+});
+
+
+</script>
+{% endblock footer %}

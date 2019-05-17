@@ -1,0 +1,53 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+<div class="container">
+    <div class="py-5 text-center">
+        <div class="entity justify-content-center feed d-flex d-block mx-auto mb-4">
+            <span class="thumb">
+                {{subscription.feed|asset_img}}
+            </span>
+        </div>
+        <p class="lead">{% trans feed=subscription.Feed().title|e %}Modify your feed subscription to <em>{{feed}}</em>{% endtrans %}</p>
+    </div>
+    <div class="row">
+        <form class="col d-block" method=POST>
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+            <h4 class="mb-3">{% trans %}Feed{% endtrans %}</h4>
+            <div class="mb-3">
+                <label for="title">{% trans %}Feed title{% endtrans %}</label>
+                <div class="input-group">
+                    <input id="title" type="text" value="{{subscription.title|e}}" name="title" class="form-control" placeholder="{{_("Feed title")}}">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="url">{% trans %}Feed source{% endtrans %}</label>
+                <div class="input-group">
+                    <input id="url" type="text" value="{{subscription.Feed().url|e}}" name="url" class="form-control" placeholder="{{_("RSS address")}}" disabled>
+                    <span class="input-group-append">
+                        <a href="{{subscription.Feed().url|e}}" class="input-group-text material-icons">rss_feed</a>
+                    </span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="link">{% trans %}Link address{% endtrans %}</label>
+                <div class="input-group">
+                    <input id="link" type="text" value="{{subscription.Feed().link|e}}" name="link" class="form-control" placeholder="{{_("RSS address")}}" disabled>
+                    <span class="input-group-append">
+                        <a href="{{subscription.Feed().link|e}}" class="input-group-text material-icons">insert_link</a>
+                    </span>
+                </div>
+            </div>
+            <hr class="mb-4" />
+            <div class="row justify-content-end m-1">
+                <button name="action" value="save" class="btn btn-primary col-sm-4 btn-lg" type="submit">{% trans %}Save{% endtrans %}</button>
+                <button name="action" value="remove" data-confirm="{{_('Really remove?')}}" class="btn btn-warning col-sm-2 offset-md-1 btn-lg" type="submit">{% trans %}Remove{% endtrans %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}

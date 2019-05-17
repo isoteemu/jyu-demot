@@ -2,15 +2,62 @@
 # -*- coding: utf-8 -*-
 
 from flask import g, request, current_app as app
-from flask_wtf.csrf import generate_csrf
+from flask_wtf import csrf
 from bs4 import BeautifulSoup
 import requests
 from url_normalize import url_normalize
 from urlparse import urlparse
 from urllib import urlencode
-
+from datetime import datetime, timedelta
+from html_sanitizer.sanitizer import Sanitizer
 
 from . import __title__, __version__, __url__
+
+
+
+class CSRFProtect(csrf.CSRFProtect):
+    r"""
+    Cookie addon for Flask-WTF CSRFProtect.
+    """
+    def init_app(self, app):
+        r = super(CSRFProtect, self).init_app(app)
+
+        app.after_request(self.set_csrf_cookie)
+        return r
+
+    def _get_csrf_token(self):
+        r"""
+        Look for CSRF token from cookie
+        """
+
+        token = super(CSRFProtect, self)._get_csrf_token()
+        if token is None:
+            name = self._get_cookie_name(app)
+            token = request.cookies.get(name, None)
+
+        return token
+
+    def _get_cookie_name(self, app):
+        name = app.config.get("WTF_CSRF_HEADERS", "X-CSRFToken")
+        if isinstance(name, (list, tuple)):
+            name = name[0]
+
+        return name
+
+    def set_csrf_cookie(self, response):
+        r"""
+        Inject csrf cookie into :param:`response`.
+        """
+        if not app.config.get("WTF_CSRF_ENABLED", False):
+            return
+
+        name = self._get_cookie_name(app)
+
+        expires_seconds = app.config.get("WTF_CSRF_TIME_LIMIT", 3600)
+        expires = datetime.utcnow() + timedelta(seconds=expires_seconds)
+
+        response.set_cookie(name, csrf.generate_csrf(), expires=expires, httponly=True)
+        return response
 
 
 def html_parser(*args, **kwargs):
@@ -88,22 +135,11 @@ def crawler_user_agent():
     })
 
 
-def csrf_token():
-    token = {}
-    if not app.config['WTF_CSRF_ENABLED']:
-        return token
-
-    key = app.config.get('WTF_CSRF_FIELD_NAME', None)
-
-    if not key:
-        return token
-
-    token = {key: generate_csrf()}
-
-    return token
-
-
 def sanitize_html(html):
+
+    sanitizer = Sanitizer()
+    return sanitizer.sanitize(html)
+
     soup = html_parser(html)
     [template_tag.decompose() for template_tag in soup.findAll("template")]
     return unicode(soup)

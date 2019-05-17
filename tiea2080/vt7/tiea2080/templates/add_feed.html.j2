@@ -2,15 +2,15 @@
 
 {% macro feed_subscride(feed) -%}
     <div class="entity feed">
-        <button class="add-feed {%if feed.user_subscribed(current_user) %}subscribed{%endif%}" title="{{_("Subscride to feed \"%(feed)s\"", feed=feed.title)|e}}" name="url" value="{{feed.url|e}}">
+        <button class="add-feed {%if current_user.has_subscribed(feed) %}subscribed{%endif%}" title="{{_(feed.title)|e}}" name="url" value="{{feed.url|e}}">
             <span class="thumb" title="{{ feed.title|e }}">
                 {{feed|asset_img}}
             </span>
-            <div class="title">{{feed.title|e}}</div>
-            {%if feed.user_subscribed(current_user) %}
-                <span class="bubble-tag btn btn-danger unsubscribe">-</span>
+            <div class="title">{{current_user.has_subscribed(feed).title|e or feed.title|e}}</div>
+            {%if current_user.has_subscribed(feed) %}
+                <span title="{{_('Remove feed from subscriptions')}}" class="bubble-tag btn btn-danger unsubscribe">-</span>
             {% else %}
-                <span class="bubble-tag btn btn-primary subscribe">+</span>
+                <span title="{{_('Subscribe to feed')}}" class="bubble-tag btn btn-primary subscribe">+</span>
             {% endif %}
         </button>
     </div>
@@ -26,6 +26,28 @@
             {% endfor %}
             </form>
         </div>
+
+{#
+    FEED SEARCH BOX
+#}
+
+        <div class="container feed-search">
+            <form class="card p-2 shadow-sm" method=POST action="{{url_for('feeds.page_add_feed')}}">
+                <div class="input-group">
+                    <span class="input-group-prepend">
+                        <span class="input-group-text material-icons">rss_feed</span>
+                    </span>
+                    <input type="text" value="{% if feeds|count %}{{feeds.values()[0].url|e}}{% endif %}" name="url" class="form-control" placeholder="{{_("Feed url")}}">
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-secondary">{{_("Add")}}</button>
+                    </div>
+                </div>
+                <small class="form-text text-muted">
+                {% trans %}Search by website or RSS link.{% endtrans %}
+                </small>
+            </form>
+        </div>
+
     </section>
 
     {% if discover %}
