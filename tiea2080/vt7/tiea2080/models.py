@@ -1,7 +1,20 @@
 #!/usr/bin/python2
 # -*- coding: utf-8 -*-
 
-from flask import current_app as app, session
+r"""
+Models
+======
+
+Regarding entity deletion: As it seems that it's not feasible
+to use ndbs hooking mechanism, we need to implement deletion
+on our own way. Models should take care of all associated entity
+deletions in :meth:`Model.delete()`, except for deleting self,
+which is taken care in :class:`Model` instance.
+TODO: maybe return future, and associated deletions into it.
+
+"""
+
+from flask import current_app as app
 from google.appengine.ext import ndb
 from google.appengine.api import memcache
 from google.appengine.api import images
@@ -74,10 +87,12 @@ class Asset(Model):
         return r
 
     def delete(self):
+        self.delete_asset()
+        return super(Asset, self).delete()
+
+    def delete_asset(self):
         if self.blob_key:
             images.delete_serving_url_async(self.blob_key)
-
-        return super(Asset, self).delete()
 
 
 class AssetedModel(Model):
@@ -123,9 +138,15 @@ class AssetedModel(Model):
             memcache_key = self._asset_memcache_key % repr(self.key)
             memcache.set(memcache_key, self._asset, namespace=memcache_namespace)
 
-    def delete(self, key, future):
-        q = Asset.query(ancestor=key)
-        ndb.multi_delete_async(q.fetch())
+    def delete(self):
+        delete = []
+        q = Asset.query(ancestor=self.key)
+        for asset in q.fetch():
+            asset.delete_asset()
+            delete.append(asset.key)
+
+        ndb.delete_multi_async(delete)
+
         return super(AssetedModel, self).delete()
 
 
@@ -151,17 +172,21 @@ class Feed(AssetedModel):
     def delete(self):
         delete = []
 
-        # Collect all subscriptions and articles for deletion
-        delete.append(Subscription.query(Subscription.feed == self.key).fetch())
-        delete.append(Article.query(Article.feed == self.key).fetch())
-        delete.append(Saved.query(Saved.feed == self.key).fetch())
+        # Collect for deletion
+        delete += Subscription.query(Subscription.feed == self.key).fetch(keys_only=True)
+        delete += Saved.query(ancestor=self.key).fetch(keys_only=True)
 
-        ndb.multi_delete_async(delete)
+        for article in Article.query(ancestor=self.key).fetch():
+            asset = article.Asset()
+            if asset:
+                asset.delete_asset()
+                delete.append(asset)
+
+            delete.append(asset.key)
+
+        ndb.delete_multi(delete)
 
         super(Feed, self).delete()
-
-    def user_subscribed(self, user):
-        raise DeprecationWarning("Replaced by `User.has_subscribed()`")
 
     def articles(self):
         return Article.query(
