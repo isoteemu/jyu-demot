@@ -42,6 +42,7 @@ from .models import (
 from .user import get_current_user
 from .subsctiptions import (
     user_subscriptions,
+    unsubscribe,
     memcache_key_subscriptions,
 )
 from .assets import asset_factory, get_entity_asset
@@ -214,7 +215,7 @@ def page_add_feed():
 
                     subscription = user.has_subscribed(feeds[feed_url])
                     if subscription:
-                        subscription.delete()
+                        unsubscribe(subscription)
                         flash(_(u"Feed %s removed." % feed_markup))
 
                     else:
@@ -223,7 +224,8 @@ def page_add_feed():
                         if asset:
                             asset.put()
 
-                        feed_subscride(feeds[feed_url], user).put()
+                        subscription = feed_subscride(feeds[feed_url], user)
+                        subscription.put()
 
                         if schedule_feed_update_if_needed(feeds[feed_url]):
                             flash(_(u"Feed %s added. It might take a second to show up." % feed_markup))

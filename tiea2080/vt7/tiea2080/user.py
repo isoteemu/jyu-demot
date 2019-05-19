@@ -96,6 +96,7 @@ def get_current_user():
             user.email = ""
 
         user.is_authenticated = True
+        user.is_admin = True if users.is_current_user_admin() else False
         user.nickname = framework_user.nickname() or _("Anonymous")
 
     except (users.UserNotFoundError, AttributeError):
@@ -226,7 +227,7 @@ def modify_subscription(email):
 
     sub_id = request.form.get("subscription") or request.args.get("subscription") or abort(404)
 
-    subscription = get_by_key(ndb.key.Key(Subscription, sub_id, parent=user.key))
+    subscription = get_by_key(ndb.key.Key(urlsafe=sub_id))
 
     if not subscription:
         abort(404)

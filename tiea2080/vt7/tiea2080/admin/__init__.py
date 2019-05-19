@@ -11,6 +11,7 @@ from flask import (
     Response,
     url_for,
     request,
+    jsonify,
     current_app as app,
 )
 from flask_babel import _
@@ -25,13 +26,17 @@ import os
 from tiea2080 import (
     crawler,
 )
+from tiea2080.user import (
+    get_current_user,
+)
 from tiea2080.utils import (
     html_parser,
 )
 from tiea2080.models import (
-    ndb,
     Feed,
+    Subscription,
     User,
+    ndb,
     get_by_key,
 )
 from tiea2080.feed import update_feed
@@ -39,18 +44,22 @@ from tiea2080.feed import update_feed
 
 class FlashHandler(logging.StreamHandler):
     def emit(self, record):
-        msg = self.format(record)
-        name = os.path.basename(record.pathname)
-        line = record.lineno
-        flash(Markup(u"<var>%s</var>[<var>%d</var>]: %s") % (name, line, msg), record.levelname)
+        if get_current_user().is_admin:
+            msg = self.format(record)
+            name = os.path.basename(record.pathname)
+            line = record.lineno
+            flash(Markup(u"<var>%s</var>[<var>%d</var>]: %s") % (name, line, msg), record.levelname)
 
 
 bp = Blueprint('admin', __name__, template_folder='templates')
 
 
 def init_app(app):
-    app.logger.addHandler(FlashHandler())
-    app.config.setdefault("DEBUG", True)
+
+    with app.app_context():
+        app.logger.addHandler(FlashHandler())
+        app.config.setdefault("DEBUG", True)
+
     app.register_blueprint(bp, url_prefix="/admin")
 
 
@@ -118,6 +127,26 @@ def page_users():
 
     users = User.query().fetch()
     return render_template("users.html.j2", users=users)
+
+
+@bp.route("/remove-orphan")
+def page_remove_orphan():
+    removed = remove_orphan()
+
+    return jsonify(removed)
+
+
+def remove_orphan():
+    r"""
+    Removes orpan entitys.
+    """
+    delete = []
+
+    for sub in Subscription.query().fetch():
+        if not sub.feed.get() or not sub.user.get():
+            delete += sub.key
+
+    return ndb.delete_multi_async(delete)
 
 
 @bp.route("/feedparser/<key>")

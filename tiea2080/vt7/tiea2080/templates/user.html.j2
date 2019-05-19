@@ -77,12 +77,13 @@
                             </div>
 
                             <div class="col-1 btn-group" role="group">
-                                <form action="{{url_for('feeds.page_add_feed')}}" method=POST>
+                                <form action="{{url_for('user.modify_subscription', email=current_user.email)}}" method=POST>
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                    <button name="url" value="{{sub.Feed().url|e}}" class="btn btn-danger unsubscribe" title="{{_('Unsubscribe feed %(feed)s', feed=sub.title)|e}}">{{_("Remove") }}</button>
+                                    <input type="hidden" name="subscription" value="{{sub.key.urlsafe()|e}}" />
+                                    <button name="action" value="remove" class="btn btn-danger unsubscribe" title="{{_('Unsubscribe feed %(feed)s', feed=sub.title)|e}}">{{_("Remove") }}</button>
                                 </form>
                                 <form action="{{url_for('user.modify_subscription', email=current_user.email)}}" method=GET>
-                                    <button name="subscription" value="{{sub.key.id()|e}}" class="btn btn-secondary" title="{{_('Modify feed')}}">{{_("Modify") }}</button>
+                                    <button name="subscription" value="{{sub.key.urlsafe()|e}}" class="btn btn-secondary" title="{{_('Modify feed')}}">{{_("Modify") }}</button>
                                 </form>
                             </div>
                         </li>

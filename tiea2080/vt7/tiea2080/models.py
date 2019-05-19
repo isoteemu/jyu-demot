@@ -1,4 +1,3 @@
-#!/usr/bin/python2
 # -*- coding: utf-8 -*-
 
 r"""
@@ -14,17 +13,14 @@ TODO: maybe return future, and associated deletions into it.
 
 """
 
-from flask import current_app as app
+from __future__ import unicode_literals
+
+from flask import g
+from werkzeug.local import LocalProxy
 from google.appengine.ext import ndb
 from google.appengine.api import memcache
 from google.appengine.api import images
 
-import random
-import uuid
-
-# Factories should store models into model_storage.
-# TODO: tämän pitäisi olla request kontekstissa.
-model_storage = {}
 memcache_namespace = u"%s" % __name__
 
 memcache_key_subscriptions = "subscribed:%s"
@@ -52,7 +48,7 @@ class Model(ndb.Model):
             del model_storage[key]
 
         memcache.delete(repr(key), namespace=memcache_namespace)
-        self.key.delete_async()
+        return self.key.delete()
 
     def _post_put_hook(self, future):
         memcache.set(repr(self.key), self, namespace=memcache_namespace)
@@ -180,11 +176,9 @@ class Feed(AssetedModel):
             asset = article.Asset()
             if asset:
                 asset.delete_asset()
-                delete.append(asset)
+                delete.append(asset.key)
 
-            delete.append(asset.key)
-
-        ndb.delete_multi(delete)
+        ndb.delete_multi_async(delete)
 
         super(Feed, self).delete()
 
@@ -201,6 +195,7 @@ class User(Model):
 
     email = ndb.StringProperty()
     is_authenticated = False
+    is_admin = False
 
     nickname = "Anonymous"
 
@@ -233,9 +228,11 @@ class User(Model):
         key = self.key
 
         # Collect items for deletion
-        delete.append(Subscription.query(Subscription.user == key).fetch())
-        delete.append(Notification.query(ancestor=key).fetch())
-        delete.append(Saved.query(ancestor=key).fetch())
+        delete += Subscription.query(ancestor=key).fetch(keys_only=True)
+        delete += Notification.query(ancestor=key).fetch(keys_only=True)
+        delete += Saved.query(ancestor=key).fetch(keys_only=True)
+
+        ndb.delete_multi_async(delete)
 
         super(User, self).delete()
 
@@ -324,6 +321,7 @@ def subscription_key(user, feed):
 
 def init_app(app):
     with app.app_context():
+        g.model_storage = {}
         app.teardown_appcontext(store_models)
 
 
@@ -379,3 +377,14 @@ def get_by_key(key, only_local=False):
 
     return None
 
+
+def model_storage_proxy():
+
+    if 'model_storage' not in g:
+        g.model_storage = {}
+
+    return g.model_storage
+
+
+# Factories should store models into model_storage.
+model_storage = LocalProxy(model_storage_proxy)

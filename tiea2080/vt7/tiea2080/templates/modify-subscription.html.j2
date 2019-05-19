@@ -19,7 +19,7 @@
             <div class="mb-3">
                 <label for="title">{% trans %}Feed title{% endtrans %}</label>
                 <div class="input-group">
-                    <input id="title" type="text" value="{{subscription.title|e}}" name="title" class="form-control" placeholder="{{_("Feed title")}}">
+                    <input id="title" type="text" value="{{subscription.title|e or feed.title|e}}" name="title" class="form-control" placeholder="{{_("Feed title")}}">
                 </div>
             </div>
 

@@ -55,9 +55,11 @@ def unsubscribe(subscription):
     if subscription in subs:
         subs.remove(subscription)
         subscription.delete()
+
+        memcache_key = memcache_key_subscriptions % user.key.id()
+        memcache.set(memcache_key, subs)
+
     else:
         raise ValueError("Subscription not in subscriptions.")
 
-    memcache_key = memcache_key_subscriptions % user.key.id()
-    memcache.set(memcache_key, subs)
 

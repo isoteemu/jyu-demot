@@ -9,6 +9,7 @@ https://web.archive.org/web/20190429082156/http://appro.mit.jyu.fi/tiea2080/vt/v
  - Kasvatettu minimaalista modalin kokoa, jolloin myös artikkelit, joilla ei ole kuvaa, ainoastaan tekstiä, näyttää tekstit.
  - Vähennetty oletuksena näytettävien artikkeleiden määrää.
  - Vakava CGIn ja App Enginen eroista johtuva bugi korjattu, jonka vuoksi instanssin ensimmäinen käyttäjä säilyi palvelun muistissa, ja sotki template -järjestelmää.
+ - Vaatimustaso nostettu ~~1:sestä~~ 0:sta 3:een.
 
  - Ja feminismi -feedejä ei lisätä enää uusille arvijoijille.
 
@@ -31,3 +32,4 @@ Toteuttaa taso 1 -mukaisen sovelluksen seuraavilla lisäominaisuuksilla ja muuto
 
 ### TODO:
  - Jos syöttessä on useampi kuin yksi kuva per artikkeli, ne olisi hyvä esittää myös.
+ - Tilauksen tilaa indikoiva pallura ei aina vaihdu valonnopeutta.
