@@ -74,10 +74,9 @@ class Asset(Model):
         r = super(Asset, self).__init__(*args, **kwargs)
 
         if self.key:
+            # Tell about self to parent instance.
             parent = self.key.parent()
-
             if parent:
-                # Tell about self to parent instance.
                 get_by_key(parent).tell_about_asset(self)
 
         return r
@@ -96,10 +95,40 @@ class AssetedModel(Model):
     _asset_memcache_key = "Asset-for:%s"
 
     def __init__(self, *args, **kwargs):
-        # Preferred asset
+        # Preferred asset. If:
+        #  - `None`: datastore lookup has not happened yet.
+        #  - `ndb.Future`: Prelookup is in process.
+        #  - `False`: lookup has happened, but no result was found.
+        #  - `ndb.Key`: Key for associated asset.
         self._asset = None
 
         super(AssetedModel, self).__init__(*args, **kwargs)
+
+        if self.key:
+            self._preload_asset()
+
+    @classmethod
+    def _post_get_hook(cls, key, future):
+        r"""
+        Preload asset after AssetedModel has been loaded.
+
+        TODO: this should be done when asset loading is prepared.
+        """
+        self = future.get_result()
+        if self:
+            self._preload_asset()
+
+    def _preload_asset(self):
+        r"""
+        Preload asset. Initializes background fetch for asset.
+        """
+        if self._asset is not None:
+            return
+
+        memcache_key = self._asset_memcache_key % repr(self.key)
+        self._asset = memcache.get(memcache_key, namespace=memcache_namespace)
+        if self._asset is None:
+            self._asset = Asset.query(ancestor=self.key).order(-Asset.weight).get_async()
 
     def Asset(self):
         r"""
@@ -107,15 +136,19 @@ class AssetedModel(Model):
         """
         memcache_key = self._asset_memcache_key % repr(self.key)
 
-        if not self._asset:
+        if isinstance(self._asset, ndb.Future):
+            asset = self._asset.get_result()
+            self._asset = asset.key if asset else False
+            memcache.set(memcache_key, self._asset, namespace=memcache_namespace)
+
+        if self._asset is None:
             self._asset = memcache.get(memcache_key, namespace=memcache_namespace)
 
-        if not self._asset:
+        if self._asset is None:
             # Fetch only key.
             asset = Asset.query(ancestor=self.key).order(-Asset.weight).get()
-            if asset:
-                self._asset = asset.key
-                memcache.set(memcache_key, self._asset, namespace=memcache_namespace)
+            self._asset = asset.key if asset else False
+            memcache.set(memcache_key, self._asset, namespace=memcache_namespace)
 
         if self._asset:
             return get_by_key(self._asset)

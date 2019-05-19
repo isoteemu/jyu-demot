@@ -29,9 +29,9 @@
         </div>
     </section>
     <section class="articles container-fluid bg-white box-shadow">
-        <div class="d-flex container justify-content-center">
+        <div class="autoload container justify-content-center">
 
-            <ul class="flex-wrap thumbs">
+            <ul id="articles-list" class="flex-wrap thumbs">
                 {# for loop needs to be conjucated to gether with <li>.
                    Whitespace breaks page layout by introducing empty text node.
                 #}
@@ -40,14 +40,39 @@
                 </li>{% endfor %}
             </ul>
 
+<nav class="container d-block justify-content-center" aria-label="{{_('Paging')}}">
+  <ul class="pagination">
+    {%if prev_page %}
+        <li class="page-item"><a class="page-link prev" href="{{prev_page}}">{{_("Previous")}}</a></li>
+    {% endif %}
+    {%if next_page %}
+        <li class="page-item"><a class="page-link next" href="{{next_page}}">{{_("Next")}}</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
         </div>
-    </section>
+
+
     {# Include article modal #}
     {{ entity.article_modal() }}
+    </section>
+
 {% endblock content %}
 
 {% block footer %}
     {{super()}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jscroll/2.4.1/jquery.jscroll.min.js" integrity="sha256-0/MF5x1AoU8a7eF3Y3gaBhdfZh6JMbOkrJ1xna3cAek=" crossorigin="anonymous"></script>
     <div><a href="https://clearbit.com/docs#logo-api">{{_("Uses Clearbit logo api")}}</a></div>
     <div><a href="https://github.com/GNOME/adwaita-icon-theme">{{_("RSS Logo from Adawait icon theme")}}</a></div>
+<script>
+$(function() {
+    $(".autoload").jscroll({
+        nextSelector: '.pagination a.page-link.next',
+        contentSelector: '.autoload',
+        loadingHtml: '<div class="spinner-border text-info" role="status"><span class="sr-only">{{_("Loading")}}</span></div>'
+    });
+});
+</script>
+
 {% endblock footer %}

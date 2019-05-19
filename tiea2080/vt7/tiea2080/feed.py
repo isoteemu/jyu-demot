@@ -52,7 +52,6 @@ feedparser_content_types = [
     "application/rss+xml", "application/atom+xml", "text/xml", "application/xml"
 ]
 
-
 default_limit = 24
 
 memcache_key_latest = "feeds.latest:%s"
@@ -74,17 +73,28 @@ class AddFeedForm(FlaskForm):
     url = StringField(_(u"Add new feed"), validators=[], description=_("Discover website or Feed"))
 
 
-r"""
-ROUTES
-======
-"""
-
-
 @bp.route("/")
 def page_reader():
     r"""
     Default reader page.
     """
+
+    next_page = None
+    prev_page = None
+    requested_cursor = request.args.get('cursor')
+
+    feeds = []
+    show_feed_keys = []
+    articles = []
+
+    # User subscribed feeds. Even if `feed_id` is defined,
+    # collect subscribed feeds and pass them to template.
+    user = get_current_user()
+    subscribed_feeds = user_subscriptions(user)
+
+    # Fetch feeds at background, while we collect articles.
+    sub_feed_keys = [sub.feed for sub in subscribed_feeds]
+    feed_async_future = ndb.get_multi_async(sub_feed_keys)
 
     # If url has param `feed`, show only that.
     feed_id = request.args.get("feed")
@@ -92,39 +102,53 @@ def page_reader():
     if feed_id:
         show_only_feed = get_by_key(ndb.key.Key(Feed, feed_id))
         if not show_only_feed or not isinstance(show_only_feed, Feed):
+            # If feed doesn't exists, fail with 404.
+            app.logger.debug("Requested feed doesnt' exists: %s", feed_id)
             abort(404)
-
-    feeds = []
-    articles = []
-    user = get_current_user()
-
-    subscriptions = user_subscriptions(user)
-
-    for feed_sub in subscriptions:
-
-        feed = get_by_key(feed_sub.feed)
-        feeds.append(feed)
-
-        if show_only_feed and feed_sub.feed != show_only_feed.key:
-            # Skip filtered feeds.
-            continue
-
-        articles = articles + get_latest_articles(feed)
-
-    # Quick hack
-    def sort_datetime(a, b):
-        if a.published > b.published:
-            return -1
-        if a.published < b.published:
-            return 1
         else:
-            return 0
+            # Add it into query.
+            show_feed_keys.append(show_only_feed.key)
+    else:
+        # If not specified feed was requested, fetch all subscribed feeds.
+        for feed_sub in subscribed_feeds:
+            show_feed_keys.append(feed_sub.feed)
 
-    articles.sort(sort_datetime)
+    # Query and cursor building
+    # =========================
 
-    articles = articles[0:default_limit]
+    cursor = ndb.Cursor(urlsafe=requested_cursor)
 
-    return render_template("page-reader.html.j2", feeds=feeds, articles=articles)
+    # Build queries for current and previous page.
+    q = Article.query(
+        Article.feed.IN(show_feed_keys)
+    )
+    q_next = q.order(-Article.published, Article._key)
+
+    # Fetch items from current cursor.
+    articles, next_cursor, has_more = q_next.fetch_page(default_limit, start_cursor=cursor)
+
+    if has_more and next_cursor:
+        # Link for next cursor.
+        next_page = url_for(".page_reader", cursor=next_cursor.urlsafe(), feed=feed_id)
+
+    if requested_cursor:
+        # Look for previous page.
+        prev_cursor = memcache.get("feed.reader.prev_cursor:%s" % next_cursor.urlsafe())
+        if prev_cursor is None:
+            # If "previous" cursor not in memstore, make query for reverse cursor
+            q_prev = q.order(Article.published, Article._key)
+            prev_articles, prev_cursor, had_more = q_prev.fetch_page(default_limit, start_cursor=cursor)
+            # Store cursor into memstore
+            memcache.set("feed.reader.prev_cursor:%s" % next_cursor.urlsafe(), prev_cursor or "")
+
+        if prev_cursor:
+            prev_page = url_for(".page_reader", cursor=prev_cursor.urlsafe(), feed=feed_id)
+
+    # Collect feeds from async query.
+    for feed_future in feed_async_future:
+        feeds.append(feed_future.get_result())
+
+    return render_template("page-reader.html.j2", feeds=feeds, articles=articles, next_page=next_page, prev_page=prev_page)
 
 
 def get_latest_articles(feed, force_refresh=False):
@@ -139,7 +163,7 @@ def get_latest_articles(feed, force_refresh=False):
     return articles
 
 
-@bp.route("/save/<article_id>", methods=('POST', 'DELETE','GET'))
+@bp.route("/save/<article_id>", methods=('POST', 'DELETE', 'GET'))
 def article_save(article_id):
     r"""
     Web callback for saving articles.
@@ -251,7 +275,6 @@ def cool_feeds():
         ],
         _(u"Culture"): [
             _discover_feed("https://jezebel.com/rss"),
-            _discover_feed("https://www.reddit.com/r/feminism/.rss"),
             _discover_feed("https://slutever.com/feed/atom"),
             _discover_feed("https://divamag.co.uk/feed"),
             _discover_feed("https://www.radiohelsinki.fi/feed/"),
@@ -489,16 +512,11 @@ def feed_factory(url, **kwargs):
 
     url = url_normalize(url)
 
-    # TODO: Use key
-    feeds = Feed.query(Feed.url == url)
+    key = ndb.key.Key(Feed, url)
+    feed = get_by_key(key) or Feed(key=key)
 
-    if feeds.count() >= 1:
-        # TODO: Should check that there is only one feed.
-        feed = feeds.get()
-    else:
-        kwargs['url'] = url
-        kwargs.setdefault("type", "feedparser")
-        feed = Feed(key=ndb.Key(Feed, url))
+    kwargs['url'] = url
+    kwargs.setdefault("type", "feedparser")
 
     feed.populate(**kwargs)
     return feed

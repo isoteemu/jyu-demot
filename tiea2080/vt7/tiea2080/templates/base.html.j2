@@ -7,11 +7,13 @@
     <link rel="stylesheet" href="//stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link href="//fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
+
     {# prefetch javascript sources #}
     <link rel="dns-prefetch" href="//ajax.googleapis.com/">
     <link rel="dns-prefetch" href="//cdnjs.cloudflare.com/">
     {# Assets are stored - usually - here #}
     <link rel="dns-prefetch" href="//lh3.googleusercontent.com">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
 <body class="kirjautunut bg-light" data-spy="scroll" data-target="#navbar" data-offset="0">
     <header id="site-header" class="site-header sticky-top bg-white box-shadow border-bottom">
@@ -98,14 +100,25 @@
         {% endblock content%}
     </div>
 
-    <footer class="container">
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <footer>
         <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
         <script src="//stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
         <script src="{{url_for('static', filename='app.js')}}"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/dompurify/1.0.10/purify.min.js"></script>
-        {% block footer %}
-        {% endblock footer %}
+        <div class="container">
+            <div class="float-right">
+                <a href="#">{{_("Back to top")}}</a>
+            </div>
+            <div class="footer-links">
+            <div>
+                <a href="https://github.com/isoteemu/jyu-demot/tree/master/tiea2080/vt7">
+                    <img src="https://github.com/favicon.ico" width=16 height=16 />{{_("Source")}}
+                </a>
+            </div>
+            {% block footer %}
+            {% endblock footer %}
+            </div>
+        </div>
     </footer>
 </body>
 </html>

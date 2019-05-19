@@ -13,6 +13,17 @@ indexes:
 - kind: Article
   properties:
   - name: feed
+  - name: __key__
+    direction: desc
+
+- kind: Article
+  properties:
+  - name: feed
+  - name: published
+
+- kind: Article
+  properties:
+  - name: feed
   - name: published
     direction: desc
 

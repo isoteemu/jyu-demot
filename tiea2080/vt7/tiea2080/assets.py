@@ -197,7 +197,7 @@ def redirect_to_asset(size, asset):
         return redirect(entity.url)
     else:
         # Redirect into entity url
-        return redirect(asset_img_fallback(entity, size_px))
+        return redirect(asset_img_fallback(entity, ASSET_SIZES[size]))
 
     app.logger.warning(u"This should not happen; Nothing found for suitable asset resource")
     abort(404)
