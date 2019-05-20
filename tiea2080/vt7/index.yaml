@@ -27,6 +27,17 @@ indexes:
   - name: published
     direction: desc
 
+- kind: Article
+  ancestor: yes
+  properties:
+  - name: published
+    direction: desc
+
+- kind: Asset
+  ancestor: yes
+  properties:
+  - name: weight
+
 - kind: Asset
   ancestor: yes
   properties:

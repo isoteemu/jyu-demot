@@ -46,6 +46,7 @@ from .subsctiptions import (
     memcache_key_subscriptions,
 )
 from .assets import asset_factory, get_entity_asset
+from .extractors import extract_assets
 
 feedparser_content_types = [
     # Content types understood by ``feedparser``
@@ -149,18 +150,6 @@ def page_reader():
         feeds.append(feed_future.get_result())
 
     return render_template("page-reader.html.j2", feeds=feeds, articles=articles, next_page=next_page, prev_page=prev_page)
-
-
-def get_latest_articles(feed, force_refresh=False):
-    memcache_key = memcache_key_subscriptions % feed.key.id()
-
-    articles = memcache.get(memcache_key)
-    if not articles or force_refresh:
-        feed_articles = Article.query(Article.feed == feed.key).order(-Article.published)
-        articles = list(feed_articles.fetch(default_limit))
-        memcache.set(memcache_key, articles)
-
-    return articles
 
 
 @bp.route("/save/<article_id>", methods=('POST', 'DELETE', 'GET'))
@@ -392,14 +381,7 @@ def update_feed(feed):
     # Collect assets.
     assets = filter(None, [get_entity_asset(e) for e in articles + [feed]])
 
-    futures = ndb.put_multi_async([feed] + articles + assets)
-
-    # Wait for everything to be committed.
-    for future in futures:
-        future.wait()
-
-    # Force cache refresh
-    get_latest_articles(feed, force_refresh=True)
+    ndb.put_multi([feed] + articles + assets)
 
 
 def feed_subscride(feed, user=None):
@@ -650,13 +632,11 @@ def update_feed_articles_with_rss(feed, content):
 
             articles.append(article_entity)
 
-            # Try finding image.
-            soup = html_parser(content)
-            img = soup.find("img")
-            if img:
-                asset_factory(img['src'], article_entity, weight=10)
+            # Asset searching
+            # ===============
 
             for media in article.get("media_thumbnail", []):
+                # Look for thumbnails. Thease are usually quite small
                 if not valid_url(media.get("url", "")):
                     continue
 
@@ -664,6 +644,8 @@ def update_feed_articles_with_rss(feed, content):
                 app.logger.debug("Found media thumbnail for article: %s", media['url'])
 
             for media in article.get("media_content", []):
+                # media content can be pretty much anything. Only lookup things that
+                # have been declared with "image/*"  type.
                 if not valid_url(media.get("url", "")):
                     continue
 
@@ -688,6 +670,11 @@ def update_feed_articles_with_rss(feed, content):
                 asset_factory(media['href'], article_entity, weight=50)
                 app.logger.debug("Found media thumbnail for article: %s", media['href'])
 
+            for asset in extract_assets(content):
+                # Try extracting content from article contents.
+                asset_url, asset_weight = asset
+                asset_factory(asset_url, article_entity, weight=asset_weight)
+
         except Exception as e:
             app.logger.exception(e)
 
@@ -701,7 +688,7 @@ def update_feed_interval(feed):
     previous = datetime.utcnow()
     time = timedelta()
 
-    articles = get_latest_articles(feed)
+    articles = Article.query(ancestor=feed.key).order(-Article.published).fetch(default_limit)
 
     i = 0
     for article in articles:

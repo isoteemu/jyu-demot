@@ -54,7 +54,7 @@ def alusta(name=__name__, **kwargs):
     :param DATABASE:
     """
 
-    app = Flask(name)
+    app = Flask(name, instance_relative_config=True)
 
     kwargs.setdefault("CHARSET", "utf-8")
     kwargs.setdefault("DEBUG", True)

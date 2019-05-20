@@ -13,6 +13,8 @@ import urllib3.contrib.appengine
 
 def setup_app(app):
 
+    app.config.from_pyfile('application.cfg')
+
     init_app(app)
 
     if app.debug:

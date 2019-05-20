@@ -23,6 +23,8 @@ from io import BytesIO
 import logging
 import os
 
+import feedparser
+
 from tiea2080 import (
     crawler,
 )
@@ -53,7 +55,6 @@ class FlashHandler(logging.StreamHandler):
 
 bp = Blueprint('admin', __name__, template_folder='templates')
 
-
 def init_app(app):
 
     with app.app_context():
@@ -66,15 +67,13 @@ def init_app(app):
 @bp.route("/test", methods=('POST', 'GET'))
 def test():
 
-    s = r"""</template><noscript><p title="></noscript><img src=x onerror=alert(1)></p></noscript>">"""
+    from tiea2080.extractors import extract_assets
+    #feed = get_by_key(ndb.key.Key(Feed, 'https://www.reddit.com/r/bois/.rss'))
 
-    return render_template("test.html.j2", foo=s)
+    return repr(extract_assets("""<a href="https://streamja.com/L9GA">foo</a>"""))
 
-    r = crawler().get("https://feeds.yle.fi/uutiset/v1/mostRead/YLE_UUTISET.rss")
-    r.raise_for_status()
+    return soup
 
-    soup = html_parser(r.text)
-    return u"%s" % (soup.find("rss", {"version": True}))
 
 
 @bp.route("/feeds", methods=('POST', 'GET'))

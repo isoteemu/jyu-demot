@@ -146,7 +146,7 @@ class AssetedModel(Model):
 
         if self._asset is None:
             # Fetch only key.
-            asset = Asset.query(ancestor=self.key).order(-Asset.weight).get()
+            asset = Asset.query(ancestor=self.key).order(Asset.weight).get()
             self._asset = asset.key if asset else False
             memcache.set(memcache_key, self._asset, namespace=memcache_namespace)
 

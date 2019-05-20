@@ -240,6 +240,7 @@ def asset_factory(url, parent, **kwargs):
 
     kwargs["url"] = url
     asset.populate(**kwargs)
+
     parent.tell_about_asset(asset)
 
     return asset
@@ -266,7 +267,7 @@ def scrape_asset(asset):
 
     # Stops if request failed.
     if response.status_code != requests.codes.ok:
-        app.logger.info("Scaping returned error code %s", response.status_code)
+        app.logger.info("Scaping %s returned error code %s", response.url, response.status_code)
         return None
 
     i = images.Image(response.content)

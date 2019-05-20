@@ -69,7 +69,7 @@
 $(function() {
     $(".autoload").jscroll({
         nextSelector: '.pagination a.page-link.next',
-        contentSelector: '.autoload',
+        contentSelector: '.autoload > *',
         loadingHtml: '<div class="spinner-border text-info" role="status"><span class="sr-only">{{_("Loading")}}</span></div>'
     });
 });
