@@ -14,9 +14,11 @@ from google.appengine.api import images
 from google.appengine.api import blobstore
 from google.appengine.api import taskqueue
 
+from requests.exceptions import RequestException
+
 from base64 import b64encode
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from . import memcache, csrf
 from .utils import url_normalize, valid_url, urlparse, crawler, requests
@@ -265,10 +267,7 @@ def scrape_asset(asset):
 
     response = crawler().get(asset.url)
 
-    # Stops if request failed.
-    if response.status_code != requests.codes.ok:
-        app.logger.info("Scaping %s returned error code %s", response.url, response.status_code)
-        return None
+    response.raise_for_status()
 
     i = images.Image(response.content)
 
@@ -343,9 +342,27 @@ def scrape_asset_task():
     try:
 
         if not entity.blob_key:
-            entity = scrape_asset(entity)
-            entity.put()
-            return "Added: %s" % repr(entity.blob_key), 202
+            try:
+                entity = scrape_asset(entity)
+                entity.put()
+                return "Added: %s" % repr(entity.blob_key), 202
+            except RequestException as e:
+                app.logger.exception(e)
+
+                # If asset is too old (1 week), and we haven't managed to dowload
+                # it yet, give up and remove it.
+                now = datetime.utcnow()
+                max_age = entity.created + timedelta(weeks=1)
+                if now > max_age:
+                    app.logger.warning("Removing week old asset as dead.")
+                    entity.delete()
+                    return "Asset removed as dead", 410
+            except images.NotImageError as e:
+                # Delete if asset was found, but is not image.
+                app.logger.warning("Asset %s is not image: %s", repr(entity.url), unicode(e))
+                entity.delete()
+                return "Asset was not image.", 410
+
         else:
             return "Asset already in storage", 200
 
