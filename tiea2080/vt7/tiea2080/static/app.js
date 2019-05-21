@@ -142,7 +142,11 @@ $(document).ready(function() {
                 })
             );
 
-            $slide.find("img").attr("src", $large_url);
+            if($large_url) {
+                $slide.find("img").attr("src", $large_url);
+            } else {
+                $slide.find("img").attr("src", $article_i.find(".thumb img").attr("src"));
+            }
             $slide.attr("title", $article_i.find(".title").text())
             $slide.attr("href", $article_i.find("a").attr("href"));
             $slide[0].feed = $(".feed [name=feed][value=\""+$article_i.find("[data-feed]").data("feed")+"\"]");
