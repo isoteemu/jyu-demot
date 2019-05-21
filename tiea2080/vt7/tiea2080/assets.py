@@ -357,6 +357,10 @@ def scrape_asset_task():
                     app.logger.warning("Removing week old asset as dead.")
                     entity.delete()
                     return "Asset removed as dead", 410
+                else:
+                    # Every time entity scrape fails, lower its' weight by 10%
+                    entity.weight = int(max(0, entity.weight * 0.9))
+                    entity.put()
             except images.NotImageError as e:
                 # Delete if asset was found, but is not image.
                 app.logger.warning("Asset %s is not image: %s", repr(entity.url), unicode(e))
