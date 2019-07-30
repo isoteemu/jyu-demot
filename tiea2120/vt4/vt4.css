@@ -1,0 +1,121 @@
+body {
+    padding:0;
+    margin:0;
+
+    background-color: #000;
+}
+
+#palkit {
+    width: 100%;
+    height: 100%;
+}
+
+#palkit > img {
+    width: 100%;
+    left:0;
+    height: 25px;
+    top: 0;
+    display: none;
+    position: absolute;
+}
+
+#palkit .palkki {
+    display: block;
+    animation: palkki 4s infinite alternate;
+}
+
+#bunny {
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    text-align: center;
+}
+
+canvas {
+    position: absolute;
+    height: 33%;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+#ylä {
+    top:calc(50% - 33%);
+    animation: ylä 2s infinite alternate;
+}
+#ala {
+    bottom:calc(50% - 33%);
+    animation: ala 2s infinite alternate;
+}
+
+.fiksattu {
+    position: fixed;
+    top:0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#pöllö {
+    width:64px;
+    width:64px;
+    position: absolute;
+    animation: 4s infinite linear pieru;
+}
+
+
+@keyframes palkki {
+    from {
+        top:0;
+    }
+    to {
+        top:100%;
+    }
+}
+
+
+@keyframes ylä {
+    from {
+        top:calc(40% - 33%);
+    }
+    to {
+        top:calc(50% - 33%);
+    }
+}
+@keyframes ala {
+    from {
+        bottom:calc(40% - 33%);
+    }
+    to {
+        bottom:calc(50% - 33%);
+    }
+}
+
+@keyframes pieru {
+    0%, 100% {
+        top:0;
+        left:0;
+        right: calc(100% - 64px);
+        bottom: calc(100% - 64px);
+    }
+    25% {
+        top:0;
+        bottom: calc(100% - 64px);
+        left: calc(100% - 64px);
+        right: 0;
+    }
+    50% {
+        top: calc(100% - 64px);
+        bottom: 0;
+        left: calc(100% - 64px);
+        right: 0;
+    }
+    75% {
+        top: calc(100% - 64px);
+        bottom: 0;
+        left: 0;
+        right: calc(100% - 64px);
+    }
+}
