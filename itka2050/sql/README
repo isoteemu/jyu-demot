@@ -1,0 +1,10 @@
+Valitsin Pythonin suhteellisen suositun ``SQLAlchemy`` (1.3) -kirjaston. Käyttää sqliteä backendinä.
+
+Käytetyt mallit on varastettu omasta projektista. Echo on päällä, joten omat tulosteet on prefixoitu ``>>> %s``
+
+Tehtävät:
+$ pip install SQLAlchemy
+
+$ python3 t1.py
+$ python3 t2.py "World Wrestling Foundation"
+$ python3 t3.py World Wildlife Federation

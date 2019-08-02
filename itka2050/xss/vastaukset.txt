@@ -1,0 +1,36 @@
+
+1:  > Mikä on suositeltu tapa tehdä tuottaa HTML:ää?
+
+Tylsänä käsittelen Flaskia. Yleisesti käytetään Jinja[2] template -järjestelmää, johon tehdään templateihin, joihin merkataan
+Jinjan omalla syntaxilla placeholderit ohjelmallisesti tuotetulle sisällölle. Laittamalla autoescapen päälle, voi automaagisesti pyrkiä - mutta siihen ei pidä luottaa kuten dokumentaatiossa sanotaan, vaan se tietää milloin käyttäjä on jo filtteröinyt sisällön - tukkimaan pahimpia mogia.
+
+2:  > Onko mahdollista tehdä HTML:ää liimaamalla merkkijonoja yhteen?
+
+On. Flask itsessään välitä miten vastaus generoidaan, joten palautettava `response` voi sisältää vaikka liimattuja merkkijonoja:
+
+    >>> from flask import make_response, request
+    >>> 
+    >>> def spam():
+    >>>     not_so_safe = request.form.get("ham")
+    >>>     return make_response('<input name="ham" value="'+not_so_safe+'" />' )
+
+3:  > Millä tavoin käyttäjän syötettä pitää käsitellä, jotta sen voi turvallisesti sijoittaa HTML:n sekaan? (esim. enkoodaus, sanitiointi yms)
+
+Poistamalla kielletyt - tai ennemmin vain sallien - merkkijonot. Käytännössä kuitenkin käytetään escape filttereitä templaten sisällä:
+
+    >>> <input name="ham" value="{{not_so_safe|escape}}" />
+    >>> <script>var muuttuja = {{not_so_safe|string|tojson}};</script>
+
+Jollei ole välttämättä halunnut käyttää muuta kuin utf-8 merkistöä, ei tarvitse encodingista uudemmilla alustoilla huolehtia. Jos haluaa, on in the world of hurt muutenkin.
+
+4:  > Sanitoiko työkalusi syötteen eri tavalla jos se on HTML:n attribuutissa kuin jos se on HTML:n leipätekstissä? Pitääkö käyttäjän ilmaista itse kumpaa koodausta missäkin tilanteessa tarvitsee käyttää?
+
+Ei, ja ei. Moderneille selaimille entityt kuten ``&lt;`` ja ``&#34;`` ei haittaa html:n attribuutin sisällä. Taas, jos haluaa olla ovela, pitää tietää mitä haluaa.
+
+    >>>
+    >>> render_form("spam.html", not_so_safe=r"""</template>\n<noscript><p title="></noscript><img src=x onerror=alert(🦄)></p></noscript>">""" )
+
+spam.html::
+    >>> <input type="text" value="{{not_so_safe|e}}">
+    >>> Sanoit: {{not_so_safe|e}}
+    >>> <script>var ham = {{not_so_safe|tojson|safe}};</script>

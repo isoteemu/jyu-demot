@@ -1,0 +1,9 @@
+Python + numpy::
+
+    >>> $ pip3 install numpy
+
+Tehtävä 2 & 3::
+
+    >>> $ python3 t2.py
+
+Ilmoittaa kauniilla metsälapilla havaitusta ylivuodosta.

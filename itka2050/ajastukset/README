@@ -1,0 +1,6 @@
+Python3 + hmac + timing. Kaikkien pitäisi tulla pythonin >=3.5 mukana.
+
+Tehtävä 1::
+    >>> $ python3 t1.py
+
+Ajaa vertailuja hetken. Taitaa kärsiä branch predictionista, mutta toisaalta, ei näytä ¯\_(ツ)_/¯

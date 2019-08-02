@@ -1,0 +1,25 @@
+Miten lempikielessäsi hallitaan kokonaislukujen ylivuodot?
+
+1:  > Mitä kokonaislukutyyppiä kielessäsi oletusarvoisesti käytetään?
+    > Kuinka suuria lukuja sillä voi käsitellä?
+
+Pythonin ``int`` on C kielen int, mutta niitä allokoidaan automaattisesti lisää. Näin ollen numerot voivat "ylivuotaa" vasta muistin loputtua.
+
+    >>> 2**7 + 1 # nuthing!
+
+ Automagia vie kuitenkin veronsa, ja yksi int vaatiikin enemmän muistia mitä olisi tarpeen. Yleistä on myös käyttää ``numpy``tä tilanteissa joissa halutaan tehoa enemmän irti, ja siinä suurin numero vastaa C:n ``long long`` tyyppiä. Tällöin voidaan käsitellä ``2 ** 63 - 1``.
+
+2:  > Onko kielessäsi keinoa saada selville tapahtuiko laskennassa ylivuoto?
+
+Riippuu laskutoimituksesta. Ynnäämällä numpyn lukuja on, jos erityisesti sitä pyytää. Normaalien kokonaislukujen kohdalla ei.
+
+Esimerkki tiedostossa :file:`t2.py`.
+
+3:  > Miten kielelläsi voidaan tehdä aliohjelma, joka kertoo syntyisikö kahden annetun kokonaisluvun kertolaskusta ylivuoto vai ei?
+
+Numpyssä :func:`numpy.set_err(over="warn")`. Yhdistetty toteutus tehtävä 2:sen kanssa tiedostossa :file:`t2.py`.
+
+4:  > Anna esimerkki tilanteesta, jossa ylivuoto aiheuttaa tietoturvaongelman.
+
+Ariane 5 rakettiin päätettiin ottaa sen edeltäjästä hyväksi havaittuja komponentteja. Hyväksi havaittu gyroskooppi lähetti dataa 64 bittisenä, ja hyväksi havaittu vastaanottava kone käsitteli sitä 16 bittisenä. Edellisessä raketissa tämä ei ollut ongelma, mutta uudempi raketti suuremman kokonsa vuoksi lenti jyrkemmässä kulmassa, aiheuttaen ylivuodon, joka aiheutti exceptionin jonka raketti kuitenkin hanskasi vaihtamalla varajärjestelmään. Joka välittömästi kärsi ylivuodosta, ja raketti keskeytti lennon. 
+Tietoturvaongelman tämä aiheutti esittelemällä tiedottomuutta vastaavalle työntekijälle työn turvasta.

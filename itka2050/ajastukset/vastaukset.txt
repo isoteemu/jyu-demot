@@ -1,0 +1,11 @@
+
+1:  > Pystytkö ajastamalla havaitsemaan eron yhtäsuuruusvertailussa kun verrataan keskenään
+    > a) kahta samaa 50 merkin merkkijonoa?
+    > b) kahta toisistaan eroavaa 50 merkin merkkijonoa?
+
+Yhdellä vertailulla en, mutta riittävän monella kyllä. Oheinen tunkki :file:`t1.py` tekee vertailua ja mitaa suorituksen aikoija. Lisäksi jos haluaa salasanoja tai muuta timing attackille herkkää vertailla, pythonissa on siihen työkaluja.
+
+2:  > Onko työkalullasi mahdollista tehdä syötteen pituudesta riippumatonta merkkijonojen vertailua?
+    > Miten? Mitä haasteita tässä voisi olla?
+
+On. Pythonissa ei varsinaisesti syöte voi mennä yli. Mutta ensimmäinen vertailu mitä python konetasolla tekee, on vertailee bittijonojen pituutta, joten eripituiset merkkijonot ovat kaikista herkimpiä ajastushyökkäyksille.
