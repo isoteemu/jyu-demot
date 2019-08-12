@@ -13,7 +13,6 @@ pupu.addEventListener("load", function(e) {
 let palkit = document.querySelectorAll("#palkit > img");
 let i = 0;
 for(let palkki of palkit) {
-    i++;
     palkki.className += " palkki";
-    palkki.style.animationDelay=i / 8 + "s";
+    palkki.style.animationDelay=i++ / 8 + "s";
 }

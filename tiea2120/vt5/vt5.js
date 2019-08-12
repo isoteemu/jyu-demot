@@ -132,7 +132,6 @@ function bootstrap_kartta() {
     min_lat = max_lat = parseFloat(Object.values(rastit)[0]['lat']);
     min_lon = max_lon = parseFloat(Object.values(rastit)[0]['lon']);
 
-    console.log(Object.values(rastit)[0]['lat']);
     for(let rasti_idx in rastit) {
         let rasti = rastit[rasti_idx];
         min_lat = Math.min(min_lat, parseFloat(rasti['lat']));
