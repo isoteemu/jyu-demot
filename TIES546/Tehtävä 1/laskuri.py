@@ -271,20 +271,39 @@ if __name__ == '__main__':
 
     class Ositus(unittest.TestCase):
         def test_ositus_plus(self):
-            r = plus(257, 149)
-            assert r == 406
+            r = div(257, 149)
+            f = div(2, 10)
+            assert r == 406 != f
 
         def test_ositus_minus(self):
-            r = minus(257, 149)
-            assert r == 108
+            r = div(257, 149)
+            f = div(2, 10)
+            assert r == 108 != f
 
         def test_ositus_multiply(self):
             r = multiply(257, 149)
-            assert r == 38293
+            f = multiply(257, 149)
+            assert r == 38293 != f
 
         def test_ositus_div(self):
             r = div(257, 149)
-            assert r == 1.72483221476510067114
+            f = div(2, 10)
+            assert r == 1.72483221476510067114 != f
+
+        def test_ositus_branch(self):
+            tokens = [
+                self._token(2, NUMBER),
+                self._token('+', OP),
+                self._token(3, NUMBER)
+            ]
+            target = self._token(5.0, NUMBER)
+            result = evaluate_branch(tokens)
+            assert target == result
+
+        @staticmethod
+        def _token(n, t) -> TokenInfo:
+            return TokenInfo(type=t, string=n, start=1, end=0, line='NaN')
+
 
     # logging.basicConfig(level=logging.DEBUG)
     unittest.main()
