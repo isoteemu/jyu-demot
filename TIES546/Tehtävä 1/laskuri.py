@@ -271,18 +271,18 @@ if __name__ == '__main__':
 
     class Ositus(unittest.TestCase):
         def test_ositus_plus(self):
-            r = div(257, 149)
-            f = div(2, 10)
+            r = plus(257, 149)
+            f = plus(2, 10)
             assert r == 406 != f
 
         def test_ositus_minus(self):
-            r = div(257, 149)
-            f = div(2, 10)
+            r = minus(257, 149)
+            f = minus(2, 10)
             assert r == 108 != f
 
         def test_ositus_multiply(self):
             r = multiply(257, 149)
-            f = multiply(257, 149)
+            f = multiply(2, 10)
             assert r == 38293 != f
 
         def test_ositus_div(self):
