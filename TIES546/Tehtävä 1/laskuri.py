@@ -307,3 +307,12 @@ if __name__ == '__main__':
 
     # logging.basicConfig(level=logging.DEBUG)
     unittest.main()
+
+"""
+- Aluksi kattavuustesuksen kohdalla oli loogin oletus että jos plus tuloksen tulos
+on oikein, se ei ole väärin. Mutta hieman myöhemmin kuitenkin tuli XKCD:n vitsi mieleen,
+että miten varmistua siitä että satunnaisgeneraattori palauttaa satunnaisesti saman luvun,
+eikä samaa lukua ei satunnaisesti. Niinpä lisäsin osittaistestaukseen vielä käänteisen;
+ettei varmisti väärä operaatio `f = plus(1,2)` tuo odotettua - oikeaa - vastausta 
+`r = plus(3, 4)`
+"""
