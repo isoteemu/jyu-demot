@@ -39,7 +39,7 @@ if __name__ == "__main__":
             except AttributeError:
                 pass
 
-            print(svg_to_path(path.get("d")), title)
+            print(svg_to_path(path.get("d")), ",", title)
         # with etree.parse(arg) as fd:
         #     print(fd)
         #     #print(svg_to_path(fd.read()))

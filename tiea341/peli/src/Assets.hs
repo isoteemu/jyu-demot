@@ -3,6 +3,15 @@ import Graphics.Gloss.Data.Color
 import Graphics.Gloss.Data.Picture
 import Graphics.Gloss.Data.Bitmap
 
+import Data.Fixed
+
+-- Vakioita
+puun_korkeus :: Num p => p
+puun_korkeus = 100
+
+navetan_korkeus :: Num p => p
+navetan_korkeus = 80 
+
 svgToVec :: Path -> Path
 svgToVec path = foldr (\(a,b) loput -> (a, -1*b):loput ) [] path
 
@@ -13,6 +22,38 @@ svgToVecFollow (a,b) ((x,y):xs) = (x+a, y+(-1.0 * b)):(x,y):xs
 
 tähti :: [(Float,Float)]
 tähti = [(15.924437,11.343439), ( 16.587742,16.962543), ( 11.724225,14.071089), ( 6.5851121,16.438328), ( 7.8321396,10.91934), ( 3.9926882,6.7632701), ( 9.6269102,6.2438026), ( 12.393112,1.3079712), ( 14.628225,6.5059104), ( 20.177283,7.6114687), (15.924437,11.343439)]
+
+
+lautanen :: Float -> Picture
+lautanen aika = color väri (translate 0 korkeus keho)
+    where
+        -- Ufon paramtrejä
+        väri        = greyN 0.9
+        leveys      = 60
+        korkeus     = 25
+        nopeus      = 3
+
+        aika' = aika * 0.8
+
+        lisääPallura offset
+            | luku <= ositus || luku >= ositus * 3 = pallura
+            | otherwise = blank
+            where
+                ositus = pi*2/4
+                luku = (aika' * nopeus + offset) `mod'` (pi*2)
+                skaala = cos(luku)
+                sijainti = sin(luku) * (-1)
+                pallura = translate (sijainti*leveys-sijainti) 0 (scale skaala 1 $ color blue (circleSolid (korkeus*0.3)))
+
+        runko = (scale 1.0 0.4 (circleSolid leveys))
+            <> translate 0 (korkeus * 0.85) (scale 1.0 0.6 (circleSolid korkeus)) -- Ohjaamo
+            <> translate 0 (korkeus * (-0.9)) (scale 1.0 0.2 ( -- Imutusreikä
+                circleSolid korkeus
+                <> (color (light yellow) (circleSolid (korkeus*0.9)))
+            ))
+        -- Lisää pyörivät pallurat
+        keho = foldr (\n runko' -> runko' <> lisääPallura (pi*2/6*n)) runko [1..6]
+
 
 navettaSprite :: Picture
 --navettaSprite = polygon $ svgToVec [(0,50),(50,0),(100,50),(100,70),(0,70)] -- ^ Etufakaadi
@@ -85,8 +126,8 @@ puuSprite = Pictures [
         p = piirräSprite
 
 
-introUfoSprite :: Picture
-introUfoSprite = Pictures [
+introTitleSprite :: Picture
+introTitleSprite = Pictures [
             väritä $ p [(130.0, 40.0), (156.0, 40.0), (156.0, 106.0), (216.0, 106.0), (216.0, 40.0), (242.0, 40.0), (242.0, 130.0), (130.0, 130.0), (130.0, 40.0)], -- UFO -> U
             väritä $ p [(248.0, 40.0), (248.0, 130.0), (274.0, 130.0), (274.0, 96.0), (340.0, 96.0), (340.0, 74.0), (274.0, 74.0), (274.0, 62.0), (340.0, 62.0), (340.0, 40.0), (248.0, 40.0)], -- UFO -> F
             väritä $ p [(344.0, 40.0), (472.0, 40.0), (472.0, 130.0), (344.0, 130.0), (344.0, 40.0)], -- UFO -> O
@@ -110,7 +151,7 @@ piirräSprite g = Pictures [polygon $ vec, color black $ line vec]
                     where vec = svgToVec g
 
 
--- Satunnaistaulukko. Suoraan alkuperäisen doomin määrittelemänä.
+-- | Satunnaistaulukko. Suoraan alkuperäisen doomin määrittelemänä.
 satunnaisTaulukko :: Num a => [a]
 satunnaisTaulukko = cycle [
     0,   8, 109, 220, 222, 241, 149, 107,  75, 248, 254, 140,  16,  66 ,
