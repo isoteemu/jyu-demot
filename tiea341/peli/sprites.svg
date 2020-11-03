@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="600"
+   height="400"
+   viewBox="0 0 600 400"
+   version="1.1"
+   id="svg8"
+   inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
+   sodipodi:docname="barn.svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="15.839192"
+     inkscape:cx="18.093069"
+     inkscape:cy="17.660611"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer5"
+     inkscape:document-rotation="0"
+     showgrid="true"
+     units="px"
+     inkscape:window-width="1920"
+     inkscape:window-height="1051"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:snap-midpoints="true"
+     inkscape:snap-grids="true">
+    <inkscape:grid
+       type="xygrid"
+       id="grid835"
+       spacingx="2"
+       spacingy="2" />
+    <sodipodi:guide
+       position="300,200"
+       orientation="0,-1"
+       id="guide1063" />
+    <sodipodi:guide
+       position="300,200"
+       orientation="1,0"
+       id="guide1065" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Navetta"
+     inkscape:groupmode="layer"
+     id="layer1"
+     style="display:inline"
+     sodipodi:insensitive="true">
+    <g
+       id="g875">
+      <path
+         style="fill:#ff0d0d;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="M 0,50 50,0 100,50 v 70 H 0 Z"
+         id="path837"
+         sodipodi:nodetypes="cccccc">
+        <title
+           id="title929">Fakaadi etu</title>
+      </path>
+      <path
+         style="fill:#1a1a1a;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="M 20,120 V 60 h 60 v 60 z"
+         id="path841">
+        <title
+           id="title925">Ovi-sisusta</title>
+      </path>
+      <path
+         style="fill:#b3b3b3;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="M 48,0 -2,50 H 0 L 50,0 Z"
+         id="path849">
+        <title
+           id="title935">Katto taka</title>
+      </path>
+      <path
+         style="fill:#d40000;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 100,50 v 70 H 210 V 50 Z"
+         id="path845"
+         sodipodi:nodetypes="ccccc">
+        <title
+           id="title931">Fakaadi sivu</title>
+      </path>
+      <path
+         style="fill:#b3b3b3;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 48,0 h 114 l 50,50 H 98 Z"
+         id="path843"
+         sodipodi:nodetypes="ccccc">
+        <title
+           id="title933">Katto etu</title>
+      </path>
+      <path
+         style="fill:#666666;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 24,60 v 60 H 20 V 60 Z"
+         id="path847"
+         sodipodi:nodetypes="ccccc">
+        <title
+           id="title927">Sisäkarmi</title>
+      </path>
+      <g
+         id="g946">
+        <path
+           style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+           d="M 38,26 H 60 V 46 H 38 Z"
+           id="path939" />
+        <path
+           style="fill:#010000;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+           d="M 40,44 H 58 V 28 H 40 Z"
+           id="path937"
+           sodipodi:nodetypes="ccccc" />
+        <path
+           style="fill:#808080;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+           d="m 40,28 v 16 h 2 V 28 Z"
+           id="path941"
+           sodipodi:nodetypes="ccccc" />
+      </g>
+      <path
+         style="fill:#f9f9f9;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="M 19.999999,120 H 18 V 58 h 64 v 62 H 80 V 60 H 19.999999 Z"
+         id="path921">
+        <title
+           id="title923">Karmi</title>
+      </path>
+    </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Layer 2" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="puu"
+     style="display:none">
+    <g
+       id="g1044">
+      <path
+         style="fill:#433314;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 32,122 -4,12 4,2 4,6 h 10 l 2,-2 h 4 l 4,-4 v -6 l -4,-6 -4,-16 H 34 Z"
+         id="path1020"
+         sodipodi:nodetypes="ccccccccccccc">
+        <title
+           id="title1048">Juuri</title>
+      </path>
+      <path
+         style="fill:#80c140;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 40,10 -8,8 6,-2 -6,18 -10,10 4,-2 -4,6 6,-2 L 10,64 26,60 8,78 h 4 l -6,8 8,-2 -2,4 4,-2 -10,10 6,-2 -12,14 10,-2 -4,6 18,-8 -6,12 10,-6 -2,6 10,-6 4,10 4,-10 16,8 -2,-6 6,2 -2,-4 6,2 v -4 l 18,4 -18,-16 12,4 -8,-16 8,2 -8,-10 h 8 l -14,-12 10,2 -4,-6 6,2 -16,-16 8,2 -14,-16 -2,-8 6,2 -6,-8 6,2 L 50,10 46,0 Z"
+         id="path1018"
+         sodipodi:nodetypes="ccccccccccccccccccccccccccccccccccccccccccccccccccccccc">
+        <title
+           id="title1046">Havusto</title>
+      </path>
+      <path
+         style="fill:#1e5027;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 38,16 4,-2 v 14 l 6,-10 6,6 v 4 l -6,-6 -6,10 -4,-12 -2,2 z"
+         id="path1022"
+         sodipodi:nodetypes="ccccccccccc">
+        <title
+           id="title1050">Varjostus</title>
+      </path>
+      <path
+         style="fill:#1e5027;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 28,46 2,-2 v 6 l 6,-4 2,10 8,-12 8,8 -2,-12 10,10 v -4 l 4,10 -10,-6 v 8 L 46,48 38,60 34,50 l -8,4 2,-6 -4,2 z"
+         id="path1024"
+         sodipodi:nodetypes="cccccccccccccccccccc">
+        <title
+           id="title1052">Varjostus</title>
+      </path>
+      <path
+         style="fill:#1e5027;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 26,60 4,-2 -2,12 v -8 l -6,2 z"
+         id="path1026">
+        <title
+           id="title1056">Varjostus</title>
+      </path>
+      <path
+         style="fill:#1e5027;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="M 40,64 28,76 v 6 L 40,66 42,76 50,64 62,80 58,64 78,76 h 2 L 66,64 58,60 V 70 L 48,60 44,72 Z"
+         id="path1028"
+         sodipodi:nodetypes="cccccccccccccccc">
+        <title
+           id="title1054">Varjostus</title>
+      </path>
+      <path
+         style="fill:#1e5027;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 12,78 8,-6 -6,12 v -6 z"
+         id="path1032" />
+      <path
+         style="fill:#1e5027;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 16,86 4,-4 v 8 l 8,-8 4,10 4,-8 2,12 4,-6 4,8 2,-12 6,6 -2,-16 14,18 2,-12 4,2 4,8 -6,-6 -2,10 4,8 -14,-14 2,12 -6,-4 2,10 -8,-10 v 12 L 42,98 36,108 V 90 l -6,10 -2,-12 -10,8 v -8 l -4,4 -2,-2 z"
+         id="path1034"
+         sodipodi:nodetypes="ccccccccccccccccccccccccccccccccccc">
+        <title
+           id="title1058">Varjostus</title>
+      </path>
+    </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="INTRO"
+     style="display:none">
+    <g
+       id="ufo">
+      <path
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 130,40 h 26 v 66 h 60 V 40 h 26 v 90 H 130 Z"
+         id="path1106"
+         sodipodi:nodetypes="ccccccccc">
+        <title
+           id="title1108">UFO -&gt; U</title>
+      </path>
+      <path
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 248,40 v 90 h 26 V 96 h 66 V 74 H 274 V 62 h 66 V 40 Z"
+         id="path1110"
+         sodipodi:nodetypes="ccccccccccc">
+        <title
+           id="title1116">UFO -&gt; F</title>
+      </path>
+      <path
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 344,40 h 128 v 90 H 344 Z"
+         id="path1112">
+        <title
+           id="title1118">UFO -&gt; O</title>
+      </path>
+      <path
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 370,64 h 76 c 0,0 0,42 0,42 h -76 z"
+         id="path1114">
+        <title
+           id="title1120">UFO -&gt; O reikä</title>
+      </path>
+    </g>
+    <g
+       id="lifter">
+      <path
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 128,286 h 16 v 40 h 40 v 14 h -56 z"
+         id="path1122">
+        <title
+           id="title1124">LIFTER -&gt; L</title>
+      </path>
+      <path
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 272,300 v -14 h 60 v 14 h -24 v 40 h -16 v -40 z"
+         id="path1132" />
+      <path
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 336,286 v 54 h 56 v -14 h -40 v -8 h 40 v -12 h -40 v -6 h 40 v -14 z"
+         id="path1136"
+         sodipodi:nodetypes="ccccccccccccc">
+        <title
+           id="title1138">LIFTER -&gt; E</title>
+      </path>
+      <path
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 396,300 v -14 h 74 v 38 h -12 l 18,16 h -24 l -16,-14 h -22 v 14 h -18 v -28 h 58 v -12 z"
+         id="path1140" />
+      <path
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 190,286 v 54 h 16 v -54 z"
+         id="path1126" />
+      <path
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 212,286 v 54 h 16 v -20 h 38 v -14 h -38 v -6 h 38 v -14 z"
+         id="path1128"
+         sodipodi:nodetypes="ccccccccccc">
+        <title
+           id="title1130">LIFTER -&gt; F</title>
+      </path>
+    </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer5"
+     inkscape:label="Lehmä">
+    <g
+       id="lehma">
+      <path
+         style="fill:#cccccc;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 8,40 h 4 V 26 H 8 Z"
+         id="path1383">
+        <title
+           id="title1457">Takataka</title>
+      </path>
+      <path
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="M 4,6 H 0 V 24 H 2 V 8 h 2 z"
+         id="path1385">
+        <title
+           id="title1387">Häntä</title>
+      </path>
+      <path
+         style="fill:#cccccc;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 40,26 v 14 h 2 V 26 Z"
+         id="path1445">
+        <title
+           id="title1447">Etutaka</title>
+      </path>
+      <path
+         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="M 4,6 V 42 H 8 V 26 h 34 v 16 h 4 V 26 h 4 L 52,6 Z"
+         id="path1373"
+         sodipodi:nodetypes="ccccccccccc" />
+      <path
+         style="fill:#ffb380;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 10,24 v 4 h 8 v -4 z"
+         id="path1389">
+        <title
+           id="title1391">Utareet</title>
+      </path>
+      <path
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="M 16,8 V 18 H 34 V 8 Z"
+         id="path1393">
+        <title
+           id="title1453">Täplä</title>
+      </path>
+      <path
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 8,8 h 4 v 6 H 8 Z"
+         id="path1395">
+        <title
+           id="title1449">Täplä</title>
+      </path>
+      <path
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 6,18 h 6 v 4 H 6 Z"
+         id="path1397">
+        <title
+           id="title1451">Täplä</title>
+      </path>
+      <path
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 38,18 v 6 h 6 v -6 z"
+         id="path1399">
+        <title
+           id="title1455">Täplä</title>
+      </path>
+      <path
+         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 58,0 h 4 l -2,2 h -2 z"
+         id="path1413">
+        <title
+           id="title1469">Korva</title>
+      </path>
+      <path
+         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 46,0 h -4 l 2,2 h 2 z"
+         id="path1411">
+        <title
+           id="title1467">Korva</title>
+      </path>
+      <path
+         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 48,14 h 8 L 58,0 H 46 Z"
+         id="path1403">
+        <title
+           id="title1465">Kallo</title>
+      </path>
+      <path
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 50,14 v -2 h 4 c 0,0 0,2 0,2 z"
+         id="path1405">
+        <title
+           id="title1459">Nenä</title>
+      </path>
+      <path
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 48,4 v 4 h 2 V 4 Z"
+         id="path1407">
+        <title
+           id="title1461">Silmä</title>
+      </path>
+      <path
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.650079;paint-order:stroke fill markers"
+         d="m 54,4 v 4 h 2 V 4 Z"
+         id="path1409">
+        <title
+           id="title1463">Silmä</title>
+      </path>
+    </g>
+  </g>
+</svg>

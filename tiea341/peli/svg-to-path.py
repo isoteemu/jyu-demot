@@ -1,12 +1,20 @@
 #!/usr/bin/env pytho3
 
+""" Muunna SVG:n polku listaksi koordinaatteja
+
+    Käyttö:
+        $ svg-to-path.py <tiedosto> <g-id>
+
+    antamalla `g-id`:n jolle löytyy vastaavalla ID:llä `<g>` -tagi (group),
+    palauttaa vain sen ryhmän polut.
+"""
+
 import sys
 from svg.path.parser import parse_path
 from svg.path.path import Close, Line, Move
-
 import xml.etree.ElementTree as etree
-
 from pathlib import Path
+
 
 def svg_to_path(svg_line):
     line = parse_path(svg_line)
@@ -40,8 +48,6 @@ if __name__ == "__main__":
                 pass
 
             print(svg_to_path(path.get("d")), ",", title)
-        # with etree.parse(arg) as fd:
-        #     print(fd)
-        #     #print(svg_to_path(fd.read()))
+
     else:
         print(svg_to_path(" ".join(sys.argv[1:])))

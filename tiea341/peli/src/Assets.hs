@@ -2,15 +2,14 @@ module Assets where
 import Graphics.Gloss.Data.Color
 import Graphics.Gloss.Data.Picture
 import Graphics.Gloss.Data.Bitmap
+import Peli
+import Ufo
 
 import Data.Fixed
 
 -- Vakioita
 puun_korkeus :: Num p => p
-puun_korkeus = 100
-
-navetan_korkeus :: Num p => p
-navetan_korkeus = 80 
+puun_korkeus = 120
 
 svgToVec :: Path -> Path
 svgToVec path = foldr (\(a,b) loput -> (a, -1*b):loput ) [] path
@@ -29,8 +28,8 @@ lautanen aika = color väri (translate 0 korkeus keho)
     where
         -- Ufon paramtrejä
         väri        = greyN 0.9
-        leveys      = 60
-        korkeus     = 25
+        leveys      = leveys' ufo_mitat / 2
+        korkeus     = korkeus' ufo_mitat / 2
         nopeus      = 3
 
         aika' = aika * 0.8
@@ -53,6 +52,21 @@ lautanen aika = color väri (translate 0 korkeus keho)
             ))
         -- Lisää pyörivät pallurat
         keho = foldr (\n runko' -> runko' <> lisääPallura (pi*2/6*n)) runko [1..6]
+
+
+traktoriSprite :: Picture
+-- #94fafd
+traktoriSprite =
+        Pictures [
+            color väri $ rectangleSolid leveys pituus,
+            color (light väri) $ rectangleSolid (leveys * 0.3) pituus,
+            color (light väri) $  line [(leveys*0.2,-pituus*0.5),(leveys*0.5,pituus*0.5)]
+                               <> line [(-leveys*0.2,-pituus*0.5),(-leveys*0.5,pituus*0.5)]
+        ]
+    where
+        pituus     = 200
+        leveys     = leveys' ufo_mitat * 0.3
+        väri       = makeColor 0.6 0.9 0.95 0.6
 
 
 navettaSprite :: Picture
@@ -79,7 +93,7 @@ navettaSprite = Pictures [
 
 
 lehmäSprite :: Picture
-lehmäSprite = Pictures [
+lehmäSprite = translate 0 (43) $ Pictures [
             takaraaja [(8.32504, 40.32504), (12.32504, 40.32504), (12.32504, 26.32504), (8.32504, 26.32504), (8.32504, 40.32504)] , -- Takataka
             häntä [(4.32504, 6.32504), (0.32504000000000044, 6.32504), (0.32504000000000044, 24.32504), (2.3250400000000004, 24.32504), (2.3250400000000004, 8.325040000000001), (4.32504, 8.325040000000001), (4.32504, 6.32504)] , -- Häntä
             takaraaja [(40.32504, 26.32504), (40.32504, 40.32504), (42.32504, 40.32504), (42.32504, 26.32504), (40.32504, 26.32504)] , -- Etutaka
@@ -149,27 +163,3 @@ introTitleSprite = Pictures [
 piirräSprite :: [Point] -> Picture
 piirräSprite g = Pictures [polygon $ vec, color black $ line vec]
                     where vec = svgToVec g
-
-
--- | Satunnaistaulukko. Suoraan alkuperäisen doomin määrittelemänä.
-satunnaisTaulukko :: Num a => [a]
-satunnaisTaulukko = cycle [
-    0,   8, 109, 220, 222, 241, 149, 107,  75, 248, 254, 140,  16,  66 ,
-    74,  21, 211,  47,  80, 242, 154,  27, 205, 128, 161,  89,  77,  36 ,
-    95, 110,  85,  48, 212, 140, 211, 249,  22,  79, 200,  50,  28, 188 ,
-    52, 140, 202, 120,  68, 145,  62,  70, 184, 190,  91, 197, 152, 224 ,
-    149, 104,  25, 178, 252, 182, 202, 182, 141, 197,   4,  81, 181, 242 ,
-    145,  42,  39, 227, 156, 198, 225, 193, 219,  93, 122, 175, 249,   0 ,
-    175, 143,  70, 239,  46, 246, 163,  53, 163, 109, 168, 135,   2, 235 ,
-    25,  92,  20, 145, 138,  77,  69, 166,  78, 176, 173, 212, 166, 113 ,
-    94, 161,  41,  50, 239,  49, 111, 164,  70,  60,   2,  37, 171,  75 ,
-    136, 156,  11,  56,  42, 146, 138, 229,  73, 146,  77,  61,  98, 196 ,
-    135, 106,  63, 197, 195,  86,  96, 203, 113, 101, 170, 247, 181, 113 ,
-    80, 250, 108,   7, 255, 237, 129, 226,  79, 107, 112, 166, 103, 241 ,
-    24, 223, 239, 120, 198,  58,  60,  82, 128,   3, 184,  66, 143, 224 ,
-    145, 224,  81, 206, 163,  45,  63,  90, 168, 114,  59,  33, 159,  95 ,
-    28, 139, 123,  98, 125, 196,  15,  70, 194, 253,  54,  14, 109, 226 ,
-    71,  17, 161,  93, 186,  87, 244, 138,  20,  52, 123, 251,  26,  36 ,
-    17,  46,  52, 231, 232,  76,  31, 221,  84,  37, 216, 165, 212, 106 ,
-    197, 242,  98,  43,  39, 175, 254, 145, 190,  84, 118, 222, 187, 136 ,
-    120, 163, 236, 249 ]

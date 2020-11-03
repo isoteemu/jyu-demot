@@ -1,3 +1,5 @@
+{-#OPTIONS_GHC -Wtype-defaults#-}
+
 module Main where
 
 import Prelude hiding (Down)
@@ -7,34 +9,37 @@ import Graphics.Gloss.Data.Vector
 import Graphics.Gloss.Geometry.Angle
 import Graphics.Gloss.Geometry.Line
 
-import Data.List
+import Data.Fixed
+import Data.List (partition,  (!!) )
+import Peli
 import Assets
 import Aritmetiikka
+import Ufo
+import Navetta
+import Lehmä
+import Karikko
 
 {-
-    Harhauduin aikaslailla harjoitustyöstä.
-
     Pelimekaniikan muutoksia:
         - Intronäyttö
         - Maa on pyöreä, ei litteä.
         - Skybox
         - Ei pelasteta, vaan kaapataan
+        - Ei ole erillisiä laskutelineitä. Törmäys on törmäys.
 
     Teknisiä muutoksia:
         - Kulma on kaikkialla radiaaneja.
         - kulma ja voima -vektorit fysikan laskemiseen
         - Satunnaisluvut ovat Doomista kopioitu lista lukuja. Tarjoaa riittävän satunnaisuuden, mutta ei tarvitse
           huolehtia satunnaislukujen ikävästä taipumuksesta olla satunnaisia. Doctor Whon sanoin:
-            "Satunnaisuuden suuri vika on ettei se suosi hyviä vaihtoehtoja yli huonojen."
+            "Satunnaisuuden suuri puute on ettei se suosi hyviä vaihtoehtoja yli huonojen."
 
-
+    Bugeja:
+        - Painovoima ei välitä pelin pysäyttämisetä.
+        - Tracktorbeam ei välitä osuuko se maahan vai ei.
 -}
 
-data Pelitila = GameOver Ufolifter | GameOn Ufolifter | Intro Ufolifter deriving Show
-
--- | Maanpinnan taso vakiona elämän helpottamiseksi
-maanpinnan_taso :: Num p => p
-maanpinnan_taso = 5000
+data Pelitila = GameOver Ufolifter Text | GameOn Ufolifter | Intro Ufolifter deriving Show
 
 data Ufolifter = Peli {
     taso_aika        :: Float,
@@ -44,32 +49,15 @@ data Ufolifter = Peli {
 
     taso_navetat    :: [Navetta],
     taso_lehmät     :: [Lehmä],
+    taso_karikot    :: [Karikko],
 
     ikkunan_leveys  :: Float,
     ikkunan_korkeus :: Float
 
 } deriving(Show)
 
-data Ufo = Ufo {
-    ufo_sijainti    :: Point,
-    ufo_teho        :: Vector,
-    ufo_liike       :: Vector
-} deriving (Show)
 
 data Taso = Taso {}
-
-data Navetta = Navetta {
-    navetta_sijainti    :: Float
-} deriving (Show)
-
-data Lehmä = Lehmä {
-    lehmä_sijainti  :: Point,
-    lehmä_liike     :: Vector,
-
-    lehmä_ai        :: LehmänAI
-} deriving (Show)
-
-data LehmänAI = AktiiviLehmä | PassiiviLehmä deriving Show
 
 (>>==) ::  Pelitila -> (Ufolifter -> Pelitila) -> Pelitila
 a >>== f1 = case a of
@@ -83,67 +71,17 @@ ufolle :: (Ufo -> Ufo) -> Ufolifter -> Ufolifter
 ufolle f peli = peli {taso_ufo=f (taso_ufo peli)}
 
 
-muutaTehoa :: Float -> Ufo -> Ufo
-muutaTehoa teho_muutos hahmo = hahmo { 
-                                    ufo_teho = (ufo_teho hahmo) #+ (0,teho_muutos)
-                                }
-
-
-kallista :: Float -> Ufo -> Ufo
-kallista kulma_muutos hahmo = hahmo {
-                                    ufo_teho = (ufo_teho hahmo) #+ (kulma_muutos,0)
-                                }
-
-
 -- | Palauta ufon liikevektori
 ufonLiike :: Ufolifter -> Vector
 ufonLiike peli = ufo_liike (taso_ufo peli)
-
 
 -- | Palauta ufon tehovektori
 ufonTeho :: Ufolifter -> Vector
 ufonTeho peli = ufo_teho (taso_ufo peli)
 
-
 -- | Palauta ufon sijainti
 ufonSijainti :: Ufolifter -> Point
 ufonSijainti peli = ufo_sijainti (taso_ufo peli)
-
-
--- | Palauta ufon etäisyys maanpinnasta
-etäisyysMaasta :: Ufolifter -> Float
-etäisyysMaasta peli = (pisteEtäisyys (0,0) (ufonSijainti peli)) - maanpinnan_taso
-
-
-kopteriTörmäysviivat :: Point -> Float -> ((Point,Point) , (Point,Point))
-kopteriTörmäysviivat paikka kulma = 
-    let
-     vasen = -170
-     oikea = 100 
-     kääntö = rotateV (kulma - pi/2)
-    in (  (kääntö (vasen,0) #+ paikka
-          ,kääntö (oikea,0) #+ paikka)
-          ,
-          (kääntö (vasen,120) #+ paikka
-          ,kääntö (oikea,120) #+ paikka)
- 
-       )
-
--- törmääköTaloon :: Point -> Float -> [Navetta] -> Bool
--- törmääköTaloon paikka kulma talot = all törmääköYhteen talot
---     where
---      törmääköYhteen talo 
---         = let 
---             ((ala1,ala2),(ylä1,ylä2)) = kopteriTörmäysviivat paikka kulma
---             (va,oy)   = nurkkaPisteet talo 
---           in segClearsBox ala1 ala2 va oy && segClearsBox ylä1 ylä2 va oy
-
--- nurkkaPisteet :: Navetta -> (Point,Point)
--- nurkkaPisteet talo = 
---     let
---         vasenAla = (navetta_sijainti talo - (navetta_leveys talo / 2) , 0)
---         oikeaYlä = (navetta_sijainti talo + (navetta_leveys talo / 2)      , navetta_korkeus talo) 
---     in (vasenAla,oikeaYlä)
 
 
 reagoi :: Event -> Pelitila -> Pelitila
@@ -154,23 +92,28 @@ reagoi (EventResize (w,h)) tila =
         korkeus = fromIntegral h :: Float
     in trace "Ikkunan koon muutos" $ case tila of
         GameOn peli -> GameOn peli{ikkunan_leveys=leveys, ikkunan_korkeus=korkeus}
-        GameOver peli -> GameOver peli{ikkunan_leveys=leveys, ikkunan_korkeus=korkeus}
+        GameOver peli syy -> GameOver peli{ikkunan_leveys=leveys, ikkunan_korkeus=korkeus} syy
         Intro peli -> Intro peli{ikkunan_leveys=leveys, ikkunan_korkeus=korkeus}
 
 -- | Käynnistä peli millä tahansa näppäimellä introissa
 reagoi tapahtuma (Intro peli) = case tapahtuma of
-    EventKey _ Down _ _                     -> trace "Käynnistä peli" GameOn peli
+    EventKey _ Down _ _                     -> GameOn peli
     EventKey (SpecialKey KeySpace) Down _ _ -> GameOn peli
+
     _                                       -> trace ("Tuntematon tapahtuma " <> show tapahtuma) Intro peli
 
 -- | Reagoi pelin hallintapyyntöihin
 reagoi tapahtuma (GameOn peli) = GameOn (
     case tapahtuma of
-        EventKey (Char 'w') Down _ _ -> ufolle (muutaTehoa 4) peli
-        EventKey (Char 's') Down _ _ -> ufolle (muutaTehoa (-4)) peli
+        EventKey (Char 'w') Down _ _ -> ufolle (muutaTehoa (-4)) peli
+        EventKey (Char 's') Down _ _ -> ufolle (muutaTehoa 4) peli
         EventKey (Char 'a') Down _ _ -> ufolle (kallista 0.1) peli
         EventKey (Char 'd') Down _ _ -> ufolle (kallista (-0.1)) peli
-        _                            -> peli
+
+        EventKey (SpecialKey KeySpace) Down _ _ -> ufolle (traktori Päällä) peli
+        EventKey (SpecialKey KeySpace) Up _ _   -> ufolle (traktori Pois) peli
+
+        _ -> peli
     )
 
 reagoi _ tila = tila
@@ -180,7 +123,7 @@ reagoi _ tila = tila
 varmistaEtäisyys :: Ufolifter -> Pelitila
 varmistaEtäisyys peli
         -- Lentääkö ulos kentän rajoista
-        | lentokorkeus > maanpinnan_taso * 0.2 = trace ("Out of bounds") $ GameOver peli
+        | lentokorkeus > maanpinnan_taso * 0.2 = GameOver peli "Poistuit ilmakehästä"
 
         -- Saavuutaa maanpinnan
         | lentokorkeus <= 0 =
@@ -188,7 +131,7 @@ varmistaEtäisyys peli
                                 -- Ufo saavutti turvallisesti maan tason.
                                 GameOn (ufolle laskeudu peli)
                             else
-                                trace ("Törmäys maahan") $ GameOver peli
+                                GameOver peli "Törmäsit maahan"
 
         -- Lentely jatkuu normaalisti
         | otherwise = GameOn peli 
@@ -197,9 +140,8 @@ varmistaEtäisyys peli
         (kulma, teho)   = ufonTeho peli
         maan_kulma      = pisteKulma (0,0) (ufonSijainti peli)
 
-        -- Maan kulman ja ufon kulman tulisi olla vastakkaiset
         laskeutumis_kulma = maan_kulma - kulma
-        lentokorkeus = etäisyysMaasta peli
+        lentokorkeus      = etäisyysMaasta (ufonSijainti peli)
 
         laskeudu :: Ufo -> Ufo
         laskeudu ufo = ufo {
@@ -208,7 +150,24 @@ varmistaEtäisyys peli
                 -- HACK miten saada ufo pysäytetyksi, muttei liimattua maahan
                 ufo_liike=(kulma, max (teho-3) 0)
             }
-                
+
+
+varmistaTörmäysNavettaan :: Ufolifter -> Pelitila
+varmistaTörmäysNavettaan peli = 
+    let 
+        törmääkö = törmääköNavettaa (ufoTörmäysviivat (taso_ufo peli)) (taso_navetat peli)
+    in case törmääkö of
+        False -> GameOn peli
+        True -> GameOver peli "Törmäsit navettaan"
+
+
+varmistaTörmäysKarikkoon :: Ufolifter -> Pelitila
+varmistaTörmäysKarikkoon peli = 
+    let 
+        törmääkö = törmääköKarikkoon (ufoTörmäysviivat (taso_ufo peli)) (taso_karikot peli)
+    in case törmääkö of
+        False -> GameOn peli
+        True -> GameOver peli "Törmäsit esteeseen"
 
 
 päivitäPelitila :: Float -> Pelitila -> Pelitila
@@ -217,12 +176,15 @@ päivitäPelitila aika (Intro peli) = Intro peli{taso_aika=taso_aika peli + aika
 
 
 -- | Päivitä pelitilanne, ja varmista ettei ajauduta kuolettavaan tilanteeseen.
-päivitäPelitila aika (GameOn peli) = tila
-    where
+päivitäPelitila aika (GameOn peli) =
+    let
         frame = päivitäPeli aika peli
-        -- Varmista ettei olla liian kaukana planeetasta
-        tila = GameOn (frame) >>== varmistaEtäisyys
-päivitäPelitila aika (GameOver peli) = GameOver (päivitäPeli 0 peli)
+    in
+        GameOn (frame)
+            >>== varmistaTörmäysKarikkoon
+            -- >>== varmistaTörmäysNavettaan
+
+päivitäPelitila aika (GameOver peli syy) = GameOver (päivitäPeli 0 peli) syy
 
 
 -- | Päivitä pelitilanne.
@@ -231,30 +193,50 @@ päivitäPeli aika peli =
         let
             edellinen_aika  = taso_aika peli
             (x, y)          = ufonSijainti peli
-            teho            = ufonTeho peli
+            (k,v)           = ufonTeho peli
             liike           = ufonLiike peli
 
-            sijainti = (x,y) #+ (pisteVektorista liike)
+            sijainti = (x, y) #+ (pisteVektorista liike)
 
-            -- Lisää ehdollisesti painovoima, jos ilmassa.
-            lisää_painovoima momentti
-                    | (etäisyysMaasta peli) > toleranssi = liikeVektori momentti painovoima aika
-                    | otherwise = liike
-                where
-                    toleranssi = 1
-                    painovoima = ((vektorienKulma (0,0) ( ufon_vektori #+ (pi, 0))), 4)
-
-            ufon_vektori = vektoriPisteestä (x,y)
-            (uusi_kulma, uusi_teho) = lisää_painovoima (liikeVektori liike teho aika)
+            --(uusi_kulma, uusi_teho) = lisääPainovoima (lisääLiike liike teho aika) (x,y) aika
+            (uusi_kulma, uusi_teho) = lisääLiike liike (k,-1*v) aika
 
             -- Lisää dragia
-            uusi_liike = (uusi_kulma, uusi_teho*(1-(0.95*aika)))
+            uusi_liike = trace (show ((k,v), liike, (uusi_kulma, uusi_teho))) (uusi_kulma, uusi_teho) -- *(1-(0.95*aika)))
+
+            lehmät = map (päivitäLehmä aika) (case ufo_traktori (taso_ufo peli) of
+                    Päällä -> imeLehmiä (x,y) k (taso_lehmät peli)
+                    Pois   -> taso_lehmät peli
+                )
+
+            -- Päiväitä lehmät
+            -- (pisteet, lehmät) = foldr (\lehmä (p,l) ->
+            --     let
+            --         lehmä_etäisyys = pisteEtäisyys (lehmä_sijainti lehmä) (x,y)
+            --     in
+            --     if lehmä_etäisyys < 25 then
+            --         trace "Lehmä poimittu" (p + 1, l)
+            --     else
+            --         (p, lehmä:l)
+            --     ) (taso_pisteet peli, []) (map (päivitäLehmä aika) (taso_lehmät peli))
         in
             peli {
-                taso_aika=aika + edellinen_aika, 
-                taso_ufo=(taso_ufo peli){ufo_sijainti=sijainti, ufo_liike=uusi_liike}
+                taso_aika = aika + edellinen_aika, 
+                -- taso_pisteet = pisteet,
+                taso_ufo = (taso_ufo peli) {
+                    ufo_sijainti=sijainti, ufo_liike=uusi_liike
+                },
+                taso_lehmät = lehmät
             }
 
+
+-- | Pelin pääpiirtofunktio.
+--   Tässä on paljon meneillään:
+--    - Ufolle piirretään oikeaan sijaintiin ja kulmaan
+--    - Skeneä skaalataan niin että maa sekä ufo näkyvät
+--    - Piirretään pelimaailma
+--    - Piirretään tracktrobeam ufon sijaintiin ja kulmaan.
+--    - Ufolle piirretään varjo maanpinnalle, jonka koko ja etäisyys vaihtelee ufon etäisyyden mukaan.
 piirräPeli :: Pelitila -> Picture
 piirräPeli (Intro peli) = intro peli
 piirräPeli (GameOn peli) = 
@@ -263,65 +245,116 @@ piirräPeli (GameOn peli) =
             (x, y)             = ufonSijainti peli
             (p_kulma, p_voima) = ufonTeho peli
             (m_kulma, m_voima) = ufonLiike peli
+            etäisyys_maasta    = etäisyysMaasta (ufonSijainti peli)
 
             ufo = translate x y $ rotate (-(radToDeg p_kulma) + 90) $ lautanen aika
 
             -- abs on jäänne debukkauksesta. Todellisuudessa aluksen ei koskaan tulisi työntyä maan sisään
-            kameran_zoom = min 2 $ sqrt (ikkunan_korkeus peli / (abs (etäisyysMaasta peli) + 40) * 0.8)
-            -- kameran_zoom = 0.1
+            kameran_zoom = min 2 $ sqrt (ikkunan_korkeus peli / (abs (etäisyys_maasta) + 40) * 0.8)
+            --kameran_zoom = 0.1
+
+            -- Maan grafiikasta hitboxia isompi.
+            maa         = color (makeColor 0 1 0 1) (circleSolid (maanpinnan_taso*1.01))
+            ilmakehä    = (color (light blue) $ circle (maanpinnan_taso * 1.2))
+
+            piirräTraktori = 
+                let
+                    max_pituus = 200
+                    pituus = min max_pituus etäisyys_maasta
+                    sprite = translate x y $ rotate (-radToDeg (p_kulma+pi/2)) $ translate 0 (pituus/2) $ scale 1 (pituus/max_pituus) $ traktoriSprite
+                in
+                    case (ufo_traktori (taso_ufo peli)) of
+                        Päällä -> sprite
+                        Pois   -> blank
 
             -- Varjo joka seuraa ufoa maassa.
-            -- TODO: KORJAA
-            varjo = translate x (maanpinnan_taso - 160 + (120*kerroin)) $ scale (1.0*kerroin) (0.4*kerroin) $ varjo_grafiikka
-                where
-                    wh = ikkunan_korkeus peli * 2
-                    kerroin = max 0 ((wh - y )/ wh)
-                    varjo_grafiikka = color (makeColor 0 0 0 kerroin) (circleSolid 100)
+            varjo = let
+                    ((ufo_vasen,ufo_ylä), (ufo_oikea,ufo_ala)) = ufo_mitat
+                    korkeus         = abs ufo_ylä + abs ufo_ala
+                    kerroin         = max 0 1-(etäisyys_maasta / (maanpinnan_taso * 0.15))
 
-            ilmakehä = (color (light blue) $ circle (maanpinnan_taso * 1.2))
+                    -- Laske varjon sijainti ufon sijainnista
+                    (kulma,_)       = vektoriPisteestä (x,y)
+                    (v_x, v_y)      = pisteVektorista (kulma, (maanpinnan_taso - (120 - korkeus/2) + 120*kerroin))
 
-            skene = color (makeColor 0 1 0 0.4) (translate 0 0 (circleSolid maanpinnan_taso))
-                <> varjo
-                <> ufo
-                <> ilmakehä
-                -- <> Pictures (map (piirräNavetta peli) (taso_navetat peli))
-                -- <> apuviivaAla <> apuviivaYlä
-                -- <> törmäys
+                    -- Laske varjon koko ufon koosta ja etäisyydestä maahan
+                    varjon_koko     = (abs ufo_vasen + ufo_oikea) * kerroin
 
-            debug = scale 0.2 0.2 (
-                text (
-                    "Teho: " <> (show $ round p_voima) 
-                        <> " Kulma: " <> (show $ (round (p_kulma * 1e3)))
-                    )
+                    varjo_grafiikka = scale 1 0.3 $ color (makeColor 0 0.1 0 kerroin) $ circleSolid (varjon_koko/2)
+                in
+                    translate v_x v_y $ rotate (-radToDeg (p_kulma-pi/2)) $ varjo_grafiikka
+
+
+            debuggausta = let
+                ((va,oa), (va1,oa1)) = ufoTörmäysviivat (taso_ufo peli)
+                
+                törmäys 
+                    | törmääköNavettaa ((va,oa), (va1,oa1)) (taso_navetat peli) = translate x y $ color red $ circle 100
+                    | otherwise = blank
+
+                navetat_apu = Pictures $ map (\navetta ->
+                     let
+                        sijainti = (navetta_sijainti navetta, 0)
+                        a = sijainti #+ fst navetta_mitat
+                        b = sijainti #+ snd navetta_mitat
+                    in 
+                        line $ koordinaatiKaarella [a,b]
+                    ) (taso_navetat peli)
+                in
+                    color red $ Pictures [
+                        line [va,oa], line [va1,oa1], -- UFON viivat
+                        navetat_apu,
+                        törmäys
+                    ]
+
+            skene = Pictures [
+                    maa,
+                    ilmakehä,
+                    varjo,
+                    piirräKarikot (taso_karikot peli),
+                    piirräLehmät (taso_lehmät peli),
+                    Pictures $ map (piirräNavetta) (taso_navetat peli),
+                    piirräTraktori,
+                    ufo,
+                    debuggausta
+                ]
+
+            hud = scale 0.2 0.2 (
+                    text ("Teho: " <> (show $ round p_voima)  <> " Kulma: " <> (show $ (round $ radToDeg (p_kulma))))
                 )
+                <> (translate (5) (ikkunan_korkeus peli - 20 ) $ scale 0.1 0.1 $ text $ "PISTEET: " <> show (taso_pisteet peli))
                 <> translate (ikkunan_leveys peli - 50) (50) (
                     color white (
-                        circle 20
-                        <> line [(0,-22),(0,22)] <> line [(-22,0),(22,0)]
+                            circle 20
+                            <> line [(0,-22),(0,22)] <> line [(-22,0),(22,0)]
                         )
                     <> rotate (-radToDeg m_kulma) (scale (m_voima/10) 1 (color red (translate (10) 0 $ rectangleSolid 20 3)))
                 )
 
         in
-            tähtiTaivas peli
-                <> (scale kameran_zoom kameran_zoom (scale 0.5 0.5 (translate (-x) (-y) (translate 0 (80) skene))))
-                <> scanLines peli
-                <> translate (-(ikkunan_leveys peli)/2) (-(ikkunan_korkeus peli)/2) (color white debug)
+            Pictures [
+                tähtiTaivas peli,
+                (scale kameran_zoom kameran_zoom (scale 0.5 0.5 (translate (-x) (-y) (translate 0 (80) skene)))),
 
+                scanLines peli,
+                -- HUD
+                translate (-(ikkunan_leveys peli)/2) (-(ikkunan_korkeus peli)/2) (color white hud)
+            ]
 
-piirräPeli (GameOver _) = text "Game Over"
-
+piirräPeli (GameOver peli syy) = piirräPeli (GameOn peli)
+        <> (color (makeColor 0 0 0 0.4) $ rectangleSolid (ikkunan_leveys peli) (ikkunan_korkeus peli))
+        <> (scale 0.3 0.3 $ color white $ text $ toString syy)
 
 -- | Luo skybox, joka muuttaa intensiteettiä ufon korkeuden mukaan
 tähtiTaivas :: Ufolifter -> Picture
 tähtiTaivas peli =
     let
-        tähtiä          = 120
+        tähtiä              = 120
 
         -- Tummenna taivasta mitä korkeammalla lennetään.
         w                   = ikkunan_leveys peli
         h                   = ikkunan_korkeus peli
-        etäisyys_maasta     = abs (etäisyysMaasta peli)
+        etäisyys_maasta     = abs (etäisyysMaasta (ufonSijainti peli))
         ilmakehän_korkeus   = maanpinnan_taso * 0.2
 
         intensiteetti       = min 1 $ max 0 (1 - (etäisyys_maasta / ilmakehän_korkeus))
@@ -342,22 +375,6 @@ tähtiTaivas peli =
         in
             tausta
             <> Pictures (map lisää_tähti (take tähtiä [0..] ))
-
-
--- | Piirrä maanpinnalle. X pisteen tulee olla 0 - 1
-piirräMaanpinnalle :: Point -> Picture -> Picture
-piirräMaanpinnalle (x, y) = rotate ((pi * 2) * x) . translate (0) (maanpinnan_taso + y)
-
-
-piirräNavetta ::  Navetta -> Picture
-piirräNavetta navetta = piirräMaanpinnalle ((navetta_sijainti navetta), (navetan_korkeus)) navettaSprite
-
--- | Piirretään puita.
-piirräPuita peli puut = Pictures puu_spritet
-    where
-        maanpinta = (maanpinnan_taso + 80)
-        piirrä_puu  = undefined
-        puu_spritet = undefined
 
 
 -- | Tee ikkunan korkuinen ja levyinen elementti, joka peittää osan kuvasta viivoilla.
@@ -406,35 +423,36 @@ intro peli =
                 a =  max 0 (sin(aika-n_f) :: Float)
                 väri = makeColor r g b a
                 pituus = sqrt (w * h) * ((r + b + g) / 3)
-        ufo_x = w * sin(aika*1.2) * 0.1
-        ufo_y = h * sin(aika*0.8) * 0.1
+
+        -- Heiluta ufoa näennäisen epätasaisesti.
+        ufo_x = w * sin(aika * 1.2) * 0.1
+        ufo_y = h * sin(aika * 0.8) * 0.1
+        ufo_kulma = (ufo_x - w) * (-0.5)
     in
         Pictures (map f (map kasvata (take viivoja [1..])))
-        <> (translate ufo_x ufo_y $ scale 0.5 0.5 $ lautanen aika)
-        <> (translate (-w/2) (h/2) introTitleSprite)
+        <> (translate ufo_x ufo_y $ rotate ufo_kulma $ scale 0.5 0.5 $ lautanen aika)
+        -- <> (translate (-w/2 + 60) (h/2 + 20) introTitleSprite)
+        <> translate (-300) (200) introTitleSprite
         <> (translate (-60) (-(h/2)+20) $ scale 0.15 0.15  $ color spacen_väri $ text "[ SPACE ]")
         <> scanLines peli
 
 
--- | Palauttaa listan satunnaisia lukuja 
-sattuma :: Fractional a => [a]
-sattuma = map (/255) satunnaisTaulukko
-
-
-luoNavettoja :: Integer -> [Navetta]
-luoNavettoja määrä = [Navetta 0]
-
-
 alustaTaso :: Ufolifter
-alustaTaso = Peli
+alustaTaso =
+    let
+                navetat         = luoNavettoja 12
+                karikot         = luoKarikkoja 40
+                lehmät          = luoLehmiä 80
+    in Peli
             {
                 taso_aika       = 0,
                 taso_pisteet    = 0,
 
                 taso_ufo        = alustaUfo,
 
-                taso_navetat    = luoNavettoja 1,
-                taso_lehmät     = [],
+                taso_navetat    = navetat,
+                taso_lehmät     = lehmät,
+                taso_karikot    = karikot,
 
                 -- Ikkunan leveys ja korkeus asetetaan tapahtumassa.
                 ikkunan_leveys  = -1, 
@@ -442,13 +460,17 @@ alustaTaso = Peli
             }
 
 alustaUfo :: Ufo
-alustaUfo = Ufo
-            {
-                -- Voima tehossa ja liikkeessä perustuu ufon sulavaan laskeutumiseen
-                ufo_sijainti = (0,5600),
-                ufo_teho     = (pi/2, 4),
-                ufo_liike    = (pi*1.5, 18)
-            }
+alustaUfo = Ufo {
+        -- Voima tehossa ja liikkeessä perustuu ufon sulavaan laskeutumiseen
+        ufo_sijainti = (0,5700),
+        ufo_teho     = (pi*0.5, 0),
+        ufo_liike    = (pi*1.5, 0),
+
+        --ufo_teho     = (pi/2, 4),
+        --ufo_liike    = (pi*1.5, 18),
+        ufo_traktori = Pois
+    }
+
 
 alustaPeli :: Pelitila
 alustaPeli = GameOn alustaTaso
@@ -458,12 +480,12 @@ main :: IO ()
 --             (InWindow "Choplifter" (600,400) (200,200))
 --             (light blue)
 --             (\x -> lehmäSprite)
-         
+
 main = do
     play
         (InWindow "Ufolifter" (720,480) (300,5200))
         black
-        30
+        10
         (Intro alustaTaso)
         piirräPeli
         reagoi
