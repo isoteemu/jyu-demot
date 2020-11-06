@@ -76,18 +76,12 @@ vektorienKulma a b = vektorien_kulma
 
 
 -- | Lisää tehoa liike-vektoriin aikakertoimen verran.
+--  (liike -> (r cos(φ), r sin(φ))) + ((kulma, voima) -> )
 lisääLiike :: Vector -> Vector -> Float -> Vector
-lisääLiike liike (p_kulma, p_teho) aika = (
-        kulma,
-        etäisyys
+lisääLiike liike (kulma, voima) aika = vektoriPisteestä (
+        -- (r * cos(φ), r * sin(φ)) + (r * cos(φ) * t, r * sin(φ) * t)
+        (pisteVektorista liike) #+ (pisteVektorista (kulma, voima * aika))
     )
-    where
-        (a,_) = liike
-        -- KULMAN LASKUSSA ON ONGELMA
-        skaalattu_teho = ((a + ((p_kulma - a) * aika)) `mod'` (pi * 2), (p_teho * aika))
-
-        kulma = vektorienKulma liike skaalattu_teho
-        etäisyys = vektoriLäheisyys liike skaalattu_teho
 
 
 -- | Lisää painovoimaa
