@@ -11,6 +11,8 @@ maanpinnan_taso = 5000
 painovoima :: Num p => p
 painovoima = 4
 
+ilmanvastus :: Fractional p => p
+ilmanvastus = 0.98
 
 -- | Piirrä maanpinnalle.
 piirräMaanpinnalle :: Point -> Picture -> Picture

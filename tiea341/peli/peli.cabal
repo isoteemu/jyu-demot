@@ -17,7 +17,7 @@ executable peli
   hs-source-dirs:      src
   main-is:             Main.hs
   default-language:    Haskell2010
-  other-modules:       Prelude, Peli, Aritmetiikka, Assets, Ufo, Navetta, Lehmä, Karikko
+  other-modules:       Prelude, Peli, Aritmetiikka, Intro, Assets, Ufo, Navetta, Lehmä, Karikko
   ghc-options:
     -Wall
     -Wincomplete-record-updates

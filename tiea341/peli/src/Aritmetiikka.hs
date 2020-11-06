@@ -6,6 +6,7 @@ import Graphics.Gloss.Data.Point
 import Data.Fixed
 import Peli
 
+
 -- | Laske XY koordinaatit vektorille
 pisteVektorista :: Vector -> Point
 pisteVektorista (kulma, voima) = (x, y)
@@ -85,10 +86,14 @@ lisääLiike liike (kulma, voima) aika = vektoriPisteestä (
 
 
 -- | Lisää painovoimaa
-lisääPainovoima :: Vector -> Point -> Float -> Vector
+lisääPainovoima :: Vector   -- ^ Liikevektori
+                -> Point    -- ^ Sijainti maailmassa
+                -> Float    -- ^ Aikakerroin
+                -> Vector
 lisääPainovoima liike sijainti aika 
-        | etäisyys > 0  = uusi_voima
-        | otherwise     = lisääLiike uusi_voima (kulma - pi, etäisyys) aika
+        | etäisyys > 0  = uusi_voima -- Ollaan maanpinnan päällä
+        | otherwise     = lisääLiike uusi_voima (kulma, etäisyys) 1
+
     where
         kulma              = (pisteKulma (0,0) sijainti) + pi
         painovoima_vektori = (kulma, painovoima)
@@ -96,9 +101,6 @@ lisääPainovoima liike sijainti aika
         uusi_voima    = lisääLiike liike painovoima_vektori aika
         uusi_sijainti = sijainti #+ (pisteVektorista uusi_voima)
         etäisyys      = etäisyysMaasta uusi_sijainti
-
-
-
 
 
 -- | Palauta etäisyys maanpinnasta
